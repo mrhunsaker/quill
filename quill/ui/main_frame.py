@@ -199,6 +199,14 @@ class _DocumentTab:
 
 
 @dataclass(slots=True)
+class _NavigatorNode:
+    label: str
+    preview: str
+    payload: object
+    children: list[_NavigatorNode]
+
+
+@dataclass(slots=True)
 class _StatusBarCell:
     item: str
     button: object
@@ -6285,25 +6293,20 @@ class MainFrame:
         if self.document.path is not None and self.document.path.suffix.lower() == ".epub":
             self.open_epub_navigator()
             return
-        wx = self._wx
-        entries = self._outline_entries()
-        if not entries:
+        nodes = self._build_outline_navigator_nodes()
+        if not nodes:
             self._set_status("No outline headings found")
             return
-        choices = [f"{'  ' * (entry.level - 1)}{entry.title}" for entry in entries]
-        with wx.SingleChoiceDialog(
-            self.frame,
-            "Choose a heading:",
-            "Outline Navigator",
-            choices=choices,
-        ) as dialog:
-            if self._show_modal_dialog(dialog, "Outline Navigator") != wx.ID_OK:
-                return
-            index = dialog.GetSelection()
-        if index < 0 or index >= len(entries):
+        selected = self._show_tree_navigator(
+            title="Outline Navigator",
+            root_label="Headings",
+            nodes=nodes,
+            open_label="Jump to Heading",
+        )
+        if not isinstance(selected, OutlineEntry):
             self._set_status("Outline navigation cancelled")
             return
-        self._jump_to(entries[index].position, "Moved to heading")
+        self._jump_to(selected.position, "Moved to heading")
 
     def match_bracket(self) -> None:
         target = find_matching_bracket(self.editor.GetValue(), self.editor.GetInsertionPoint())
@@ -6366,6 +6369,113 @@ class MainFrame:
     def _outline_entries(self) -> list[OutlineEntry]:
         markup_kind = infer_markup_kind(self.document.path)
         return extract_outline_entries(self.editor.GetValue(), markup_kind)
+
+    def _build_outline_navigator_nodes(self) -> list[_NavigatorNode]:
+        entries = self._outline_entries()
+        if not entries:
+            return []
+        text = self.editor.GetValue()
+        roots: list[_NavigatorNode] = []
+        stack: list[tuple[int, _NavigatorNode]] = []
+        for index, entry in enumerate(entries):
+            end = entries[index + 1].position if index + 1 < len(entries) else len(text)
+            preview = text[entry.position:end].strip() or entry.title
+            node = _NavigatorNode(
+                label=entry.title,
+                preview=preview,
+                payload=entry,
+                children=[],
+            )
+            while stack and stack[-1][0] >= entry.level:
+                stack.pop()
+            if stack:
+                stack[-1][1].children.append(node)
+            else:
+                roots.append(node)
+            stack.append((entry.level, node))
+        return roots
+
+    def _build_epub_navigator_nodes(self, book: EpubBook) -> list[_NavigatorNode]:
+        return [
+            _NavigatorNode(
+                label=chapter.title,
+                preview=f"# {chapter.title}\n\n{chapter.text}\n",
+                payload=index,
+                children=[],
+            )
+            for index, chapter in enumerate(book.chapters)
+        ]
+
+    def _show_tree_navigator(
+        self,
+        *,
+        title: str,
+        root_label: str,
+        nodes: list[_NavigatorNode],
+        open_label: str,
+    ) -> object | None:
+        wx = self._wx
+        dialog = wx.Dialog(self.frame, title=title, size=(900, 620))
+        splitter = wx.SplitterWindow(dialog, style=wx.SP_LIVE_UPDATE)
+        tree = wx.TreeCtrl(splitter, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT)
+        preview = wx.TextCtrl(splitter, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        splitter.SplitVertically(tree, preview, 300)
+        splitter.SetMinimumPaneSize(200)
+
+        item_payloads: dict[object, object] = {}
+        root = tree.AddRoot(root_label)
+
+        def append_nodes(parent: object, children: list[_NavigatorNode]) -> object | None:
+            first_item = None
+            for node in children:
+                item = tree.AppendItem(parent, node.label)
+                item_payloads[item] = node.payload
+                if first_item is None:
+                    first_item = item
+                append_nodes(item, node.children)
+            return first_item
+
+        first_item = append_nodes(root, nodes)
+        tree.Expand(root)
+        if first_item is not None:
+            tree.SelectItem(first_item)
+            preview.ChangeValue(nodes[0].preview)
+
+        buttons = dialog.CreateButtonSizer(wx.OK | wx.CANCEL)
+        if buttons is not None:
+            ok = buttons.FindWindowById(wx.ID_OK)
+            if ok is not None:
+                ok.SetLabel(open_label)
+        layout = wx.BoxSizer(wx.VERTICAL)
+        layout.Add(splitter, 1, wx.EXPAND | wx.ALL, 8)
+        if buttons is not None:
+            layout.Add(buttons, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        dialog.SetSizer(layout)
+
+        node_by_payload: dict[object, _NavigatorNode] = {}
+
+        def collect(children: list[_NavigatorNode]) -> None:
+            for node in children:
+                node_by_payload[node.payload] = node
+                collect(node.children)
+
+        collect(nodes)
+        selected_payload = nodes[0].payload if nodes else None
+
+        def on_select(event: object) -> None:
+            nonlocal selected_payload
+            item = event.GetItem()
+            payload = item_payloads.get(item)
+            if payload in node_by_payload:
+                selected_payload = payload
+                preview.ChangeValue(node_by_payload[payload].preview)
+            event.Skip()
+
+        tree.Bind(wx.EVT_TREE_SEL_CHANGED, on_select)
+        result = self._show_modal_dialog(dialog, title)
+        if result != wx.ID_OK:
+            return None
+        return selected_payload
 
     def _jump_to(self, position: int, message: str) -> None:
         self._record_location_before_jump()
@@ -6715,69 +6825,26 @@ class MainFrame:
         self._set_status(f'Added "{word}" to dictionary')
 
     def open_epub_navigator(self) -> None:
-        wx = self._wx
         if self.document.path is None or self.document.path.suffix.lower() != ".epub":
             self._set_status("Open an EPUB file to use EPUB Navigator")
             return
         from quill.core.epub import load_epub_book
 
         book = self._epub_book or load_epub_book(self.document.path)
-        if not book.chapters:
+        nodes = self._build_epub_navigator_nodes(book)
+        if not nodes:
             self._set_status("EPUB has no navigable chapters")
             return
-        dialog = wx.Dialog(self.frame, title=f"EPUB Navigator - {book.title}", size=(900, 620))
-        splitter = wx.SplitterWindow(dialog, style=wx.SP_LIVE_UPDATE)
-        tree = wx.TreeCtrl(splitter, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT)
-        preview = wx.TextCtrl(splitter, style=wx.TE_MULTILINE | wx.TE_READONLY)
-        splitter.SplitVertically(tree, preview, 300)
-        splitter.SetMinimumPaneSize(200)
-
-        root = tree.AddRoot("EPUB")
-        chapter_nodes: dict[object, int] = {}
-        for index, chapter in enumerate(book.chapters):
-            node = tree.AppendItem(root, chapter.title)
-            chapter_nodes[node] = index
-        tree.Expand(root)
-        if book.chapters:
-            first_child, _cookie = tree.GetFirstChild(root)
-            if first_child.IsOk():
-                tree.SelectItem(first_child)
-
-        open_id = wx.NewIdRef()
-        buttons = dialog.CreateButtonSizer(wx.OK | wx.CANCEL)
-        if buttons is not None:
-            ok = buttons.FindWindowById(wx.ID_OK)
-            if ok is not None:
-                ok.SetLabel("Open Chapter in Editor")
-                open_id = wx.ID_OK
-        layout = wx.BoxSizer(wx.VERTICAL)
-        layout.Add(splitter, 1, wx.EXPAND | wx.ALL, 8)
-        if buttons is not None:
-            layout.Add(buttons, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
-        dialog.SetSizer(layout)
-
-        selection_index = 0
-
-        def apply_preview(index: int) -> None:
-            chapter = book.chapters[index]
-            preview.ChangeValue(f"# {chapter.title}\n\n{chapter.text}\n")
-
-        apply_preview(selection_index)
-
-        def on_select(event: object) -> None:
-            nonlocal selection_index
-            item = event.GetItem()
-            if item in chapter_nodes:
-                selection_index = chapter_nodes[item]
-                apply_preview(selection_index)
-            event.Skip()
-
-        tree.Bind(wx.EVT_TREE_SEL_CHANGED, on_select)
-        result = self._show_modal_dialog(dialog, "EPUB Navigator")
-        if result != open_id:
+        selected = self._show_tree_navigator(
+            title=f"Navigator - {book.title}",
+            root_label=book.title,
+            nodes=nodes,
+            open_label="Open Chapter in Editor",
+        )
+        if not isinstance(selected, int) or selected < 0 or selected >= len(book.chapters):
             self._set_status("Closed EPUB Navigator")
             return
-        chapter = book.chapters[selection_index]
+        chapter = book.chapters[selected]
         chapter_text = f"# {chapter.title}\n\n{chapter.text}\n"
         self._create_document_tab(
             Document(text=chapter_text, path=None, modified=False),

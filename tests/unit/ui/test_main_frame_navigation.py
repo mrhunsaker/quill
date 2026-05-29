@@ -6,6 +6,7 @@ import pytest
 
 from quill.core.a11y_regions import RegionTracker
 from quill.core.document import Document
+from quill.core.epub import EpubBook, EpubChapter
 from quill.core.features import FEATURE_DEFINITIONS, feature_for_command
 from quill.core.locations import LocationRing
 from quill.ui.main_frame import MainFrame
@@ -366,6 +367,33 @@ def test_open_outline_navigator_routes_epub_to_epub_navigator() -> None:
     frame.open_outline_navigator()
 
     assert called["epub"] is True
+
+
+def test_build_outline_navigator_nodes_tracks_heading_hierarchy() -> None:
+    frame = _build_frame("# Title\nBody\n## Child\nText\n# Next\n", insertion_point=0)
+
+    nodes = frame._build_outline_navigator_nodes()
+
+    assert [node.label for node in nodes] == ["Title", "Next"]
+    assert [node.label for node in nodes[0].children] == ["Child"]
+    assert "## Child" in nodes[0].children[0].preview
+
+
+def test_build_epub_navigator_nodes_uses_chapter_titles_and_preview() -> None:
+    frame = _build_frame("# EPUB", insertion_point=0)
+    book = EpubBook(
+        title="Sample Book",
+        chapters=(
+            EpubChapter(title="One", href="one.xhtml", text="First chapter"),
+            EpubChapter(title="Two", href="two.xhtml", text="Second chapter"),
+        ),
+    )
+
+    nodes = frame._build_epub_navigator_nodes(book)
+
+    assert [node.label for node in nodes] == ["One", "Two"]
+    assert nodes[0].payload == 0
+    assert "First chapter" in nodes[0].preview
 
 
 def test_save_all_files_calls_save_file() -> None:
