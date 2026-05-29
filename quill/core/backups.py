@@ -27,9 +27,20 @@ def list_backups(document_path: Path) -> list[Path]:
     backup_root = app_data_dir() / "backups" / _document_key(doc)
     if not backup_root.exists():
         return []
-    return sorted(backup_root.glob("*.bak"), reverse=True)
+    return sorted(backup_root.glob("*.bak"), key=_backup_sort_key, reverse=True)
 
 
 def _document_key(document: Document) -> str:
     seed = str(document.path.resolve()) if document.path else "untitled"
     return sha1(seed.encode("utf-8")).hexdigest()
+
+
+def _backup_sort_key(path: Path) -> tuple[str, int]:
+    stem = path.stem
+    timestamp, separator, suffix = stem.partition("-")
+    if not separator:
+        return timestamp, 0
+    try:
+        return timestamp, int(suffix)
+    except ValueError:
+        return timestamp, 0
