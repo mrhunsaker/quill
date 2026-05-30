@@ -112,6 +112,24 @@ def save_model_choice(model_id: str) -> None:
     write_json_atomic(_choice_path(), {"model": model_id})
 
 
+# --- AI on/off (a Settings value, set during onboarding) -------------------
+
+def _ai_enabled_path() -> Path:
+    return app_data_dir() / "ai" / "ai-enabled.json"
+
+
+def load_ai_enabled() -> bool:
+    """Whether the user has the AI features turned on (default on)."""
+    raw = read_json(_ai_enabled_path(), default={})
+    if isinstance(raw, dict) and "enabled" in raw:
+        return bool(raw["enabled"])
+    return True
+
+
+def save_ai_enabled(enabled: bool) -> None:
+    write_json_atomic(_ai_enabled_path(), {"enabled": bool(enabled)})
+
+
 def resolve_spec(choice: str | None = None) -> ModelSpec:
     choice = choice or load_model_choice()
     if choice == "auto" or choice not in MODELS:

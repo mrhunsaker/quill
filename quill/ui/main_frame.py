@@ -2574,6 +2574,7 @@ class MainFrame:
         self._id_link_inventory = wx.NewIdRef()
         self._id_ai_assistant = wx.NewIdRef()
         self._id_ask_quill_chat = wx.NewIdRef()
+        self._id_ai_enabled = wx.NewIdRef()
         self._id_ai_model = wx.NewIdRef()
         self._id_ai_rewrite_selection = wx.NewIdRef()
         self._id_ai_summarize_selection = wx.NewIdRef()
@@ -2770,6 +2771,11 @@ class MainFrame:
             self._menu_label("&YAML Structure Editor...", "tools.yaml_structure_editor"),
         )
         ai_menu = wx.Menu()
+        from quill.core.ai.model_manager import load_ai_enabled
+
+        ai_menu.AppendCheckItem(self._id_ai_enabled, "Use Artificial &Intelligence")
+        ai_menu.Check(self._id_ai_enabled, load_ai_enabled())
+        ai_menu.AppendSeparator()
         ai_menu.Append(
             self._id_ask_quill_chat,
             self._menu_label("Ask Quill &Chat...", "tools.ask_quill_chat"),
@@ -3092,6 +3098,7 @@ class MainFrame:
             lambda _e: self.open_ask_quill_chat(),
             id=self._id_ask_quill_chat,
         )
+        self.frame.Bind(wx.EVT_MENU, self._on_toggle_ai_enabled, id=self._id_ai_enabled)
         self.frame.Bind(
             wx.EVT_MENU,
             lambda _e: self.open_ai_model_settings(),
@@ -11547,7 +11554,19 @@ class MainFrame:
         if assistant is not None:
             assistant.set_style_preamble(style_preamble(load_style()))
 
+    def _on_toggle_ai_enabled(self, event: object) -> None:
+        from quill.core.ai.model_manager import save_ai_enabled
+
+        enabled = bool(event.IsChecked())
+        save_ai_enabled(enabled)
+        self._set_status("AI enabled" if enabled else "AI disabled")
+
     def open_ask_quill_chat(self) -> None:
+        from quill.core.ai.model_manager import load_ai_enabled
+
+        if not load_ai_enabled():
+            self._set_status("AI is turned off. Enable 'Use Artificial Intelligence' in the AI menu.")
+            return
         self._apply_style_to_assistant()
         tool_catalog = allowed_tools(self.commands, getattr(self, "features", None))
         dialog = AskQuillChatDialog(
@@ -14189,32 +14208,47 @@ class MainFrame:
         if getattr(self, "_first_run_profile_prompt", False):
             self._show_profile_onboarding(force=False)
             self._first_run_profile_prompt = False
+            self._offer_ai_onboarding()
         if getattr(self, "_first_run_assistant_prompt", False):
             self._show_assistant_onboarding(force=False)
             self._first_run_assistant_prompt = False
-            self._maybe_offer_ai_model_download()
 
-    def _maybe_offer_ai_model_download(self) -> None:
-        """On first run, offer to download the on-device AI model (llama.cpp only)."""
+    def _offer_ai_onboarding(self) -> None:
+        """First run: ask whether to use AI; if yes, set up the model."""
         from quill.core.ai.llama_cpp_backend import LlamaCppBackend
-        from quill.core.ai.model_manager import MODELS, existing_model, recommended_id
+        from quill.core.ai.model_manager import existing_model, save_ai_enabled
 
-        assistant = self._get_assistant()
-        if not isinstance(assistant.backend, LlamaCppBackend):
-            return  # e.g. macOS Foundation Models needs no download
-        if not assistant.is_available()[0] or existing_model():
-            return
         wx = self._wx
-        spec = MODELS[recommended_id()]
-        result = self._show_message_box(
-            "Quill's on-device AI uses a local model. Download the recommended model "
-            f"now?\n\n{spec.name} (about {spec.approx_gb:g} GB). You can change this "
-            "later in the AI menu under AI Model.",
-            "Download AI Model",
+        use_ai = self._show_message_box(
+            "Do you want to use Quill's built-in artificial intelligence (Ask Quill)?\n\n"
+            "It runs entirely on your computer. You can turn it on or off later from the "
+            "AI menu.",
+            "Use Artificial Intelligence?",
             wx.ICON_QUESTION | wx.YES_NO,
         )
-        if result == wx.YES:
+        enabled = use_ai == wx.YES
+        save_ai_enabled(enabled)
+        self._sync_ai_enabled_menu(enabled)
+        if not enabled:
+            self._set_status("AI is off. You can enable it later from the AI menu.")
+            return
+        # Foundation Models (macOS) needs no download; only llama.cpp does.
+        assistant = self._get_assistant()
+        if (
+            isinstance(assistant.backend, LlamaCppBackend)
+            and assistant.is_available()[0]
+            and not existing_model()
+        ):
             AIModelDialog(self.frame, announce=self._set_status).show()
+        else:
+            self._set_status("AI is ready.")
+
+    def _sync_ai_enabled_menu(self, enabled: bool) -> None:
+        menu_bar = self.frame.GetMenuBar()
+        if menu_bar is not None and hasattr(self, "_id_ai_enabled"):
+            item = menu_bar.FindItemById(self._id_ai_enabled)
+            if item is not None:
+                item.Check(enabled)
 
     def _show_profile_onboarding(self, force: bool) -> None:
         wx = self._wx
