@@ -1,12 +1,9 @@
-"""Automatic, RAM-tiered model download for the llama.cpp backend.
+"""Model registry, RAM-tiered recommendation, saved choice, and auto-download
+for the llama.cpp backend.
 
-On first use, if no GGUF model is present, Quill downloads one sized to the
-machine's RAM (per issue #40):
-  - under 8 GB RAM  -> Llama 3.2 1B Instruct (Q4)  (~0.8 GB)
-  - 8 GB or more    -> Phi-4-mini Instruct (Q4)    (~2.5 GB)
-
-Resolution order: QUILL_LLAMA_MODEL env -> first *.gguf in <app data>/models ->
-download the tiered model. Standard library only (urllib).
+Users pick a model in Settings (default = "Recommended", chosen from RAM); the
+GGUF is downloaded automatically on first use into ``<app data>/models``. No
+manual file handling. Standard library only (urllib) — no extra dependencies.
 """
 from __future__ import annotations
 
@@ -17,38 +14,50 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from quill.core.paths import app_data_dir
+from quill.core.storage import read_json, write_json_atomic
+
+_CHOICE_FILE = "ai-model.json"
+_LOW_RAM_THRESHOLD_GB = 8.0
 
 
 @dataclass(frozen=True, slots=True)
 class ModelSpec:
+    id: str
     name: str
     filename: str
     url: str
+    approx_gb: float
+    note: str = ""
 
 
-_LOW_END = ModelSpec(
-    "Llama 3.2 1B Instruct (Q4_K_M)",
-    "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
-    "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/"
-    "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
-)
-_DEFAULT = ModelSpec(
-    "Phi-4-mini Instruct (Q4_K_M)",
-    "Phi-4-mini-instruct-Q4_K_M.gguf",
-    "https://huggingface.co/bartowski/Phi-4-mini-instruct-GGUF/resolve/main/"
-    "Phi-4-mini-instruct-Q4_K_M.gguf",
-)
-
-_LOW_RAM_THRESHOLD_GB = 8.0
+# Curated, free, open GGUF models (bartowski Q4_K_M re-uploads, no auth/gating).
+MODELS: dict[str, ModelSpec] = {
+    "llama-3.2-1b": ModelSpec(
+        "llama-3.2-1b",
+        "Llama 3.2 1B Instruct",
+        "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+        "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/"
+        "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+        0.8,
+        "Best for low-memory machines (under 8 GB RAM).",
+    ),
+    "phi-4-mini": ModelSpec(
+        "phi-4-mini",
+        "Phi-4-mini Instruct",
+        "Phi-4-mini-instruct-Q4_K_M.gguf",
+        "https://huggingface.co/bartowski/Phi-4-mini-instruct-GGUF/resolve/main/"
+        "Phi-4-mini-instruct-Q4_K_M.gguf",
+        2.5,
+        "Recommended for machines with 8 GB RAM or more.",
+    ),
+}
 
 
 def total_ram_gb() -> float:
-    # POSIX (Linux, macOS)
     try:
         return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / (1024**3)
     except (ValueError, AttributeError, OSError):
         pass
-    # Windows
     if sys.platform.startswith("win"):
         import ctypes
 
@@ -69,42 +78,84 @@ def total_ram_gb() -> float:
         stat.dwLength = ctypes.sizeof(_MEMORYSTATUSEX)
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
         return stat.ullTotalPhys / (1024**3)
-    return _LOW_RAM_THRESHOLD_GB  # safe default
+    return _LOW_RAM_THRESHOLD_GB
+
+
+def recommended_id() -> str:
+    """The model recommended for this machine's RAM."""
+    return "llama-3.2-1b" if total_ram_gb() < _LOW_RAM_THRESHOLD_GB else "phi-4-mini"
 
 
 def choose_model_spec() -> ModelSpec:
-    return _LOW_END if total_ram_gb() < _LOW_RAM_THRESHOLD_GB else _DEFAULT
+    return MODELS[recommended_id()]
 
+
+# --- saved choice (a Settings value) --------------------------------------
+
+def _choice_path() -> Path:
+    return app_data_dir() / "ai" / _CHOICE_FILE
+
+
+def load_model_choice() -> str:
+    """Return the saved model id, or 'auto' (use the RAM recommendation)."""
+    raw = read_json(_choice_path(), default={})
+    if isinstance(raw, dict):
+        choice = str(raw.get("model", "auto"))
+        if choice == "auto" or choice in MODELS:
+            return choice
+    return "auto"
+
+
+def save_model_choice(model_id: str) -> None:
+    if model_id != "auto" and model_id not in MODELS:
+        raise ValueError(f"Unknown model id: {model_id}")
+    write_json_atomic(_choice_path(), {"model": model_id})
+
+
+def resolve_spec(choice: str | None = None) -> ModelSpec:
+    choice = choice or load_model_choice()
+    if choice == "auto" or choice not in MODELS:
+        return choose_model_spec()
+    return MODELS[choice]
+
+
+# --- download / resolution -------------------------------------------------
 
 def models_dir() -> Path:
     return app_data_dir() / "models"
+
+
+def model_path_for(spec: ModelSpec) -> Path:
+    return models_dir() / spec.filename
+
+
+def is_downloaded(spec: ModelSpec) -> bool:
+    return model_path_for(spec).exists()
+
+
+def ensure_model(progress=None) -> str:
+    """Return a local GGUF path for the chosen model, downloading it if needed.
+
+    ``progress`` is an optional callable(downloaded_bytes, total_bytes).
+    """
+    override = os.environ.get("QUILL_LLAMA_MODEL")
+    if override and Path(override).expanduser().exists():
+        return str(Path(override).expanduser())
+    spec = resolve_spec()
+    target = model_path_for(spec)
+    if target.exists():
+        return str(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    _download(spec.url, target, progress)
+    return str(target)
 
 
 def existing_model() -> str | None:
     override = os.environ.get("QUILL_LLAMA_MODEL")
     if override and Path(override).expanduser().exists():
         return str(Path(override).expanduser())
-    folder = models_dir()
-    if folder.exists():
-        for candidate in sorted(folder.glob("*.gguf")):
-            return str(candidate)
-    return None
-
-
-def ensure_model(progress=None) -> str:
-    """Return a local GGUF path, downloading the RAM-appropriate model if needed.
-
-    ``progress`` is an optional callable(downloaded_bytes, total_bytes).
-    """
-    found = existing_model()
-    if found:
-        return found
-    spec = choose_model_spec()
-    folder = models_dir()
-    folder.mkdir(parents=True, exist_ok=True)
-    target = folder / spec.filename
-    _download(spec.url, target, progress)
-    return str(target)
+    target = model_path_for(resolve_spec())
+    return str(target) if target.exists() else None
 
 
 def _download(url: str, target: Path, progress=None) -> None:

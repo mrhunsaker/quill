@@ -307,6 +307,7 @@ from quill.ui.assistant_tools import (
 from quill.core.ai import Assistant
 from quill.core.ai.agent import allowed_tools
 from quill.ui.assistant_panel import AskQuillChatDialog
+from quill.ui.ai_model_panel import AIModelDialog
 
 
 @dataclass(slots=True)
@@ -911,6 +912,12 @@ class MainFrame:
             "tools.ask_quill_chat",
             "Ask Quill Chat",
             self.open_ask_quill_chat,
+            None,
+        )
+        self.commands.register(
+            "tools.ai_model",
+            "AI Model",
+            self.open_ai_model_settings,
             None,
         )
         self.commands.register(
@@ -2567,6 +2574,7 @@ class MainFrame:
         self._id_link_inventory = wx.NewIdRef()
         self._id_ai_assistant = wx.NewIdRef()
         self._id_ask_quill_chat = wx.NewIdRef()
+        self._id_ai_model = wx.NewIdRef()
         self._id_ai_rewrite_selection = wx.NewIdRef()
         self._id_ai_summarize_selection = wx.NewIdRef()
         self._id_ai_continue_writing = wx.NewIdRef()
@@ -2765,6 +2773,10 @@ class MainFrame:
         ai_menu.Append(
             self._id_ask_quill_chat,
             self._menu_label("Ask Quill &Chat...", "tools.ask_quill_chat"),
+        )
+        ai_menu.Append(
+            self._id_ai_model,
+            self._menu_label("AI &Model...", "tools.ai_model"),
         )
         ai_menu.Append(
             self._id_ai_assistant,
@@ -3079,6 +3091,11 @@ class MainFrame:
             wx.EVT_MENU,
             lambda _e: self.open_ask_quill_chat(),
             id=self._id_ask_quill_chat,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self.open_ai_model_settings(),
+            id=self._id_ai_model,
         )
         self.frame.Bind(
             wx.EVT_MENU,
@@ -3859,6 +3876,7 @@ class MainFrame:
             "view.browser_preview": self._id_browser_preview,
             "tools.ai_assistant": self._id_ai_assistant,
             "tools.ask_quill_chat": self._id_ask_quill_chat,
+            "tools.ai_model": self._id_ai_model,
             "tools.ai_rewrite_selection": self._id_ai_rewrite_selection,
             "tools.ai_summarize_selection": self._id_ai_summarize_selection,
             "tools.ai_continue_writing": self._id_ai_continue_writing,
@@ -11558,6 +11576,9 @@ class MainFrame:
 
     def _ai_run_command(self, command_id: str) -> None:
         self.commands.run(command_id)
+
+    def open_ai_model_settings(self) -> None:
+        AIModelDialog(self.frame, announce=self._set_status).show()
 
     def open_writing_assistant(self, initial_prompt: str = "") -> None:
         dialog = WritingAssistantDialog(
