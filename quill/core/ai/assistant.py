@@ -29,12 +29,32 @@ _OPERATION_PROMPTS: dict[str, str] = {
 }
 
 
+def make_default_backend() -> AIBackend:
+    """Pick the best available backend for this platform.
+
+    macOS with Apple Intelligence -> Foundation Models (on-device); otherwise
+    (Windows, Linux, or macOS without Apple Intelligence) -> llama.cpp CPU.
+    """
+    import sys
+
+    if sys.platform == "darwin":
+        try:
+            from quill.core.ai.foundation_models import FoundationModelsBackend
+
+            fm = FoundationModelsBackend()
+            if fm.is_available()[0]:
+                return fm
+        except Exception:  # noqa: BLE001
+            pass
+    from quill.core.ai.llama_cpp_backend import LlamaCppBackend
+
+    return LlamaCppBackend()
+
+
 class Assistant:
     def __init__(self, backend: AIBackend | None = None) -> None:
         if backend is None:
-            from quill.core.ai.foundation_models import FoundationModelsBackend
-
-            backend = FoundationModelsBackend()
+            backend = make_default_backend()
         self.backend = backend
         self._style_preamble = ""
 
