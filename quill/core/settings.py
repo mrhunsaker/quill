@@ -85,6 +85,8 @@ class Settings:
     keyboard_pack: str = "Quill Default"
     soft_wrap: bool = True
     wrap_find: bool = True
+    csv_open_mode: str = "prompt"
+    word_open_mode: str = "prompt"
     indent_with_tabs: bool = False
     indent_size: int = 4
     auto_check_updates: bool = False
@@ -118,6 +120,12 @@ class Settings:
         keyboard_pack = str(data.get("keyboard_pack", "Quill Default"))
         soft_wrap = bool(data.get("soft_wrap", True))
         wrap_find = bool(data.get("wrap_find", True))
+        csv_open_mode = str(data.get("csv_open_mode", "prompt")).strip().lower()
+        if csv_open_mode not in {"prompt", "text", "grid"}:
+            csv_open_mode = "prompt"
+        word_open_mode = str(data.get("word_open_mode", "prompt")).strip().lower()
+        if word_open_mode not in {"prompt", "text", "structured"}:
+            word_open_mode = "prompt"
         indent_with_tabs = bool(data.get("indent_with_tabs", False))
         indent_size = int(data.get("indent_size", 4))
         auto_check_updates = bool(data.get("auto_check_updates", False))
@@ -171,6 +179,8 @@ class Settings:
             keyboard_pack=keyboard_pack,
             soft_wrap=soft_wrap,
             wrap_find=wrap_find,
+            csv_open_mode=csv_open_mode,
+            word_open_mode=word_open_mode,
             indent_with_tabs=indent_with_tabs,
             indent_size=indent_size,
             auto_check_updates=auto_check_updates,

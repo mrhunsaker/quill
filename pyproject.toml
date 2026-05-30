@@ -33,7 +33,7 @@ spellcheck = ["pyenchant>=3.2"]
 # a GGUF model (e.g. Phi-4-mini Q4) goes in <app data>/models or QUILL_LLAMA_MODEL.
 ai = ["llama-cpp-python>=0.3"]
 dictation = ["SpeechRecognition>=3.10.0"]
-pages = ["keynote-parser>=1.0", "markitdown[docx]>=0.3.0"]
+pages = ["keynote-parser>=1.0", "markitdown[all]>=0.3.0"]
 dev = [
   "pytest>=8.2",
   "pytest-xdist>=3.6",

@@ -3,13 +3,15 @@ from __future__ import annotations
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from quill.core.document import Document
+from quill.io.markitdown_bridge import convert_with_markitdown
 
 
 def read_pages_document(path: Path) -> Document:
     """Import an Apple Pages document and extract text with heading structure.
-    
+
     Uses Route A (pure Python IWA parsing) when available, falls back to Route B
     (LibreOffice + MarkItDown) for higher fidelity. If neither is available,
     returns a graceful error message.
@@ -19,13 +21,13 @@ def read_pages_document(path: Path) -> Document:
         return _read_pages_via_iwa(path)
     except (ImportError, Exception):
         pass  # Fall through to Route B
-    
+
     try:
         # Route B: LibreOffice headless + MarkItDown
         return _read_pages_via_libreoffice(path)
     except (ImportError, subprocess.CalledProcessError, Exception):
         pass  # Fall through to error message
-    
+
     # No engines available
     return Document(
         text=(
@@ -52,37 +54,39 @@ def _read_pages_via_iwa(path: Path) -> Document:
         from keynote_parser.parser import load_presentation  # type: ignore[import-untyped]
     except ImportError as e:
         raise ImportError("keynote-parser not available") from e
-    
+
     # Load via keynote-parser (also handles Pages via IWA)
-    doc_obj = load_presentation(str(path))
-    
+    doc_obj: Any = load_presentation(str(path))
+
     # Extract text and structure from IWA
-    text_parts = []
-    
+    text_parts: list[str] = []
+
     # keynote-parser returns slides/pages; iterate and extract text with heading levels
     if hasattr(doc_obj, "pages") or hasattr(doc_obj, "slides"):
-        pages_or_slides = getattr(doc_obj, "pages", None) or getattr(doc_obj, "slides", [])
+        pages_or_slides: list[Any] = getattr(doc_obj, "pages", None) or getattr(
+            doc_obj, "slides", []
+        )
         for page_or_slide in pages_or_slides:
             # Extract title (usually h1 equivalent)
             if hasattr(page_or_slide, "title") and page_or_slide.title:
                 text_parts.append(f"# {page_or_slide.title}\n")
-            
+
             # Extract body/notes (h2+)
             if hasattr(page_or_slide, "notes") and page_or_slide.notes:
                 text_parts.append(page_or_slide.notes)
             elif hasattr(page_or_slide, "text") and page_or_slide.text:
                 text_parts.append(page_or_slide.text)
-            
+
             text_parts.append("\n")
     else:
         # Fallback: try direct text extraction
         text_content = str(doc_obj)
         text_parts.append(text_content)
-    
+
     text = "".join(text_parts).strip()
     if not text:
         raise ValueError("No text extracted from Pages via IWA")
-    
+
     return Document(
         text=text + "\n",
         path=path,
@@ -102,11 +106,6 @@ def _read_pages_via_libreoffice(path: Path) -> Document:
 
     Requires LibreOffice (soffice) and markitdown Python package.
     """
-    try:
-        from markitdown import MarkItDown  # type: ignore[import-untyped]
-    except ImportError as e:
-        raise ImportError("markitdown not available") from e
-
     # Use a temp directory for the converted file
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -140,12 +139,7 @@ def _read_pages_via_libreoffice(path: Path) -> Document:
         if not docx_path.exists():
             raise RuntimeError("LibreOffice did not produce a DOCX file")
         # Convert DOCX to Markdown via MarkItDown
-        md = MarkItDown()
-        result = md.convert(str(docx_path))
-        text = result.text_content
-
-        if not text or not text.strip():
-            raise ValueError("MarkItDown produced empty output")
+        text = convert_with_markitdown(docx_path)
 
         return Document(
             text=text.strip() + "\n",
@@ -163,12 +157,12 @@ def _read_pages_via_libreoffice(path: Path) -> Document:
 
 def outline_pages_document(document: Document) -> list[tuple[int, str]]:
     """Extract heading outline from a Pages-imported document.
-    
+
     Returns list of (level, heading_text) tuples.
     Expects document to be Markdown with # headings.
     """
     import re
-    
+
     headings: list[tuple[int, str]] = []
     for line in document.text.split("\n"):
         match = re.match(r"^(#{1,6})\s+(.+)$", line)
@@ -176,5 +170,5 @@ def outline_pages_document(document: Document) -> list[tuple[int, str]]:
             level = len(match.group(1))
             heading_text = match.group(2).strip()
             headings.append((level, heading_text))
-    
+
     return headings

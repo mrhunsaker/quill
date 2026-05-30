@@ -22,6 +22,9 @@ def build_intake_summary(document: Document, cursor_position: int | None = None)
             parts.append(f"{page_count} pages")
         parts.append(f"extracted by {engine}")
         parts.append(f"quality {quality}/100")
+    elif source_kind in {"csv", "tsv", "xlsx", "xls"}:
+        engine = str(metadata.get("engine", source_kind))
+        parts.append(f"{engine} table extract")
     elif source_kind != "text":
         engine = str(metadata.get("engine", source_kind))
         parts.append(f"{engine} extract")
@@ -101,7 +104,7 @@ def build_context_help(document: Document, has_selection: bool) -> str:
             "Available actions: intake report, review extraction quality, copy with source, "
             "go to page, find, compare with file."
         )
-    elif source_kind in {"docx", "epub", "odt", "rtf", "sqlite"}:
+    elif source_kind in {"doc", "docx", "ppt", "pptx", "epub", "odt", "rtf", "sqlite"}:
         lines.append(
             "Available actions: intake report, copy with source, word count, find, "
             "compare with file."
@@ -154,7 +157,7 @@ def build_source_reference(document: Document, cursor_position: int, text: str) 
             f"Source: {path_name}, page {page_number}, line {line}, column {column}, "
             f"extracted by {engine} ({quality}/100)."
         )
-    if source_kind in {"docx", "epub", "odt", "rtf", "sqlite"}:
+    if source_kind in {"doc", "docx", "ppt", "pptx", "epub", "odt", "rtf", "sqlite"}:
         return f"Source: {path_name}, line {line}, column {column}."
     return f"Source: {path_name}, line {line}, column {column}."
 

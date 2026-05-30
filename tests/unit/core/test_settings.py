@@ -15,6 +15,8 @@ def test_settings_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
             keyboard_pack="VS Code",
             soft_wrap=False,
             wrap_find=False,
+            csv_open_mode="grid",
+            word_open_mode="structured",
             indent_with_tabs=True,
             indent_size=2,
             auto_check_updates=True,
@@ -39,6 +41,8 @@ def test_settings_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     assert loaded.keyboard_pack == "VS Code"
     assert loaded.soft_wrap is False
     assert loaded.wrap_find is False
+    assert loaded.csv_open_mode == "grid"
+    assert loaded.word_open_mode == "structured"
     assert loaded.indent_with_tabs is True
     assert loaded.indent_size == 2
     assert loaded.auto_check_updates is True
@@ -145,6 +149,40 @@ def test_settings_defaults_preview_browser_to_system(
     monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
     loaded = load_settings()
     assert loaded.preview_browser == "system"
+
+
+def test_settings_defaults_csv_open_mode_to_prompt(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    loaded = load_settings()
+    assert loaded.csv_open_mode == "prompt"
+
+
+def test_settings_normalize_invalid_csv_open_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text('{"csv_open_mode":"nope"}', encoding="utf-8")
+    loaded = load_settings()
+    assert loaded.csv_open_mode == "prompt"
+
+
+def test_settings_defaults_word_open_mode_to_prompt(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    loaded = load_settings()
+    assert loaded.word_open_mode == "prompt"
+
+
+def test_settings_normalize_invalid_word_open_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text('{"word_open_mode":"nope"}', encoding="utf-8")
+    loaded = load_settings()
+    assert loaded.word_open_mode == "prompt"
 
 
 def test_settings_default_hides_tab_control(

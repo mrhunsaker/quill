@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from quill.io.markitdown_bridge import convert_with_markitdown
+
 
 @dataclass(slots=True)
 class PdfExtractionResult:
@@ -40,10 +42,30 @@ def format_pdf_document(path: Path | PdfExtractionResult) -> str:
         f"Engine: {result.engine}",
         f"Quality score: {result.quality_score}/100",
     ]
-    if result.quality_score < 40:
-        header.append("Low-confidence extraction. OCR may improve the result.")
+    if result.quality_score < 50:
+        header.append("Low-confidence extraction. MarkItDown or OCR may improve the result.")
     header.append("")
-    return "\n".join(header) + result.text.rstrip() + "\n"
+    body = result.text.rstrip() + "\n"
+    if isinstance(path, Path) and result.quality_score < 50:
+        try:
+            markitdown_text = convert_with_markitdown(path)
+        except (ImportError, ValueError, RuntimeError):
+            return "\n".join(header) + body
+        if len(markitdown_text.strip()) > len(result.text.strip()):
+            return (
+                "\n".join(
+                    [
+                        "# PDF Extract",
+                        "",
+                        "Engine: markitdown",
+                        "Quality score: 85/100",
+                        "",
+                    ]
+                )
+                + markitdown_text.rstrip()
+                + "\n"
+            )
+    return "\n".join(header) + body
 
 
 def _extract_with_pdfplumber(path: Path) -> PdfExtractionResult:

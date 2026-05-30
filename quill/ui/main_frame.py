@@ -298,6 +298,8 @@ from quill.platform.windows.sr_announce import (
 )
 from quill.platform.windows.sr_detect import detect_screen_reader
 from quill.ui.palette import CommandPaletteDialog
+from quill.ui.csv_grid import CsvGridSurface
+from quill.ui.word_view import WordDocumentSurface
 from quill.ui.sticky_notes import StickyNoteEditorDialog, StickyNotesVaultDialog
 from quill.ui.assistant_tools import (
     AssistantConnectionDialog,
@@ -2721,7 +2723,9 @@ class MainFrame:
             self._id_dictation_voice_commands,
             self._menu_label("&Hey QUILL Commands", "tools.dictation_voice_commands_toggle"),
         )
-        dictation_menu.Check(self._id_dictation_voice_commands, self.settings.voice_commands_enabled)
+        dictation_menu.Check(
+            self._id_dictation_voice_commands, self.settings.voice_commands_enabled
+        )
         tools_menu.AppendSubMenu(dictation_menu, "D&ictation")
 
         integrations_menu = wx.Menu()
@@ -2818,20 +2822,20 @@ class MainFrame:
         glow_menu = wx.Menu()
         glow_menu.Append(
             self._id_glow_audit_document,
-            self._menu_label("Audit Current &Document", "tools.glow_audit_document"),
+            self._menu_label("GLOW Audit Current &Document", "tools.glow_audit_document"),
         )
         glow_menu.Append(
             self._id_glow_audit_selection,
-            self._menu_label("Audit &Selection", "tools.glow_audit_selection"),
+            self._menu_label("GLOW Audit &Selection", "tools.glow_audit_selection"),
         )
         glow_menu.AppendSeparator()
         glow_menu.Append(
             self._id_glow_fix_document,
-            self._menu_label("&Fix Current Document", "tools.glow_fix_document"),
+            self._menu_label("&GLOW Fix Current Document", "tools.glow_fix_document"),
         )
         glow_menu.Append(
             self._id_glow_fix_selection,
-            self._menu_label("Fix S&election", "tools.glow_fix_selection"),
+            self._menu_label("GLOW Fix S&election", "tools.glow_fix_selection"),
         )
         authoring_menu.AppendSubMenu(glow_menu, "&GLOW")
         macro_menu = wx.Menu()
@@ -4077,6 +4081,10 @@ class MainFrame:
         self._apply_soft_wrap(self.settings.soft_wrap)
 
     def _bind_editor_events(self, editor: object) -> None:
+        binder = getattr(editor, "bind_editor_events", None)
+        if callable(binder):
+            binder(self)
+            return
         wx = self._wx
         editor.Bind(wx.EVT_TEXT, self._on_text_changed)
         editor.Bind(wx.EVT_KEY_DOWN, self._on_editor_key_down)
@@ -4230,6 +4238,9 @@ class MainFrame:
             and self._expand_snippet_trigger_if_match()
         ):
             return
+        self._sync_editor_change("Modified")
+
+    def _sync_editor_change(self, status: str) -> None:
         self.document.set_text(self.editor.GetValue())
         if not self._suspend_persistent_undo:
             self._record_persistent_undo_state(self.document.text)
@@ -4242,7 +4253,10 @@ class MainFrame:
         self._maybe_autosave()
         self._refresh_title()
         self._refresh_contextual_menu_items()
-        self._set_status("Modified")
+        self._set_status(status)
+
+    def _on_csv_surface_changed(self) -> None:
+        self._sync_editor_change("Modified")
 
     def _expand_snippet_trigger_if_match(self) -> bool:
         if self.editor.GetSelection()[0] != self.editor.GetSelection()[1]:
@@ -4373,7 +4387,11 @@ class MainFrame:
             else:
                 self.format_indent()
             return
-        if hasattr(self, '_dictation') and self._dictation.state == "listening" and event.GetKeyCode() == wx.WXK_ESCAPE:
+        if (
+            hasattr(self, "_dictation")
+            and self._dictation.state == "listening"
+            and event.GetKeyCode() == wx.WXK_ESCAPE
+        ):
             self.toggle_dictation()
             return
         if self._extend_selection_mode and event.GetKeyCode() == wx.WXK_ESCAPE:
@@ -4410,7 +4428,9 @@ class MainFrame:
         start, end = self.editor.GetSelection()
         if start != end:
             return False
-        continuation = continue_markdown_list(self.editor.GetValue(), self.editor.GetInsertionPoint())
+        continuation = continue_markdown_list(
+            self.editor.GetValue(), self.editor.GetInsertionPoint()
+        )
         if continuation is None:
             return False
         self._replace_document_text(continuation.text)
@@ -5995,9 +6015,7 @@ class MainFrame:
         root.Add(
             wx.StaticText(
                 panel,
-                label=(
-                    f"{folder} is not trusted yet. Open this file anyway?"
-                ),
+                label=(f"{folder} is not trusted yet. Open this file anyway?"),
             ),
             0,
             wx.ALL | wx.EXPAND,
@@ -6206,10 +6224,10 @@ class MainFrame:
                 "Open text file",
                 wildcard=(
                     "Supported files (*.txt;*.md;*.html;*.htm;*.xhtml;*.json;*.yaml;*.yml;"
-                    "*.toml;*.xml;*.csv;*.tsv;*.ipynb;*.sqlite;*.db;*.docx;*.epub;*.pages;*.pdf;*.odt;*.rtf;*.pptx)|"
+                    "*.toml;*.xml;*.csv;*.tsv;*.ipynb;*.sqlite;*.db;*.doc;*.docx;*.ppt;*.pptx;*.epub;*.pages;*.pdf;*.odt;*.rtf)|"
                     "*.txt;*.md;*.html;"
                     "*.htm;*.xhtml;*.json;*.yaml;*.yml;*.toml;*.xml;*.csv;*.tsv;"
-                    "*.ipynb;*.sqlite;*.db;*.docx;*.epub;*.pages;*.pdf;*.odt;*.rtf;*.pptx|All files (*.*)|*.*"
+                    "*.ipynb;*.sqlite;*.db;*.doc;*.docx;*.ppt;*.pptx;*.epub;*.pages;*.pdf;*.odt;*.rtf|All files (*.*)|*.*"
                 ),
                 style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             ) as dialog:
@@ -6234,32 +6252,56 @@ class MainFrame:
                 self._trusted_locations.add(selected_path.parent.resolve())
                 save_trusted_locations(self._trusted_locations)
 
-        structured_extensions = {
+        suffix = selected_path.suffix.lower()
+        if suffix in {".csv", ".tsv"}:
+            csv_mode = self._resolve_csv_open_mode(selected_path)
+            if csv_mode == "grid":
+                loaded = read_text_document(selected_path)
+                loaded.source_metadata = {
+                    "source_kind": suffix.lstrip("."),
+                    "engine": "csv grid",
+                    "quality_score": 100,
+                    "csv_open_mode": "grid",
+                }
+            else:
+                loaded = read_text_document(selected_path)
+                loaded.source_metadata = {
+                    "source_kind": suffix.lstrip("."),
+                    "engine": "csv text",
+                    "quality_score": 100,
+                    "csv_open_mode": "text",
+                }
+        elif suffix in {".doc", ".docx"}:
+            word_mode = self._resolve_word_open_mode(selected_path)
+            from quill.io.structured import read_structured_document
+
+            loaded = read_structured_document(selected_path)
+            loaded.source_metadata["word_open_mode"] = word_mode
+        elif suffix in {
             ".json",
             ".yaml",
             ".yml",
             ".toml",
             ".xml",
-            ".csv",
-            ".tsv",
             ".ipynb",
             ".sqlite",
             ".db",
-            ".docx",
+            ".ppt",
+            ".xlsx",
+            ".xls",
+            ".pptx",
             ".epub",
             ".pages",
             ".pdf",
             ".odt",
             ".rtf",
-            ".pptx",
-        }
-        if selected_path.suffix.lower() in structured_extensions:
+        }:
             from quill.io.structured import read_structured_document
 
             loaded = read_structured_document(selected_path)
         else:
             loaded = read_text_document(selected_path)
-        if selected_path.suffix.lower() == ".epub":
+        if suffix == ".epub":
             from quill.core.epub import load_epub_book
 
             self._epub_book = load_epub_book(selected_path)
@@ -6272,7 +6314,12 @@ class MainFrame:
             self._load_persistent_undo_state(selected_path, loaded.text)
             self._select_tab(existing_index)
         else:
-            self._create_document_tab(loaded, select=True)
+            if loaded.source_metadata.get("csv_open_mode") == "grid":
+                self._create_csv_document_tab(loaded, select=True)
+            elif loaded.source_metadata.get("word_open_mode") == "structured":
+                self._create_word_document_tab(loaded, select=True)
+            else:
+                self._create_document_tab(loaded, select=True)
             self._load_persistent_undo_state(selected_path, loaded.text)
             self._location_ring = LocationRing()
             self._location_ring.record(0)
@@ -6281,6 +6328,128 @@ class MainFrame:
         self._refresh_title()
         self._last_intake_report = build_intake_report(loaded)
         self._set_status(build_intake_summary(loaded))
+
+    def _resolve_csv_open_mode(self, path: Path) -> str:
+        mode = getattr(self.settings, "csv_open_mode", "prompt")
+        if mode in {"grid", "text"}:
+            return mode
+        return self._prompt_csv_open_mode(path)
+
+    def _resolve_word_open_mode(self, path: Path) -> str:
+        mode = getattr(self.settings, "word_open_mode", "prompt")
+        if mode in {"structured", "text"}:
+            return mode
+        return self._prompt_word_open_mode(path)
+
+    def _prompt_csv_open_mode(self, path: Path) -> str:
+        wx = self._wx
+        dialog = wx.Dialog(self.frame, title=f"Open {path.name}")
+        panel = wx.Panel(dialog)
+        root = wx.BoxSizer(wx.VERTICAL)
+        root.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    f"{path.name} can open in the special CSV grid or in the normal text editor."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            8,
+        )
+        grid_choice = wx.RadioButton(panel, label="Open in special CSV grid", style=wx.RB_GROUP)
+        text_choice = wx.RadioButton(panel, label="Open in normal text editor")
+        grid_choice.SetValue(True)
+        root.Add(grid_choice, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
+        root.Add(text_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        remember_choice = wx.CheckBox(panel, label="Remember this choice for CSV files")
+        root.Add(remember_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        buttons = dialog.CreateButtonSizer(wx.OK | wx.CANCEL)
+        root.Add(buttons, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.ALIGN_RIGHT, 8)
+        panel.SetSizer(root)
+        dialog.SetAffirmativeId(wx.ID_OK)
+        dialog.SetEscapeId(wx.ID_CANCEL)
+        if self._show_modal_dialog(dialog, "CSV Open Choice") != wx.ID_OK:
+            return "text"
+        mode = "grid" if grid_choice.GetValue() else "text"
+        if remember_choice.GetValue():
+            self.settings.csv_open_mode = mode
+            save_settings(self.settings)
+        return mode
+
+    def _prompt_word_open_mode(self, path: Path) -> str:
+        wx = self._wx
+        dialog = wx.Dialog(self.frame, title=f"Open {path.name}")
+        panel = wx.Panel(dialog)
+        root = wx.BoxSizer(wx.VERTICAL)
+        root.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    f"{path.name} can open in a structured Word view or in the normal text editor."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            8,
+        )
+        structured_choice = wx.RadioButton(
+            panel, label="Open in structured Word view", style=wx.RB_GROUP
+        )
+        text_choice = wx.RadioButton(panel, label="Open in normal text editor")
+        structured_choice.SetValue(True)
+        root.Add(structured_choice, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
+        root.Add(text_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        remember_choice = wx.CheckBox(panel, label="Remember this choice for Word files")
+        root.Add(remember_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        buttons = dialog.CreateButtonSizer(wx.OK | wx.CANCEL)
+        root.Add(buttons, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.ALIGN_RIGHT, 8)
+        panel.SetSizer(root)
+        dialog.SetAffirmativeId(wx.ID_OK)
+        dialog.SetEscapeId(wx.ID_CANCEL)
+        if self._show_modal_dialog(dialog, "Word Open Choice") != wx.ID_OK:
+            return "text"
+        mode = "structured" if structured_choice.GetValue() else "text"
+        if remember_choice.GetValue():
+            self.settings.word_open_mode = mode
+            save_settings(self.settings)
+        return mode
+
+    def _create_csv_document_tab(self, document: Document, select: bool = True) -> int:
+        wx = self._wx
+        surface = CsvGridSurface(wx, self.notebook, document, self._on_csv_surface_changed)
+        panel = surface.panel
+        self._bind_editor_events(surface)
+        tab = _DocumentTab(panel=panel, editor=surface, document=document)
+        self._document_tabs.append(tab)
+        index = self.notebook.GetPageCount()
+        self.notebook.AddPage(panel, document.name, select=select)
+        if select:
+            self._active_tab_index = index
+            self.editor = surface
+            self.document = document
+            self._apply_statusbar_layout()
+            self._refresh_title()
+        self._refresh_sessions_menu()
+        return index
+
+    def _create_word_document_tab(self, document: Document, select: bool = True) -> int:
+        wx = self._wx
+        surface = WordDocumentSurface(wx, self.notebook, document, self._sync_editor_change)
+        panel = surface.panel
+        self._bind_editor_events(surface)
+        tab = _DocumentTab(panel=panel, editor=surface, document=document)
+        self._document_tabs.append(tab)
+        index = self.notebook.GetPageCount()
+        self.notebook.AddPage(panel, document.name, select=select)
+        if select:
+            self._active_tab_index = index
+            self.editor = surface
+            self.document = document
+            self._apply_statusbar_layout()
+            self._refresh_title()
+        self._refresh_sessions_menu()
+        return index
 
     def next_document(self) -> None:
         self._switch_document(reverse=False)
@@ -8636,7 +8805,9 @@ class MainFrame:
         cancel_button = wx.Button(dialog, id=wx.ID_CANCEL, label="Cancel")
 
         def labels() -> list[str]:
-            return [f"Heading {entry.level}: {entry.title or '(empty heading)'}" for entry in working]
+            return [
+                f"Heading {entry.level}: {entry.title or '(empty heading)'}" for entry in working
+            ]
 
         def refresh() -> None:
             nonlocal selected_index
@@ -8737,7 +8908,8 @@ class MainFrame:
                     )
                 return True
             self._show_message_box(
-                "Fix these heading issues before applying:\n\n" + "\n".join(f"- {issue}" for issue in issues),
+                "Fix these heading issues before applying:\n\n"
+                + "\n".join(f"- {issue}" for issue in issues),
                 "Heading Organizer",
                 wx.OK | wx.ICON_WARNING,
             )
@@ -8763,7 +8935,12 @@ class MainFrame:
         main = wx.BoxSizer(wx.VERTICAL)
         main.Add(instructions, 0, wx.ALL | wx.EXPAND, 8)
         main.Add(list_box, 1, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 8)
-        main.Add(wx.StaticText(dialog, label="Preview of selected heading section:"), 0, wx.LEFT | wx.RIGHT, 8)
+        main.Add(
+            wx.StaticText(dialog, label="Preview of selected heading section:"),
+            0,
+            wx.LEFT | wx.RIGHT,
+            8,
+        )
         main.Add(preview, 1, wx.ALL | wx.EXPAND, 8)
         actions = wx.BoxSizer(wx.VERTICAL)
         actions.Add(promote_button, 0, wx.EXPAND | wx.BOTTOM, 6)
@@ -10180,7 +10357,7 @@ class MainFrame:
             self._schedule_voice_command_scan()
             self._set_status('Hey QUILL commands enabled. Say "Hey QUILL" plus a command.')
         elif self.settings.voice_commands_enabled:
-            self._set_status('Hey QUILL commands enabled. Start dictation to use them.')
+            self._set_status("Hey QUILL commands enabled. Start dictation to use them.")
         else:
             self._cancel_voice_command_scan()
             self._voice_command_baseline_text = ""
@@ -10262,7 +10439,7 @@ class MainFrame:
             self._voice_command_guard = False
         self._refresh_title()
         self._refresh_contextual_menu_items()
-        self._set_status(f'Hey QUILL: {command.title}')
+        self._set_status(f"Hey QUILL: {command.title}")
         command.handler()
         self._voice_command_baseline_text = self.editor.GetValue()
 
@@ -11368,9 +11545,7 @@ class MainFrame:
             self._open_generated_tab(f"Search - {request.pattern}", text)
             match_count = report.total_matches
             file_count = len(report.entries)
-            self._set_status(
-                f"Search complete: {match_count} match(es) in {file_count} file(s)"
-            )
+            self._set_status(f"Search complete: {match_count} match(es) in {file_count} file(s)")
 
         self._run_background_task("Searching files", work, on_success)
 
@@ -11434,9 +11609,7 @@ class MainFrame:
             self._open_generated_tab(f"Replace Results - {request.pattern}", text)
             replacement_count = report.total_replacements
             file_count = len(report.entries)
-            self._set_status(
-                f"Replaced {replacement_count} occurrence(s) in {file_count} file(s)"
-            )
+            self._set_status(f"Replaced {replacement_count} occurrence(s) in {file_count} file(s)")
 
         self._run_background_task("Replacing files", work, on_success)
 
@@ -11501,7 +11674,9 @@ class MainFrame:
         if not self._document_tabs:
             self._set_status("No document open")
             return
-        tab_index = self._active_tab_index if self._active_tab_index >= 0 else self._current_tab_index()
+        tab_index = (
+            self._active_tab_index if self._active_tab_index >= 0 else self._current_tab_index()
+        )
         if tab_index < 0 or tab_index >= len(self._document_tabs):
             self._set_status("No document open")
             return
@@ -11512,7 +11687,9 @@ class MainFrame:
         title = f"{tab.document.name or 'Preview'} - Browser Preview"
         preview_dir = app_data_dir() / "browser-preview"
         preview_dir.mkdir(parents=True, exist_ok=True)
-        safe_name = re.sub(r"[^a-zA-Z0-9]+", "-", tab.document.name or "preview").strip("-") or "preview"
+        safe_name = (
+            re.sub(r"[^a-zA-Z0-9]+", "-", tab.document.name or "preview").strip("-") or "preview"
+        )
         preview_path = preview_dir / f"{tab_index}-{safe_name}.html"
         payload = render_preview_html(title, text, kind, anchor)
         temp_path = preview_path.with_suffix(".tmp")
@@ -11533,7 +11710,9 @@ class MainFrame:
                 browser_choice=browser_choice,
                 title=title,
             )
-            self._set_status(f"Opened browser preview in {browser_choice_label_for_value(browser_choice)}")
+            self._set_status(
+                f"Opened browser preview in {browser_choice_label_for_value(browser_choice)}"
+            )
             return
         self._set_status("Refreshed browser preview")
 
@@ -11981,7 +12160,9 @@ class MainFrame:
             self._set_status("Heading styling cancelled")
             return
         text = self.editor.GetValue()
-        updated, changed = apply_heading_style(text, markup_kind=surface, style=style, levels=levels)
+        updated, changed = apply_heading_style(
+            text, markup_kind=surface, style=style, levels=levels
+        )
         if changed == 0:
             self._set_status("No headings matched the selected level")
             return
@@ -12177,7 +12358,10 @@ class MainFrame:
         while top > 0 and self._parse_list_manager_line(line_text(top - 1)) is not None:
             top -= 1
         bottom = current_index
-        while bottom + 1 < len(starts) and self._parse_list_manager_line(line_text(bottom + 1)) is not None:
+        while (
+            bottom + 1 < len(starts)
+            and self._parse_list_manager_line(line_text(bottom + 1)) is not None
+        ):
             bottom += 1
 
         block_start = starts[top]
@@ -12382,7 +12566,10 @@ class MainFrame:
                 return
             start, end = subtree_bounds(index)
             target = end
-            while target < len(working_items) and working_items[target].level != working_items[index].level:
+            while (
+                target < len(working_items)
+                and working_items[target].level != working_items[index].level
+            ):
                 target += 1
             if target >= len(working_items):
                 return
@@ -12642,6 +12829,7 @@ class MainFrame:
 
     def _prompt_table_shape(self) -> tuple[int, int, bool] | None:
         wx = self._wx
+
         def prompt_dimension(message: str, minimum: int, maximum: int) -> int | None:
             while True:
                 with wx.TextEntryDialog(
@@ -13960,9 +14148,7 @@ class MainFrame:
                 wx.YES_NO | wx.ICON_QUESTION,
             ) as inherit_dialog:
                 inherits_parent = (
-                    self._show_modal_dialog(
-                        inherit_dialog, "Custom Profile Inheritance"
-                    )
+                    self._show_modal_dialog(inherit_dialog, "Custom Profile Inheritance")
                     == wx.ID_YES
                 )
             if not inherits_parent:

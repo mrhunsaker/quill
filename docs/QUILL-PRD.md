@@ -785,6 +785,8 @@ def test_macros_not_executed():
 
 #### 5.3b.12 Rollout and Communication
 
+Word documents should open through a direct/native Word-document path by default when the local engine can handle them. If that path is unavailable or fails on a particular file, Quill should offer an explicit choice to fall back to extracted-text import so the user always knows which mode they are entering.
+
 **Pre-release (release notes):**
 - Announce: "New: Microsoft Word support (v1.0)"
 - Link to knowledge base: "Opening Word Documents in Quill"
@@ -792,7 +794,7 @@ def test_macros_not_executed():
 
 **In-app messaging (on first Word document open):**
 - Display metadata banner with quality score
-- Offer `[📖 Learn more]`, `[💾 Save as .txt]`, `[❌ Close]` actions
+- Offer `[📖 Learn more]`, `[💾 Save as .txt]`, `[📝 Open as extracted text]`, `[❌ Close]` actions when the direct/native path is not available
 - Help menu entry: "Opening Word Documents in Quill"
 
 **Documentation:**
@@ -805,7 +807,7 @@ def test_macros_not_executed():
 
 By end of v1.0:
 
-1. ✅ **Functional**: Users open .docx/.doc, extract text is readable/navigable with screen readers, content (headings, lists, tables, links) preserved accurately, save to .txt/Markdown/new .docx
+1. ✅ **Functional**: Users open .docx/.doc through a direct/native Word path when available; extracted text remains readable/navigable with screen readers as a fallback, content (headings, lists, tables, links) preserved accurately, save to .txt/Markdown/new .docx
 2. ✅ **Safe**: No crashes on corrupted/malicious/large files, VBA not executed, timeout prevents runaway conversions, user warned before formatting loss
 3. ✅ **Discoverable**: File > Open shows .docx/.doc as supported, File > Save As offers Word formats, in-app banner explains changes, help docs explain workflow
 4. ✅ **Tested**: 10+ real-world documents tested, unit/integration/a11y/perf tests passing, no regressions in existing formats
@@ -815,7 +817,7 @@ By end of v1.0:
 
 - **Async extraction**: Large files extract in background without blocking UI
 - **OCR images**: Option to OCR images in Word documents (local Tesseract or cloud service)
-- **Format bridge UI**: Visual flow chart of all supported conversions (Word ↔ Markdown ↔ HTML ↔ PDF)
+- **Format bridge UI**: Visual flow chart of all supported conversions (Word native/direct ↔ Markdown ↔ HTML ↔ PDF)
 - **Batch conversion**: "Convert 50 Word docs to Markdown" automation
 - **Metadata editor**: Simple UI to edit document title, author, creation date
 - **Plugin API**: Allow plugins to register custom Word extraction filters
@@ -3362,6 +3364,17 @@ Deferred to v1.1:
 - [x] Add profile import safety validation and locked feature protection.
 - [x] Add "Show what changed" reporting after profile switches.
 - [x] Add feature-flag coverage tests for new commands and surfaces.
+
+### GLOW implementation roadmap
+
+This roadmap is the GLOW-branded implementation order for the shared document-intelligence work now being folded into Quill.
+
+1. **CSV Mode first.** Finish the accessible grid editor, the default-choice prompt, remembered CSV preference, and the ability to return to normal text editing at any time.
+2. **Word support next.** Complete MarkItDown-first Word intake, semantic diagnostics, and review/fix hooks for `.docx` and legacy `.doc` flows.
+3. **PowerPoint support next.** Finish slide linearisation, speaker-notes extraction, and reading-order diagnostics for `.pptx` and legacy `.ppt` flows.
+4. **Then the rest of the document families.** Extend the same shared path to PDF refinement, EPUB/pages tuning, legacy Office fallbacks, version transparency, and provenance reporting.
+
+The governing rules remain the same throughout the roadmap: local-first processing, no silent network calls, explicit consent for outbound content, and deterministic extraction before higher-level analysis.
 
 ### 21.14 Feature registry and profiles
 

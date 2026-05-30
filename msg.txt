@@ -1,0 +1,7 @@
+feat: add Word native/structured mode and accessibility-first table preview
+
+- add Word open-mode prompt with persisted default and structured Word surface
+- keep normal text editing path available and switchable at any time
+- improve screen-reader table output with HTML and markdown table linearization
+- extend structured ingestion/docs for doc/ppt/xls and MarkItDown bridge support
+- add/expand unit tests for settings, structured IO, intake, and Word view accessibility

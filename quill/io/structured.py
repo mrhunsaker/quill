@@ -5,8 +5,10 @@ import html
 import io
 import json
 import posixpath
+import subprocess
 import re
 import sqlite3
+import tempfile
 import tomllib
 import xml.etree.ElementTree as ET
 import zipfile
@@ -15,6 +17,7 @@ from xml.etree.ElementTree import Element
 
 from quill.core.document import Document
 from quill.core.epub import load_epub_book, render_epub_book
+from quill.io.markitdown_bridge import convert_with_markitdown
 from quill.io.pages import read_pages_document
 from quill.io.pdf import extract_pdf_text, format_pdf_document
 
@@ -25,22 +28,23 @@ def read_structured_document(path: Path, encoding: str = "utf-8") -> Document:
         text = _format_sqlite(path)
         metadata = {"source_kind": "sqlite", "engine": "sqlite", "quality_score": 100}
     elif suffix == ".docx":
+        document = _read_via_markitdown(path, "docx", fallback_engine="docx")
+        if document is not None:
+            return document
         text = _format_docx(path)
         metadata = {"source_kind": "docx", "engine": "docx", "quality_score": 100}
+    elif suffix == ".doc":
+        document = _read_via_markitdown(path, "doc", fallback_engine="doc")
+        if document is not None:
+            return document
+        text, metadata = _read_legacy_office_via_libreoffice(
+            path, converted_suffix=".docx", source_kind="doc", fallback_engine="doc"
+        )
     elif suffix == ".epub":
         text = render_epub_book(load_epub_book(path))
         metadata = {"source_kind": "epub", "engine": "epub", "quality_score": 100}
     elif suffix == ".pdf":
-        result = extract_pdf_text(path)
-        text = format_pdf_document(result)
-        metadata = {
-            "source_kind": "pdf",
-            "engine": result.engine,
-            "quality_score": result.quality_score,
-            "page_count": result.page_count,
-            "extracted_pages": result.extracted_pages,
-            "page_scores": result.page_scores,
-        }
+        text, metadata = _format_pdf(path)
     elif suffix == ".pages":
         doc = read_pages_document(path)
         text = doc.text
@@ -52,8 +56,23 @@ def read_structured_document(path: Path, encoding: str = "utf-8") -> Document:
         text = _format_rtf(path)
         metadata = {"source_kind": "rtf", "engine": "rtf", "quality_score": 100}
     elif suffix == ".pptx":
+        document = _read_via_markitdown(path, "pptx", fallback_engine="pptx")
+        if document is not None:
+            return document
         text = _format_pptx(path)
         metadata = {"source_kind": "pptx", "engine": "pptx", "quality_score": 100}
+    elif suffix == ".ppt":
+        document = _read_via_markitdown(path, "ppt", fallback_engine="ppt")
+        if document is not None:
+            return document
+        text, metadata = _read_legacy_office_via_libreoffice(
+            path, converted_suffix=".pptx", source_kind="ppt", fallback_engine="ppt"
+        )
+    elif suffix in {".xlsx", ".xls"}:
+        document = _read_spreadsheet_via_markitdown(path)
+        if document is not None:
+            return document
+        text, metadata = _format_spreadsheet(path)
     else:
         raw_text = path.read_text(encoding=encoding)
         if suffix == ".json":
@@ -88,6 +107,239 @@ def read_structured_document(path: Path, encoding: str = "utf-8") -> Document:
         line_ending=line_ending,
         source_metadata=metadata,
     )
+
+
+def _read_via_markitdown(
+    path: Path,
+    source_kind: str,
+    *,
+    fallback_engine: str,
+    quality_score: int = 90,
+) -> Document | None:
+    try:
+        text = convert_with_markitdown(path)
+    except (ImportError, ValueError, RuntimeError):
+        return None
+    return Document(
+        text=text,
+        path=path,
+        modified=False,
+        encoding="utf-8",
+        line_ending="\n",
+        source_metadata={
+            "source_kind": source_kind,
+            "engine": "markitdown",
+            "quality_score": quality_score,
+            "fallback_engine": fallback_engine,
+        },
+    )
+
+
+def _read_spreadsheet_via_markitdown(path: Path) -> Document | None:
+    document = _read_via_markitdown(
+        path,
+        path.suffix.lower().lstrip("."),
+        fallback_engine="csv table",
+    )
+    if document is not None:
+        return document
+    if path.suffix.lower() == ".xls":
+        return _read_spreadsheet_via_libreoffice(path)
+    return None
+
+
+def _read_spreadsheet_via_libreoffice(path: Path) -> Document | None:
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            converted_path = tmpdir_path / f"{path.stem}.xlsx"
+            subprocess.run(
+                [
+                    "soffice",
+                    "--headless",
+                    "--convert-to",
+                    "xlsx",
+                    "--outdir",
+                    str(tmpdir_path),
+                    str(path),
+                ],
+                check=True,
+                capture_output=True,
+                timeout=45,
+            )
+            if not converted_path.exists():
+                return None
+            try:
+                from openpyxl import load_workbook  # type: ignore[import-not-found]
+            except ImportError:
+                return None
+            return _read_workbook_as_text(path, load_workbook(str(converted_path), data_only=True))
+    except (FileNotFoundError, subprocess.SubprocessError, OSError):
+        return None
+
+
+def _read_legacy_office_via_libreoffice(
+    path: Path,
+    *,
+    converted_suffix: str,
+    source_kind: str,
+    fallback_engine: str,
+) -> tuple[str, dict[str, object]]:
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            converted_path = tmpdir_path / f"{path.stem}{converted_suffix}"
+            subprocess.run(
+                [
+                    "soffice",
+                    "--headless",
+                    "--convert-to",
+                    converted_suffix.lstrip("."),
+                    "--outdir",
+                    str(tmpdir_path),
+                    str(path),
+                ],
+                check=True,
+                capture_output=True,
+                timeout=45,
+            )
+            if not converted_path.exists():
+                return _missing_legacy_office_text(path, source_kind)
+            text = convert_with_markitdown(converted_path)
+            return text, {
+                "source_kind": source_kind,
+                "engine": "markitdown",
+                "quality_score": 85,
+                "fallback_engine": fallback_engine,
+                "conversion_engine": "libreoffice",
+            }
+    except (
+        FileNotFoundError,
+        subprocess.SubprocessError,
+        OSError,
+        ImportError,
+        ValueError,
+        RuntimeError,
+    ):
+        return _missing_legacy_office_text(path, source_kind)
+
+
+def _format_spreadsheet(path: Path) -> tuple[str, dict[str, object]]:
+    try:
+        from openpyxl import load_workbook  # type: ignore[import-not-found]
+    except ImportError:
+        return _missing_spreadsheet_text(path)
+
+    try:
+        workbook = load_workbook(str(path), data_only=True, read_only=True)
+    except Exception:
+        return _missing_spreadsheet_text(path)
+
+    try:
+        text = _read_workbook_as_text(path, workbook).text
+    finally:
+        workbook.close()
+    return text, {
+        "source_kind": path.suffix.lower().lstrip("."),
+        "engine": "openpyxl",
+        "quality_score": 90,
+    }
+
+
+def _read_workbook_as_text(path: Path, workbook) -> Document:
+    lines = [f"# Spreadsheet Extract: {path.name}", ""]
+    for worksheet in workbook.worksheets:
+        lines.append(f"## Sheet: {worksheet.title}")
+        rows = []
+        for row_index, row in enumerate(worksheet.iter_rows(values_only=True), start=1):
+            rows.append(["" if cell is None else str(cell) for cell in row[:20]])
+            if row_index >= 50:
+                break
+        lines.extend(_rows_to_markdown_table(rows) or ["(no extractable cells)"])
+        lines.append("")
+    text = "\n".join(lines).rstrip() + "\n"
+    return Document(
+        text=text,
+        path=path,
+        modified=False,
+        encoding="utf-8",
+        line_ending="\n",
+        source_metadata={
+            "source_kind": path.suffix.lower().lstrip("."),
+            "engine": "openpyxl",
+            "quality_score": 90,
+        },
+    )
+
+
+def _rows_to_markdown_table(rows: list[list[str]]) -> list[str]:
+    if not rows:
+        return []
+    width = max(len(row) for row in rows)
+    padded = [row + [""] * (width - len(row)) for row in rows]
+    lines = ["| " + " | ".join(padded[0]) + " |"]
+    lines.append("| " + " | ".join(["---"] * width) + " |")
+    for row in padded[1:]:
+        lines.append("| " + " | ".join(row) + " |")
+    return lines
+
+
+def _missing_spreadsheet_text(path: Path) -> tuple[str, dict[str, object]]:
+    return (
+        (
+            f"(Spreadsheet import not available for {path.name}.)\n\n"
+            "Install MarkItDown support for spreadsheet extraction: pip install markitdown[all]\n"
+        ),
+        {
+            "source_kind": path.suffix.lower().lstrip("."),
+            "engine": "unavailable",
+            "quality_score": 0,
+        },
+    )
+
+
+def _missing_legacy_office_text(path: Path, source_kind: str) -> tuple[str, dict[str, object]]:
+    return (
+        (
+            f"({source_kind.upper()} import not available for {path.name}.)\n\n"
+            "Install MarkItDown support and LibreOffice for legacy Office extraction.\n"
+        ),
+        {
+            "source_kind": source_kind,
+            "engine": "unavailable",
+            "quality_score": 0,
+        },
+    )
+
+
+def _format_pdf(path: Path) -> tuple[str, dict[str, object]]:
+    result = extract_pdf_text(path)
+    text = format_pdf_document(result)
+    metadata: dict[str, object] = {
+        "source_kind": "pdf",
+        "engine": result.engine,
+        "quality_score": result.quality_score,
+        "page_count": result.page_count,
+        "extracted_pages": result.extracted_pages,
+        "page_scores": result.page_scores,
+    }
+    if result.quality_score >= 50 and result.text.strip():
+        return text, metadata
+
+    markitdown_document = _read_via_markitdown(
+        path, "pdf", fallback_engine=result.engine, quality_score=85
+    )
+    if markitdown_document is None:
+        return text, metadata
+
+    metadata.update(
+        {
+            "engine": f"{result.engine} + markitdown",
+            "quality_score": max(result.quality_score, 85),
+            "markitdown_used": True,
+        }
+    )
+    return markitdown_document.text, metadata
 
 
 def _format_json(text: str) -> str:
@@ -215,7 +467,11 @@ _PPTX_NAMESPACES = {
 def _format_pptx(path: Path) -> str:
     with zipfile.ZipFile(path) as archive:
         slide_paths = sorted(
-            [name for name in archive.namelist() if name.startswith("ppt/slides/slide") and name.endswith(".xml")],
+            [
+                name
+                for name in archive.namelist()
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+            ],
             key=_pptx_slide_sort_key,
         )
         if not slide_paths:
@@ -304,7 +560,9 @@ def _pptx_shape_is_title(shape: Element) -> bool:
 def _pptx_shape_paragraphs(shape: Element) -> list[str]:
     paragraphs: list[str] = []
     for paragraph in shape.findall(".//a:p", _PPTX_NAMESPACES):
-        text = "".join(node.text or "" for node in paragraph.findall(".//a:t", _PPTX_NAMESPACES)).strip()
+        text = "".join(
+            node.text or "" for node in paragraph.findall(".//a:t", _PPTX_NAMESPACES)
+        ).strip()
         if text:
             paragraphs.append(text)
     return paragraphs
@@ -316,7 +574,9 @@ def _pptx_slide_body_lines(root: Element) -> list[str]:
         if _pptx_shape_is_title(shape):
             continue
         for paragraph in shape.findall(".//a:p", _PPTX_NAMESPACES):
-            text = "".join(node.text or "" for node in paragraph.findall(".//a:t", _PPTX_NAMESPACES)).strip()
+            text = "".join(
+                node.text or "" for node in paragraph.findall(".//a:t", _PPTX_NAMESPACES)
+            ).strip()
             if not text:
                 continue
             level = 0
@@ -336,7 +596,9 @@ def _pptx_slide_table_blocks(root: Element) -> list[list[str]]:
         for row in table.findall("a:tr", _PPTX_NAMESPACES):
             cells: list[str] = []
             for cell in row.findall("a:tc", _PPTX_NAMESPACES):
-                text = "".join(node.text or "" for node in cell.findall(".//a:t", _PPTX_NAMESPACES)).strip()
+                text = "".join(
+                    node.text or "" for node in cell.findall(".//a:t", _PPTX_NAMESPACES)
+                ).strip()
                 cells.append(text or " ")
             if cells:
                 rows.append(cells)
@@ -372,7 +634,9 @@ def _pptx_slide_notes_lines(
         return []
     lines: list[str] = []
     for paragraph in root.findall(".//a:p", _PPTX_NAMESPACES):
-        text = "".join(node.text or "" for node in paragraph.findall(".//a:t", _PPTX_NAMESPACES)).strip()
+        text = "".join(
+            node.text or "" for node in paragraph.findall(".//a:t", _PPTX_NAMESPACES)
+        ).strip()
         if text:
             lines.append(text)
     return lines

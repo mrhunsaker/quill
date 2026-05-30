@@ -2,6 +2,7 @@ import sqlite3
 import zipfile
 from pathlib import Path
 
+from quill.core.document import Document
 from quill.io.pdf import PdfExtractionResult
 from quill.io.structured import read_structured_document
 
@@ -65,23 +66,32 @@ def test_read_structured_sqlite_renders_table_summary(tmp_path: Path) -> None:
     assert "- notes: 1 row(s)" in document.text
 
 
-def test_read_structured_docx_extracts_text(tmp_path: Path) -> None:
+def test_read_structured_docx_extracts_text(monkeypatch, tmp_path: Path) -> None:
     target = tmp_path / "sample.docx"
-    document_xml = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-        "<w:body>"
-        "<w:p><w:r><w:t>Hello</w:t></w:r></w:p>"
-        "<w:p><w:r><w:t>World</w:t></w:r></w:p>"
-        "</w:body>"
-        "</w:document>"
+    target.write_bytes(b"PK\x03\x04")
+    monkeypatch.setattr(
+        "quill.io.structured.convert_with_markitdown",
+        lambda _path: "# DOCX Extract\n\nHello\nWorld\n",
     )
-    with zipfile.ZipFile(target, "w") as archive:
-        archive.writestr("word/document.xml", document_xml)
     document = read_structured_document(target)
     assert "# DOCX Extract" in document.text
     assert "Hello" in document.text
     assert "World" in document.text
+
+
+def test_read_structured_doc_extracts_text(monkeypatch, tmp_path: Path) -> None:
+    target = tmp_path / "sample.doc"
+    target.write_bytes(b"\xd0\xcf\x11\xe0")
+    monkeypatch.setattr(
+        "quill.io.structured.convert_with_markitdown",
+        lambda _path: "# Word Extract\n\nLegacy Word text\n",
+    )
+
+    document = read_structured_document(target)
+
+    assert document.source_metadata["source_kind"] == "doc"
+    assert document.source_metadata["engine"] == "markitdown"
+    assert "Legacy Word text" in document.text
 
 
 def test_read_structured_epub_extracts_text(tmp_path: Path) -> None:
@@ -130,47 +140,62 @@ def test_read_structured_pdf_attaches_metadata(monkeypatch, tmp_path: Path) -> N
     assert document.source_metadata["page_count"] == 2
 
 
-def test_read_structured_pptx_extracts_headings_lists_tables_and_notes(tmp_path: Path) -> None:
+def test_read_structured_xlsx_uses_markitdown_when_available(monkeypatch, tmp_path: Path) -> None:
+    target = tmp_path / "sample.xlsx"
+    target.write_bytes(b"PK\x03\x04")
+    monkeypatch.setattr(
+        "quill.io.structured.convert_with_markitdown",
+        lambda _path: "# Sheet: Budget\n\n| Item | Amount |\n| --- | --- |\n| Snacks | 12 |\n",
+    )
+
+    document = read_structured_document(target)
+
+    assert document.source_metadata["source_kind"] == "xlsx"
+    assert document.source_metadata["engine"] == "markitdown"
+    assert "| Item | Amount |" in document.text
+
+
+def test_read_structured_pdf_prefers_markitdown_when_quality_is_low(
+    monkeypatch, tmp_path: Path
+) -> None:
+    target = tmp_path / "sample.pdf"
+    target.write_bytes(b"%PDF-1.4")
+    monkeypatch.setattr(
+        "quill.io.structured.extract_pdf_text",
+        lambda _path: PdfExtractionResult(
+            text="",
+            quality_score=12,
+            engine="pdfplumber",
+            page_count=2,
+            extracted_pages=0,
+            page_scores=[12, 8],
+        ),
+    )
+    monkeypatch.setattr(
+        "quill.io.structured.convert_with_markitdown",
+        lambda _path: "# PDF Extract\n\nReadable PDF text\n",
+    )
+
+    document = read_structured_document(target)
+
+    assert document.source_metadata["engine"] == "pdfplumber + markitdown"
+    assert document.source_metadata["markitdown_used"] is True
+    assert "Readable PDF text" in document.text
+
+
+def test_read_structured_pptx_extracts_headings_lists_tables_and_notes(
+    monkeypatch, tmp_path: Path
+) -> None:
     target = tmp_path / "sample.pptx"
-    slide_xml = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
-        'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
-        "<p:cSld><p:spTree>"
-        "<p:sp><p:nvSpPr><p:nvPr><p:ph type=\"title\"/></p:nvPr></p:nvSpPr>"
-        "<p:txBody><a:p><a:r><a:t>Slide Title</a:t></a:r></a:p></p:txBody></p:sp>"
-        "<p:sp><p:nvSpPr><p:nvPr><p:ph type=\"body\"/></p:nvPr></p:nvSpPr><p:txBody>"
-        "<a:p><a:pPr lvl=\"0\"/><a:r><a:t>Top item</a:t></a:r></a:p>"
-        "<a:p><a:pPr lvl=\"1\"/><a:r><a:t>Nested item</a:t></a:r></a:p>"
-        "</p:txBody></p:sp>"
-        "<p:graphicFrame><a:graphic><a:graphicData>"
-        "<a:tbl><a:tr><a:tc><a:txBody><a:p><a:r><a:t>H1</a:t></a:r></a:p></a:txBody></a:tc>"
-        "<a:tc><a:txBody><a:p><a:r><a:t>H2</a:t></a:r></a:p></a:txBody></a:tc></a:tr>"
-        "<a:tr><a:tc><a:txBody><a:p><a:r><a:t>A</a:t></a:r></a:p></a:txBody></a:tc>"
-        "<a:tc><a:txBody><a:p><a:r><a:t>B</a:t></a:r></a:p></a:txBody></a:tc></a:tr>"
-        "</a:tbl></a:graphicData></a:graphic></p:graphicFrame>"
-        "</p:spTree></p:cSld></p:sld>"
+    target.write_bytes(b"PK\x03\x04")
+    monkeypatch.setattr(
+        "quill.io.structured.convert_with_markitdown",
+        lambda _path: (
+            "# Slide Title\n\n- Top item\n  - Nested item\n\n"
+            "| H1 | H2 |\n| --- | --- |\n| A | B |\n\n"
+            "## Notes\n\nSpeaker note line\n"
+        ),
     )
-    rels_xml = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" '
-        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" '
-        'Target="../notesSlides/notesSlide1.xml"/>'
-        "</Relationships>"
-    )
-    notes_xml = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
-        'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
-        "<p:cSld><p:spTree><p:sp><p:txBody>"
-        "<a:p><a:r><a:t>Speaker note line</a:t></a:r></a:p>"
-        "</p:txBody></p:sp></p:spTree></p:cSld></p:notes>"
-    )
-    with zipfile.ZipFile(target, "w") as archive:
-        archive.writestr("ppt/slides/slide1.xml", slide_xml)
-        archive.writestr("ppt/slides/_rels/slide1.xml.rels", rels_xml)
-        archive.writestr("ppt/notesSlides/notesSlide1.xml", notes_xml)
 
     document = read_structured_document(target)
 
@@ -182,22 +207,43 @@ def test_read_structured_pptx_extracts_headings_lists_tables_and_notes(tmp_path:
     assert "Speaker note line" in document.text
 
 
+def test_read_structured_ppt_extracts_text(monkeypatch, tmp_path: Path) -> None:
+    target = tmp_path / "sample.ppt"
+    target.write_bytes(b"\xd0\xcf\x11\xe0")
+    monkeypatch.setattr(
+        "quill.io.structured.convert_with_markitdown",
+        lambda _path: "# Slide Title\n\nSpeaker note line\n",
+    )
+
+    document = read_structured_document(target)
+
+    assert document.source_metadata["source_kind"] == "ppt"
+    assert document.source_metadata["engine"] == "markitdown"
+    assert "Speaker note line" in document.text
+
+
 def test_read_structured_pages_gracefully_handles_missing_deps(tmp_path: Path, monkeypatch) -> None:
     """Test that Pages import shows a helpful message when dependencies are missing."""
     target = tmp_path / "sample.pages"
     # Create a minimal ZIP file (Pages files are ZIPs)
     with zipfile.ZipFile(target, "w") as archive:
         archive.writestr("Index/Document.iwa", b"fake iwa data")
-    
+
     # Mock both Pages readers to fail (simulating missing deps)
     from unittest.mock import Mock
     from quill.io import pages
-    
-    monkeypatch.setattr(pages, "_read_pages_via_iwa", Mock(side_effect=ImportError("keynote-parser not available")))
-    monkeypatch.setattr(pages, "_read_pages_via_libreoffice", Mock(side_effect=ImportError("markitdown not available")))
-    
+
+    monkeypatch.setattr(
+        pages, "_read_pages_via_iwa", Mock(side_effect=ImportError("keynote-parser not available"))
+    )
+    monkeypatch.setattr(
+        pages,
+        "_read_pages_via_libreoffice",
+        Mock(side_effect=ImportError("markitdown not available")),
+    )
+
     document = read_structured_document(target)
-    
+
     assert "Pages import not available" in document.text
     assert "pip install keynote-parser" in document.text
     assert "pip install markitdown" in document.text
