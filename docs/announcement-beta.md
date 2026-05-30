@@ -81,15 +81,14 @@ Inside Quill 0.1.1 Beta, the primary feedback path starts in the Help menu.
 
 If you want to report a problem, Quill now guides you through it like this:
 
-1. Open **Help -> Save Diagnostics...** if you want a support bundle.
-2. Review the diagnostics summary in Quill and decide whether to include plain file paths.
-3. Save the diagnostics zip somewhere easy to find, such as your Desktop or Downloads folder.
-4. Open **Help -> Report a Bug...**.
-5. Review the in-app support summary that Quill prepares for you.
-6. Choose **Open Support Form** to open the Community Access support page.
-7. Describe what happened in plain language and attach the diagnostics zip if it will help.
+1. Open **Help -> Report a Bug...**.
+2. Review the in-app support summary that Quill prepares for you.
+3. Choose whether to include diagnostics, and whether to include plain file paths.
+4. If diagnostics are included, save the diagnostics zip somewhere easy to find, such as your Desktop or Downloads folder.
+5. Choose **Open Support Form** to open the Community Access support page.
+6. Describe what happened in plain language and attach the diagnostics zip if it helps.
 
-That is the intended user route. It keeps the work inside Quill for as long as possible, explains what is being shared, and gives the user a clearer handoff into the Community Access support process.
+That is the intended unified user route. It keeps the work inside Quill for as long as possible, explains what is being shared, and gives the user a clearer handoff into the Community Access support process.
 
 There is still room to improve this over time, especially around future no-login upload flows, but the important point for Quill 0.1.1 Beta is that users should start in **Help**, not by hunting for a GitHub page.
 

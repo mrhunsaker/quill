@@ -37,9 +37,9 @@ The External Tools and Format Support dialog explains what each tool unlocks, wh
 
 The primary support and feedback route for Quill 0.1.1 Beta is inside Quill itself.
 
-Use **Help -> Save Diagnostics...** when you want to create a reviewable diagnostics bundle, then use **Help -> Report a Bug...** to open Quill's guided report summary and handoff into the Community Access support form.
+Start with **Help -> Report a Bug...**. The guided flow now includes optional diagnostics generation (including optional file paths), in-app report review, and the support-form handoff in one place.
 
-Report a Bug now includes an in-app accessible form and can create a diagnostics zip in the same flow so the issue can be filed with everything ready to attach.
+**Help -> Save Diagnostics...** remains available as a standalone export command when you want diagnostics without filing a report.
 
 ## Update Feed and GitHub Pages
 

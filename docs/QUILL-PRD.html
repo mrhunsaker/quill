@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Quill Product Requirements Document</title>
+  <title>QUILL-PRD</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -237,501 +237,10 @@
   </style>
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">Quill Product Requirements Document</h1>
-</header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#quill-product-requirements-document"
-id="toc-quill-product-requirements-document">Quill: Product Requirements
-Document</a>
-<ul>
-<li><a
-href="#a-magical-screen-reader-first-writing-and-document-environment-built-in-wxpython."
-id="toc-a-magical-screen-reader-first-writing-and-document-environment-built-in-wxpython.">A
-magical, screen-reader-first writing and document environment, built in
-wxPython.</a></li>
-<li><a href="#vision" id="toc-vision">1. Vision</a></li>
-<li><a href="#goals-and-non-goals" id="toc-goals-and-non-goals">2. Goals
-and non-goals</a>
-<ul>
-<li><a href="#goals" id="toc-goals">2.1 Goals</a></li>
-<li><a href="#non-goals" id="toc-non-goals">2.2 Non-goals</a></li>
-</ul></li>
-<li><a href="#target-users-and-primary-scenarios"
-id="toc-target-users-and-primary-scenarios">3. Target users and primary
-scenarios</a>
-<ul>
-<li><a href="#personas" id="toc-personas">3.1 Personas</a></li>
-<li><a href="#primary-scenarios" id="toc-primary-scenarios">3.2 Primary
-scenarios</a></li>
-</ul></li>
-<li><a href="#product-principles" id="toc-product-principles">4. Product
-principles</a></li>
-<li><a href="#functional-requirements"
-id="toc-functional-requirements">5. Functional requirements</a>
-<ul>
-<li><a href="#application-shell" id="toc-application-shell">5.1
-Application shell</a></li>
-<li><a href="#a-the-magical-menu-bar"
-id="toc-a-the-magical-menu-bar">5.1a The magical menu bar</a></li>
-<li><a href="#b-the-magical-status-bar"
-id="toc-b-the-magical-status-bar">5.1b The magical status bar</a></li>
-<li><a href="#c-trust-and-verification"
-id="toc-c-trust-and-verification">5.1c Trust and verification</a></li>
-<li><a href="#f-profile-safety-and-recovery"
-id="toc-f-profile-safety-and-recovery">5.1f Profile safety and
-recovery</a></li>
-<li><a href="#g-feature-registry-and-user-profiles"
-id="toc-g-feature-registry-and-user-profiles">5.1g Feature registry and
-user profiles</a></li>
-<li><a href="#d-power-search-regex-and-special-characters"
-id="toc-d-power-search-regex-and-special-characters">5.1d Power search,
-regex, and special characters</a></li>
-<li><a href="#e-feature-flags-and-profiles"
-id="toc-e-feature-flags-and-profiles">5.1e Feature flags and
-profiles</a></li>
-<li><a href="#documents-and-the-editor"
-id="toc-documents-and-the-editor">5.2 Documents and the editor</a></li>
-<li><a href="#file-operations" id="toc-file-operations">5.3 File
-operations</a></li>
-<li><a href="#a-extended-format-support"
-id="toc-a-extended-format-support">5.3a Extended format support</a></li>
-<li><a href="#pdf-handling-in-v1.0" id="toc-pdf-handling-in-v1.0">5.4
-PDF handling in v1.0</a></li>
-<li><a href="#improve-reading-order" id="toc-improve-reading-order">5.5
-Improve reading order</a></li>
-<li><a href="#html-and-markdown" id="toc-html-and-markdown">5.6 HTML and
-Markdown</a></li>
-<li><a href="#find-and-replace" id="toc-find-and-replace">5.7 Find and
-replace</a></li>
-<li><a href="#spell-checking-magical-local-first"
-id="toc-spell-checking-magical-local-first">5.8 Spell checking (magical,
-local-first)</a></li>
-<li><a href="#word-count-and-navigation"
-id="toc-word-count-and-navigation">5.9 Word count and
-navigation</a></li>
-<li><a href="#bookmarks" id="toc-bookmarks">5.10 Bookmarks</a></li>
-<li><a href="#selection-helpers-and-where-am-i"
-id="toc-selection-helpers-and-where-am-i">5.11 Selection helpers and
-Where Am I</a></li>
-<li><a href="#command-palette-visual-studio-code-style"
-id="toc-command-palette-visual-studio-code-style">5.12 Command palette
-(Visual Studio Code style)</a></li>
-<li><a href="#document-backups" id="toc-document-backups">5.13 Document
-backups</a></li>
-<li><a href="#settings" id="toc-settings">5.14 Settings</a></li>
-<li><a href="#plugin-system-v1.1" id="toc-plugin-system-v1.1">5.15
-Plugin system (v1.1)</a></li>
-<li><a href="#outline-navigator-heading-tree"
-id="toc-outline-navigator-heading-tree">5.16 Outline Navigator (heading
-tree)</a></li>
-<li><a href="#jump-by-structure-shortcuts"
-id="toc-jump-by-structure-shortcuts">5.17 Jump-by-structure
-shortcuts</a></li>
-<li><a href="#line-and-block-operations"
-id="toc-line-and-block-operations">5.18 Line and block
-operations</a></li>
-<li><a href="#document-statistics-and-reading-metrics"
-id="toc-document-statistics-and-reading-metrics">5.19 Document
-statistics and reading metrics</a></li>
-<li><a href="#accessibility-auditor" id="toc-accessibility-auditor">5.20
-Accessibility auditor</a></li>
-<li><a href="#table-mode-for-markdown-and-html-tables"
-id="toc-table-mode-for-markdown-and-html-tables">5.21 Table mode for
-Markdown and HTML tables</a></li>
-<li><a href="#editor-essentials" id="toc-editor-essentials">5.22 Editor
-essentials</a></li>
-<li><a href="#recent-locations-history-browser-style-backforward"
-id="toc-recent-locations-history-browser-style-backforward">5.23 Recent
-locations history (browser-style back/forward)</a></li>
-<li><a href="#mark-ring" id="toc-mark-ring">5.24 Mark ring</a></li>
-<li><a href="#read-aloud-secondary-voice-not-the-screen-reader"
-id="toc-read-aloud-secondary-voice-not-the-screen-reader">5.25 Read
-Aloud (secondary voice, not the screen reader)</a></li>
-<li><a href="#number-lines-and-strip-line-numbers"
-id="toc-number-lines-and-strip-line-numbers">5.26 Number lines and strip
-line numbers</a></li>
-<li><a href="#open-from-url" id="toc-open-from-url">5.27 Open from
-URL</a></li>
-<li><a href="#format-aware-bracket-and-quote-navigation"
-id="toc-format-aware-bracket-and-quote-navigation">5.28 Format-aware
-bracket and quote navigation</a></li>
-<li><a href="#format-menu-text-transforms-no-styling"
-id="toc-format-menu-text-transforms-no-styling">5.29 Format menu (text
-transforms, no styling)</a></li>
-<li><a href="#a-magical-html-and-markdown-tag-picker"
-id="toc-a-magical-html-and-markdown-tag-picker">5.29a Magical HTML and
-Markdown tag picker</a></li>
-<li><a href="#bookmark-export-and-import"
-id="toc-bookmark-export-and-import">5.30 Bookmark export and
-import</a></li>
-<li><a href="#trusted-locations-office-style"
-id="toc-trusted-locations-office-style">5.31 Trusted locations
-(Office-style)</a></li>
-<li><a href="#jump-list-and-shell-integration"
-id="toc-jump-list-and-shell-integration">5.32 Jump List and shell
-integration</a></li>
-<li><a href="#diagnostics-and-bug-reporting"
-id="toc-diagnostics-and-bug-reporting">5.33 Diagnostics and bug
-reporting</a></li>
-<li><a href="#welcome-and-keyboard-reference"
-id="toc-welcome-and-keyboard-reference">5.34 Welcome and Keyboard
-Reference</a></li>
-<li><a href="#notifications-centre" id="toc-notifications-centre">5.35
-Notifications centre</a></li>
-<li><a href="#what-changed-on-save-opt-in"
-id="toc-what-changed-on-save-opt-in">5.36 “What changed on save”
-(opt-in)</a></li>
-<li><a href="#link-tools" id="toc-link-tools">5.37 Link tools</a></li>
-<li><a href="#document-properties-and-front-matter"
-id="toc-document-properties-and-front-matter">5.38 Document properties
-and front-matter</a></li>
-<li><a href="#autosave-control-and-persistent-undo"
-id="toc-autosave-control-and-persistent-undo">5.39 Autosave control and
-persistent undo</a></li>
-<li><a href="#paragraph-line-and-footnote-refinements"
-id="toc-paragraph-line-and-footnote-refinements">5.40 Paragraph, line,
-and footnote refinements</a></li>
-<li><a href="#search-and-replace-preview-and-saved-searches"
-id="toc-search-and-replace-preview-and-saved-searches">5.41
-Search-and-replace preview and saved searches</a></li>
-<li><a href="#sort-and-transform-details"
-id="toc-sort-and-transform-details">5.42 Sort and transform
-details</a></li>
-<li><a
-href="#save-all-with-conflict-detection-and-per-file-format-memory"
-id="toc-save-all-with-conflict-detection-and-per-file-format-memory">5.43
-Save All with conflict detection and per-file format memory</a></li>
-<li><a href="#per-document-scratchpad"
-id="toc-per-document-scratchpad">5.44 Per-document scratchpad</a></li>
-<li><a href="#section-folding-announce-only"
-id="toc-section-folding-announce-only">5.45 Section folding
-(announce-only)</a></li>
-<li><a href="#spell-check-ignore-directives-and-manual-bilingual-flag"
-id="toc-spell-check-ignore-directives-and-manual-bilingual-flag">5.46
-Spell-check ignore directives and manual bilingual flag</a></li>
-<li><a
-href="#word-boundary-mode-trailing-whitespace-case-change-announcement"
-id="toc-word-boundary-mode-trailing-whitespace-case-change-announcement">5.47
-Word boundary mode, trailing whitespace, case-change
-announcement</a></li>
-<li><a href="#multi-format-export-and-reading-view"
-id="toc-multi-format-export-and-reading-view">5.48 Multi-format export
-and reading view</a></li>
-<li><a href="#welcome-back-snapshot" id="toc-welcome-back-snapshot">5.49
-Welcome-back snapshot</a></li>
-<li><a href="#per-document-keymap-override-with-explicit-consent"
-id="toc-per-document-keymap-override-with-explicit-consent">5.50
-Per-document keymap override (with explicit consent)</a></li>
-<li><a href="#settings-export-import-and-partitioned-reset"
-id="toc-settings-export-import-and-partitioned-reset">5.51 Settings
-export, import, and partitioned reset</a></li>
-<li><a href="#document-fingerprint" id="toc-document-fingerprint">5.52
-Document fingerprint</a></li>
-<li><a href="#unicode-insert" id="toc-unicode-insert">5.53 Unicode
-insert</a></li>
-<li><a href="#idle-time-prefetch" id="toc-idle-time-prefetch">5.54
-Idle-time prefetch</a></li>
-<li><a href="#atomic-on-disk-stores" id="toc-atomic-on-disk-stores">5.55
-Atomic on-disk stores</a></li>
-<li><a href="#first-run-onboarding" id="toc-first-run-onboarding">5.56
-First-run onboarding</a></li>
-<li><a href="#privacy-summary" id="toc-privacy-summary">5.57 Privacy
-summary</a></li>
-<li><a href="#licenses-screen" id="toc-licenses-screen">5.58 Licenses
-screen</a></li>
-<li><a href="#crash-recovery-transparency"
-id="toc-crash-recovery-transparency">5.59 Crash recovery
-transparency</a></li>
-<li><a href="#read-only-document-mode"
-id="toc-read-only-document-mode">5.60 Read-only document mode</a></li>
-<li><a href="#file-related-menu-helpers"
-id="toc-file-related-menu-helpers">5.61 File-related menu
-helpers</a></li>
-<li><a href="#open-recent-enhancements"
-id="toc-open-recent-enhancements">5.62 Open Recent enhancements</a></li>
-<li><a href="#document-timeline" id="toc-document-timeline">5.63
-Document timeline</a></li>
-<li><a href="#sentence-and-paragraph-navigation"
-id="toc-sentence-and-paragraph-navigation">5.64 Sentence and paragraph
-navigation</a></li>
-<li><a href="#word-count-goal-per-document"
-id="toc-word-count-goal-per-document">5.65 Word-count goal per
-document</a></li>
-<li><a href="#reading-position-memory-per-document"
-id="toc-reading-position-memory-per-document">5.66 Reading position
-memory per document</a></li>
-<li><a href="#compare-with-clipboard"
-id="toc-compare-with-clipboard">5.67 Compare with clipboard</a></li>
-<li><a href="#insert-from-file" id="toc-insert-from-file">5.68 Insert
-from file</a></li>
-<li><a href="#selection-statistics-direct-shortcut"
-id="toc-selection-statistics-direct-shortcut">5.69 Selection-statistics
-direct shortcut</a></li>
-<li><a href="#audio-cue-catalogue-opt-in"
-id="toc-audio-cue-catalogue-opt-in">5.70 Audio cue catalogue
-(opt-in)</a></li>
-<li><a href="#quiet-mode" id="toc-quiet-mode">5.71 Quiet mode</a></li>
-<li><a href="#temporary-trust-for-untrusted-location-opens"
-id="toc-temporary-trust-for-untrusted-location-opens">5.72 Temporary
-trust for untrusted-location opens</a></li>
-<li><a href="#settings-search" id="toc-settings-search">5.73 Settings
-search</a></li>
-<li><a href="#in-app-changelog-and-update-transparency"
-id="toc-in-app-changelog-and-update-transparency">5.74 In-app changelog
-and update transparency</a></li>
-<li><a href="#crash-report-opt-in-per-recovery"
-id="toc-crash-report-opt-in-per-recovery">5.75 Crash-report opt-in (per
-recovery)</a></li>
-<li><a href="#interactive-compare-mode"
-id="toc-interactive-compare-mode">5.76 Interactive compare mode</a></li>
-</ul></li>
-<li><a href="#spell-checking-deep-dive"
-id="toc-spell-checking-deep-dive">6. Spell checking deep dive</a>
-<ul>
-<li><a href="#the-tinyspell-question"
-id="toc-the-tinyspell-question">6.1 The TinySpell question</a></li>
-<li><a href="#engine-architecture-quill-spell"
-id="toc-engine-architecture-quill-spell">6.2 Engine architecture: “Quill
-Spell”</a></li>
-<li><a href="#user-experience" id="toc-user-experience">6.3 User
-experience</a></li>
-</ul></li>
-<li><a href="#command-palette-deep-dive"
-id="toc-command-palette-deep-dive">7. Command palette deep dive</a>
-<ul>
-<li><a href="#opening-and-dismissing"
-id="toc-opening-and-dismissing">7.1 Opening and dismissing</a></li>
-<li><a href="#prefix-modes" id="toc-prefix-modes">7.2 Prefix
-modes</a></li>
-<li><a href="#matching" id="toc-matching">7.3 Matching</a></li>
-<li><a href="#rows" id="toc-rows">7.4 Rows</a></li>
-<li><a href="#inline-keybinding-edit"
-id="toc-inline-keybinding-edit">7.5 Inline keybinding edit</a></li>
-<li><a href="#recently-used-and-pinned"
-id="toc-recently-used-and-pinned">7.6 Recently used and pinned</a></li>
-<li><a href="#help" id="toc-help">7.7 Help</a></li>
-<li><a href="#accessibility-specifics"
-id="toc-accessibility-specifics">7.8 Accessibility specifics</a></li>
-</ul></li>
-<li><a href="#keymap-and-keystroke-reassignment"
-id="toc-keymap-and-keystroke-reassignment">8. Keymap and keystroke
-reassignment</a>
-<ul>
-<li><a href="#where-keystrokes-live" id="toc-where-keystrokes-live">8.1
-Where keystrokes live</a></li>
-<li><a href="#keyboard-settings-page"
-id="toc-keyboard-settings-page">8.2 Keyboard settings page</a></li>
-<li><a href="#editing-a-single-binding"
-id="toc-editing-a-single-binding">8.3 Editing a single binding</a></li>
-<li><a href="#conflict-handling" id="toc-conflict-handling">8.4 Conflict
-handling</a></li>
-<li><a href="#when-contexts" id="toc-when-contexts">8.5 “When”
-contexts</a></li>
-<li><a href="#profiles-in-detail" id="toc-profiles-in-detail">8.6
-Profiles in detail</a></li>
-<li><a href="#storage-format" id="toc-storage-format">8.7 Storage
-format</a></li>
-<li><a href="#import-export-sync" id="toc-import-export-sync">8.8
-Import, export, sync</a></li>
-<li><a href="#safety-net" id="toc-safety-net">8.9 Safety net</a></li>
-</ul></li>
-<li><a href="#accessibility-wcag-2.2-aa-conformance-and-certification"
-id="toc-accessibility-wcag-2.2-aa-conformance-and-certification">9.
-Accessibility, WCAG 2.2 AA conformance, and certification</a>
-<ul>
-<li><a href="#compliance-posture-and-target-standards"
-id="toc-compliance-posture-and-target-standards">9.1 Compliance posture
-and target standards</a></li>
-<li><a href="#conformance-posture-statement-will-appear-in-the-acr"
-id="toc-conformance-posture-statement-will-appear-in-the-acr">9.2
-Conformance posture statement (will appear in the ACR)</a></li>
-<li><a href="#wcag-2.2-aa-conformance-matrix"
-id="toc-wcag-2.2-aa-conformance-matrix">9.3 WCAG 2.2 AA conformance
-matrix</a></li>
-<li><a href="#screen-reader-compatibility-matrix"
-id="toc-screen-reader-compatibility-matrix">9.4 Screen-reader
-compatibility matrix</a></li>
-<li><a href="#screen-reader-announcement-architecture"
-id="toc-screen-reader-announcement-architecture">9.5 Screen-reader
-announcement architecture</a></li>
-<li><a href="#keyboard-accessibility-gates"
-id="toc-keyboard-accessibility-gates">9.6 Keyboard accessibility
-gates</a></li>
-<li><a href="#visual-accessibility-gates"
-id="toc-visual-accessibility-gates">9.7 Visual accessibility
-gates</a></li>
-<li><a href="#cognitive-accessibility-gates"
-id="toc-cognitive-accessibility-gates">9.8 Cognitive accessibility
-gates</a></li>
-<li><a href="#accessibility-testing-pipeline"
-id="toc-accessibility-testing-pipeline">9.9 Accessibility testing
-pipeline</a></li>
-<li><a href="#vpat-acr-generation" id="toc-vpat-acr-generation">9.10
-VPAT / ACR generation</a></li>
-<li><a href="#certification-path" id="toc-certification-path">9.11
-Certification path</a></li>
-<li><a href="#gated-regressions-ci-must-pass-list"
-id="toc-gated-regressions-ci-must-pass-list">9.12 Gated regressions (CI
-must-pass list)</a></li>
-</ul></li>
-<li><a href="#technical-infrastructure"
-id="toc-technical-infrastructure">10. Technical infrastructure</a>
-<ul>
-<li><a href="#module-map-and-responsibilities"
-id="toc-module-map-and-responsibilities">10.1 Module map and
-responsibilities</a></li>
-<li><a href="#complete-dependency-manifest"
-id="toc-complete-dependency-manifest">10.2 Complete dependency
-manifest</a></li>
-<li><a href="#per-feature-technical-specifications"
-id="toc-per-feature-technical-specifications">10.3 Per-feature technical
-specifications</a></li>
-<li><a href="#threading-and-concurrency-model"
-id="toc-threading-and-concurrency-model">10.4 Threading and concurrency
-model</a></li>
-<li><a href="#data-layout-canonical" id="toc-data-layout-canonical">10.5
-Data layout (canonical)</a></li>
-<li><a href="#packaging-signing-supply-chain"
-id="toc-packaging-signing-supply-chain">10.6 Packaging, signing, supply
-chain</a></li>
-<li><a href="#build-and-dev-environment"
-id="toc-build-and-dev-environment">10.7 Build and dev
-environment</a></li>
-<li><a href="#continuous-integration-and-delivery"
-id="toc-continuous-integration-and-delivery">10.8 Continuous integration
-and delivery</a></li>
-<li><a href="#observability" id="toc-observability">10.9
-Observability</a></li>
-<li><a href="#plugin-runtime-v1.0-surface-v1.1-full"
-id="toc-plugin-runtime-v1.0-surface-v1.1-full">10.10 Plugin runtime
-(v1.0 surface, v1.1 full)</a></li>
-<li><a href="#security-architecture"
-id="toc-security-architecture">10.11 Security architecture</a></li>
-<li><a href="#update-mechanism" id="toc-update-mechanism">10.12 Update
-mechanism</a></li>
-<li><a href="#internationalisation-infrastructure"
-id="toc-internationalisation-infrastructure">10.13 Internationalisation
-infrastructure</a></li>
-<li><a href="#performance-budgets-and-instrumentation"
-id="toc-performance-budgets-and-instrumentation">10.14 Performance
-budgets and instrumentation</a></li>
-<li><a href="#coding-standards-and-review"
-id="toc-coding-standards-and-review">10.15 Coding standards and
-review</a></li>
-<li><a href="#module-ownership-and-solid-boundaries"
-id="toc-module-ownership-and-solid-boundaries">10.16 Module ownership
-and SOLID boundaries</a></li>
-<li><a href="#magic-by-construction"
-id="toc-magic-by-construction">10.17 Magic, by construction</a></li>
-</ul></li>
-<li><a href="#performance-targets" id="toc-performance-targets">11.
-Performance targets</a></li>
-<li><a href="#privacy-and-security" id="toc-privacy-and-security">12.
-Privacy and security</a></li>
-<li><a href="#internationalisation-and-localisation"
-id="toc-internationalisation-and-localisation">13. Internationalisation
-and localisation</a></li>
-<li><a href="#telemetry" id="toc-telemetry">14. Telemetry</a></li>
-<li><a href="#success-metrics" id="toc-success-metrics">15. Success
-metrics</a></li>
-<li><a href="#release-plan" id="toc-release-plan">16. Release plan</a>
-<ul>
-<li><a href="#v0.9-alpha-internal-6-weeks"
-id="toc-v0.9-alpha-internal-6-weeks">16.1 v0.9 alpha (internal, 6
-weeks)</a></li>
-<li><a href="#v1.0-beta-8-weeks-after-0.9"
-id="toc-v1.0-beta-8-weeks-after-0.9">16.2 v1.0 beta (8 weeks after
-0.9)</a></li>
-<li><a href="#v1.0-release-4-weeks-after-beta"
-id="toc-v1.0-release-4-weeks-after-beta">16.3 v1.0 release (4 weeks
-after beta)</a></li>
-<li><a href="#v1.1" id="toc-v1.1">16.4 v1.1</a></li>
-<li><a href="#v1.2" id="toc-v1.2">16.5 v1.2</a></li>
-</ul></li>
-<li><a href="#backlog-and-deferred-items"
-id="toc-backlog-and-deferred-items">17. Backlog and deferred items</a>
-<ul>
-<li><a href="#format-support-deferred-to-plugins-v1.1"
-id="toc-format-support-deferred-to-plugins-v1.1">17.1 Format support
-deferred to plugins (v1.1+)</a></li>
-<li><a href="#features-deferred" id="toc-features-deferred">17.2
-Features deferred</a></li>
-<li><a
-href="#explicitly-out-of-scope-for-quill-any-version-unless-re-evaluated"
-id="toc-explicitly-out-of-scope-for-quill-any-version-unless-re-evaluated">17.4
-Explicitly out of scope for Quill (any version unless
-re-evaluated)</a></li>
-<li><a href="#confidence-grades-shown-to-the-user"
-id="toc-confidence-grades-shown-to-the-user">17.3 Confidence grades
-shown to the user</a></li>
-</ul></li>
-<li><a href="#risks-and-mitigations" id="toc-risks-and-mitigations">18.
-Risks and mitigations</a></li>
-<li><a href="#open-questions" id="toc-open-questions">19. Open
-questions</a></li>
-<li><a href="#why-this-can-be-magical"
-id="toc-why-this-can-be-magical">20. Why this can be magical</a></li>
-<li><a href="#project-delivery-todo-living-checklist"
-id="toc-project-delivery-todo-living-checklist">21. Project delivery
-TODO (living checklist)</a>
-<ul>
-<li><a href="#application-shell-and-document-lifecycle"
-id="toc-application-shell-and-document-lifecycle">21.1 Application shell
-and document lifecycle</a></li>
-<li><a href="#core-editing-and-formatting"
-id="toc-core-editing-and-formatting">21.2 Core editing and
-formatting</a></li>
-<li><a href="#navigation-search-structure-and-links"
-id="toc-navigation-search-structure-and-links">21.3 Navigation, search,
-structure, and links</a></li>
-<li><a href="#metrics-spell-and-tools"
-id="toc-metrics-spell-and-tools">21.4 Metrics, spell, and tools</a></li>
-<li><a href="#a-trust-and-verification"
-id="toc-a-trust-and-verification">21.4a Trust and verification</a></li>
-<li><a href="#b-power-search" id="toc-b-power-search">21.4b Power
-search</a></li>
-<li><a href="#persistence-safety-and-recovery"
-id="toc-persistence-safety-and-recovery">21.5 Persistence, safety, and
-recovery</a></li>
-<li><a href="#command-palette-and-keymap-system"
-id="toc-command-palette-and-keymap-system">21.6 Command palette and
-keymap system</a></li>
-<li><a href="#format-support-and-io-coverage"
-id="toc-format-support-and-io-coverage">21.7 Format support and I/O
-coverage</a></li>
-<li><a href="#accessibility-and-ux-hardening"
-id="toc-accessibility-and-ux-hardening">21.8 Accessibility and UX
-hardening</a></li>
-<li><a href="#windows-integration" id="toc-windows-integration">21.9
-Windows integration</a></li>
-<li><a href="#ai-ocr-and-optional-network-features-deferred-to-v1.1"
-id="toc-ai-ocr-and-optional-network-features-deferred-to-v1.1">21.10 AI,
-OCR, and optional network features (deferred to v1.1)</a></li>
-<li><a href="#engineering-quality-gates-and-release"
-id="toc-engineering-quality-gates-and-release">21.11 Engineering quality
-gates and release</a></li>
-<li><a href="#documentation-and-readiness"
-id="toc-documentation-and-readiness">21.12 Documentation and
-readiness</a></li>
-<li><a href="#profile-safety-and-recovery"
-id="toc-profile-safety-and-recovery">21.13 Profile safety and
-recovery</a></li>
-<li><a href="#feature-registry-and-profiles"
-id="toc-feature-registry-and-profiles">21.14 Feature registry and
-profiles</a></li>
-<li><a href="#macro-and-compare-expansion"
-id="toc-macro-and-compare-expansion">21.15 Macro and compare
-expansion</a></li>
-</ul></li>
-</ul></li>
-</ul>
-</nav>
 <h1 id="quill-product-requirements-document">Quill: Product Requirements
 Document</h1>
 <h2
-id="a-magical-screen-reader-first-writing-and-document-environment-built-in-wxpython.">A
+id="a-magical-screen-reader-first-writing-and-document-environment-built-in-wxpython">A
 magical, screen-reader-first writing and document environment, built in
 wxPython.</h2>
 <p>Status: Quill 1.0 PRD aligned with Quill 0.1.1 Beta Owner: Blind
@@ -740,7 +249,7 @@ platform: Windows 10 and Windows 11 Target screen readers: NVDA
 (primary), JAWS, Narrator UI framework: wxPython (wxWidgets 3.2 or
 newer) Language: Python 3.11 or newer</p>
 <hr />
-<h2 id="vision">1. Vision</h2>
+<h2 id="1-vision">1. Vision</h2>
 <p>Quill is a focused writing and document-reading workstation for blind
 and low-vision users. It opens almost anything, turns it into clean,
 navigable text in a familiar Windows edit field, and gives the writer a
@@ -754,7 +263,7 @@ Windows control (<code>wx.TextCtrl</code> multiline,
 <code>wx.ListBox</code>, <code>wx.Dialog</code>) so MSAA, UIA,
 IAccessible2 and braille routing all just work. No custom drawn controls
 in the writing path.</li>
-<li><strong>Magical, not flashy.</strong> “Magic” means the right thing
+<li><strong>Magical, not flashy.</strong> "Magic" means the right thing
 happens without ceremony. PDFs become readable. Bookmarks survive edits.
 Backups are automatic. The command palette knows what you mean. Nothing
 surprises the screen reader.</li>
@@ -766,15 +275,15 @@ silent.</li>
 <p>If a sighted person watched a Quill user work, they would see almost
 nothing on screen. That is the point.</p>
 <hr />
-<h2 id="goals-and-non-goals">2. Goals and non-goals</h2>
-<h3 id="goals">2.1 Goals</h3>
+<h2 id="2-goals-and-non-goals">2. Goals and non-goals</h2>
+<h3 id="21-goals">2.1 Goals</h3>
 <ul>
 <li>Provide a dependable plain-text writing surface that NVDA, JAWS and
 Narrator can read without quirks.</li>
 <li>Open a wide range of document formats and present them as editable
 text in a standard edit field.</li>
 <li>Preserve the original source file. Extracted or rendered text saves
-through “Save As” so originals are never overwritten.</li>
+through "Save As" so originals are never overwritten.</li>
 <li>Offer practical writer tools: find and replace, bookmarks that
 survive edits, magical spell check, word count, page navigation,
 multiple documents, backups, recent files.</li>
@@ -784,12 +293,12 @@ so users do not need to memorise every shortcut.</li>
 editor.</li>
 <li>Offer optional, transparent AI assistance for awkward PDFs, scanned
 images and broken layouts.</li>
-<li>Integrate cleanly with Windows: file associations, “Open with”, jump
+<li>Integrate cleanly with Windows: file associations, "Open with", jump
 lists, taskbar.</li>
 <li>Be themable for low vision (high contrast, large fonts) without
 breaking screen-reader behaviour.</li>
 </ul>
-<h3 id="non-goals">2.2 Non-goals</h3>
+<h3 id="22-non-goals">2.2 Non-goals</h3>
 <ul>
 <li>Not a visual word processor. No bold, italic, fonts, colour styling
 in the writing surface for v1.</li>
@@ -801,9 +310,9 @@ documents as editable text.</li>
 extract text.</li>
 </ul>
 <hr />
-<h2 id="target-users-and-primary-scenarios">3. Target users and primary
-scenarios</h2>
-<h3 id="personas">3.1 Personas</h3>
+<h2 id="3-target-users-and-primary-scenarios">3. Target users and
+primary scenarios</h2>
+<h3 id="31-personas">3.1 Personas</h3>
 <ol type="1">
 <li><strong>Mira, blind university student.</strong> Reads PDF lecture
 notes daily. Needs them to make sense linearly, with reliable search and
@@ -816,11 +325,11 @@ documents from email. Wants to copy reference numbers and totals
 quickly.</li>
 <li><strong>Sam, low-vision novelist.</strong> Uses Narrator with a
 large font and high contrast. Writes long manuscripts, restores from
-yesterday’s backup occasionally.</li>
+yesterday's backup occasionally.</li>
 <li><strong>Jamie, blind sysadmin.</strong> Edits INI, JSON, log and
 config files. Wants a calm editor that does not fight tooling.</li>
 </ol>
-<h3 id="primary-scenarios">3.2 Primary scenarios</h3>
+<h3 id="32-primary-scenarios">3.2 Primary scenarios</h3>
 <ul>
 <li>Open a 30-page PDF invoice, find the payment reference, copy
 it.</li>
@@ -836,7 +345,7 @@ ago.</li>
 because the user prefers a different convention.</li>
 </ul>
 <hr />
-<h2 id="product-principles">4. Product principles</h2>
+<h2 id="4-product-principles">4. Product principles</h2>
 <ol type="1">
 <li><strong>The edit field is sacred.</strong> The writing surface is a
 standard multi-line <code>wx.TextCtrl</code>. Nothing exotic. Screen
@@ -860,8 +369,8 @@ on launch. Nothing the user wrote should ever be lost.</li>
 every action with its current binding.</li>
 </ol>
 <hr />
-<h2 id="functional-requirements">5. Functional requirements</h2>
-<h3 id="application-shell">5.1 Application shell</h3>
+<h2 id="5-functional-requirements">5. Functional requirements</h2>
+<h3 id="51-application-shell">5.1 Application shell</h3>
 <ul>
 <li>Single window per running instance, with multiple documents
 inside.</li>
@@ -869,7 +378,7 @@ inside.</li>
 (5.1a), <strong>central editor</strong>, <strong>status bar</strong>
 (5.1b).</li>
 <li>Window title shows <code>document-name [modified] – Quill</code>.
-The word “modified” appears only when the document has unsaved
+The word "modified" appears only when the document has unsaved
 changes.</li>
 <li>Tray icon optional, off by default.</li>
 <li>No splash screen.</li>
@@ -880,13 +389,13 @@ users.</li>
 <li><strong>F6 region cycling</strong> moves keyboard focus through the
 three regions in order (editor → menu bar → status bar → editor).
 <code>Shift+F6</code> cycles in reverse. The region name is announced on
-entry (“Status bar”). If the Outline Navigator (5.16) is pinned, it
+entry ("Status bar"). If the Outline Navigator (5.16) is pinned, it
 joins the cycle between editor and menu bar.</li>
 <li>All regions are stock wx controls (<code>wx.MenuBar</code>,
 <code>wx.TextCtrl</code>, <code>wx.StatusBar</code> with a custom
 layout) so MSAA/UIA expose them correctly without scripts.</li>
 </ul>
-<h3 id="a-the-magical-menu-bar">5.1a The magical menu bar</h3>
+<h3 id="51a-the-magical-menu-bar">5.1a The magical menu bar</h3>
 <p>The menu bar is standards-based, predictable, and exhaustive. Every
 menu item is also a command in the palette, every item shows its current
 keybinding to the right of its label, and the displayed binding updates
@@ -895,71 +404,50 @@ remain visible with a short tooltip explaining why they are disabled in
 the current context.</p>
 <p>Menu structure:</p>
 <ul>
-<li><strong>File</strong>: New, New From Template…, Open…, Open from
-URL… (5.27), Open With Encoding…, Open Recent ‣ (last N, with Clear),
-Save, Save As…, Save All, Save As Plain Text…, Reload From Disk, Restore
-Document Backup…, Sessions ‣ (Save Session…, Open Session…, Recent
-Sessions), Print…, Page Setup…, Close, Close All, Exit.</li>
-<li><strong>Edit</strong>: Undo, Redo, Cut, Copy, Paste, Paste Special ‣
-(Paste As Plain Text, Paste As Quotation, Paste Without Auto-Pair),
-Delete, Select All, Select Line, Select Paragraph, Select Block, Select
-to End of Line, Select to Start of Line, Select to End of Document,
-Select to Start of Document, Expand Selection, Shrink Selection, Mark
-Ring ‣ (Set Mark, Pop Mark, Exchange Point and Mark, List Marks), Recent
-Locations ‣ (Back, Forward, List Locations). (See 5.24 and 5.25.)</li>
-<li><strong>View</strong>: Toggle Status Bar, Toggle Menu Bar (revealed
-by <code>Alt</code> when hidden), Toggle Soft Wrap, Toggle Outline
-Navigator (pinned/unpinned), Zoom In, Zoom Out, Zoom Reset, Theme ‣
-(System, Light, Dark, High Contrast, Custom…), Font Size ‣ (presets),
-Full Screen.</li>
-<li><strong>Navigate</strong>: Go To Line…, Go To Page…, Go To
-Bookmark…, Outline Navigator…, Next Heading, Previous Heading, Next
-Heading of Level ‣ (1–6), Next Block, Previous Block, Next Match (F3),
-Previous Match (Shift+F3), Find All Matches… (Alt+F3), Match Bracket,
-Back, Forward, Switch Document ‣ (lists open documents with
-<code>Alt+1</code>…<code>Alt+9</code>).</li>
-<li><strong>Tools</strong>: Spell Check… (F7), Toggle As-You-Type Spell
-Check, Next Misspelling, Add to Dictionary ‣ (Personal, This Document,
-Project), Word Count and Statistics… (5.19), Accessibility Audit…
-(5.20), Alt-Text Catalog…, Link Inventory…, Compare With File…, Improve
-Reading Order… (opt-in AI), Enhanced PDF Tools ‣ (5.4), Read Aloud ‣
-(Start/Pause, Stop, Next Sentence, Previous Sentence, Voice…), Insert ‣
-(Date, Time, Date and Time, Filename, File Path, UUID), Convert ‣ (Sort
-Lines, Remove Duplicate Lines, Reverse Lines, Trim Trailing Whitespace,
-Normalize Whitespace, Convert Indent to Spaces, Convert Indent to Tabs,
-Wrap to Column…, Re-flow Paragraph), Number Lines… (5.30), Strip Line
-Numbers.</li>
-<li><strong>Format</strong>: Upper Case, Lower Case, Title Case,
-Sentence Case, Toggle Case, Toggle Line Comment, Toggle Block Comment,
-Indent, Outdent, Move Line Up, Move Line Down, Duplicate Line, Delete
-Line, Join Lines, Insert Heading ‣ (Markdown/HTML, levels 1–6), Insert
-List ‣ (bullet, numbered, task), Insert Table…, Insert Link…, Insert
-Code Block, Insert Footnote.</li>
-<li><strong>Window</strong>: Next Document, Previous Document, Close
-Document, Close Other Documents, Close Documents to the Right, List All
-Open Documents (with <code>Alt+1</code>…<code>Alt+9</code> accelerators
-for the first nine).</li>
-<li><strong>Help</strong>: Welcome (opens a guided tutorial document in
-a new tab), Keyboard Reference (auto-generated from the current keymap,
-opens in the editor as a searchable, printable document that updates
-whenever the keymap changes), Tip of the Day… (off by default; drawn
-from real actions in the palette), Command Palette… (Ctrl+Shift+P),
-Documentation Online…, Release Notes, Report a Bug… (opens an in-app
-review screen, then a pre-filled Community Access support-hub issue form
-with redacted environment info; never auto-sends), Save Diagnostics…
-(5.33), Check for Updates…, About Quill.</li>
+<li><strong>File</strong>: New/Open/Open Recent/Open from URL,
+<strong>Workspace Snapshots</strong>, Save/Save As/Save All/Save as
+plain text, Reload/Restore backup, print flows, close/exit.</li>
+<li><strong>Edit</strong>: Undo/redo, clipboard, selection helpers, link
+insertion/follow, and <strong>Recent Marks (Ring)</strong> with
+plain-language labels.</li>
+<li><strong>Search</strong>: Find/Replace flows plus Next/Previous/All
+matches.</li>
+<li><strong>View</strong>: shell behavior toggles, title style options,
+theme and visual controls.</li>
+<li><strong>Navigate</strong>: line/page/bookmark movement,
+heading/block/structure movement, outline, bracket match, region
+movement.</li>
+<li><strong>Format</strong>: case/comment/indent/line transforms plus
+rich text and heading controls.</li>
+<li><strong>Insert</strong>: table/list/code/footnote/tag insertion
+helpers.</li>
+<li><strong>Tools</strong>: regrouped into discoverable submenus:
+<ul>
+<li>Writing and Language</li>
+<li>Read Aloud</li>
+<li>Integrations</li>
+<li>Document Intake</li>
+<li>Authoring and Automation</li>
+<li>Compare Documents</li>
+<li>Accessibility</li>
+<li>Support</li>
+<li>Customize</li>
+</ul></li>
+<li><strong>Window</strong>: document/tab management actions.</li>
+<li><strong>Help</strong>: contextual help, onboarding docs, feature
+profile support, updates, and About.</li>
 </ul>
 <p>All menu strings are translatable. Every menu item has a unique
 mnemonic. The menu bar may be hidden via View; when hidden, pressing
 <code>Alt</code> reveals it temporarily and <code>Esc</code> dismisses
 it again, matching Windows convention.</p>
-<h3 id="b-the-magical-status-bar">5.1b The magical status bar</h3>
+<h3 id="51b-the-magical-status-bar">5.1b The magical status bar</h3>
 <p>The status bar is not a passive label strip. It is a fully
 keyboard-navigable row of items that any user can reach with
 <code>F6</code> and arrow through with Left and Right. Each item is a
 small interactive cell, and <code>Enter</code> on a cell either toggles
 a state, opens a chooser, or runs a related command. This is modelled on
-Visual Studio Code’s status bar, adapted for screen-reader-first
+Visual Studio Code's status bar, adapted for screen-reader-first
 interaction.</p>
 <p>Design rules:</p>
 <ul>
@@ -977,31 +465,25 @@ with wrap-around. <code>Home</code>/<code>End</code> jump to first/last.
 <code>Esc</code> returns focus to the editor. Tab and Shift+Tab also
 move between cells inside the status bar.</li>
 <li><strong>Announced</strong>: when focus enters the status bar, the
-region name and the focused cell are announced (“Status bar, Line 12,
-Column 7, button”). Cells announce their value when arrowed to.</li>
+region name and the focused cell are announced ("Status bar, Line 12,
+Column 7, button"). Cells announce their value when arrowed to.</li>
 <li><strong>Activated</strong>: <code>Enter</code> or <code>Space</code>
-triggers the cell’s primary action. <code>Shift+F10</code> or the
+triggers the cell's primary action. <code>Shift+F10</code> or the
 Application key opens a context menu of related actions for that cell.
 Right-clicking is equivalent.</li>
 <li><strong>Live updates</strong>: cell values update without stealing
 focus. Updates marshal via <code>wx.CallAfter</code> and use a debounced
 single accessibility event per cell per 200 ms to avoid speech
 spam.</li>
-<li><strong>Hideable per cell</strong>: a context menu item “Hide this
-item” tucks any cell behind an overflow group. Overflow is reached at
-the right end (“More items, button”); Enter opens a small list of hidden
+<li><strong>Hideable per cell</strong>: a context menu item "Hide this
+item" tucks any cell behind an overflow group. Overflow is reached at
+the right end ("More items, button"); Enter opens a small list of hidden
 cells, any of which can be restored.</li>
 <li><strong>Plugin-extensible</strong> (v1.1): plugins may register
 status-bar cells with the same MSAA contract.</li>
 </ul>
 <p>Cells shipped in v1.0, in left-to-right order:</p>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Cell</th>
@@ -1135,7 +617,7 @@ Notifications. Other cells are present but tucked into overflow until
 first relevant use; they auto-surface when their context becomes
 relevant (for example Page appears as soon as a paged document is
 opened; Search term appears the moment a search term is set).</p>
-<h3 id="c-trust-and-verification">5.1c Trust and verification</h3>
+<h3 id="51c-trust-and-verification">5.1c Trust and verification</h3>
 <p>Quill explains what it did, how confident it is, and how to recover
 if extraction looked wrong.</p>
 <ul>
@@ -1167,7 +649,7 @@ choice and an independence command.</li>
 canonical corpus of PDFs, DOCX, XLSX, PPTX, EPUB, Markdown, HTML, and
 OCR samples with expected extraction and announcement snapshots.</li>
 </ul>
-<h3 id="f-profile-safety-and-recovery">5.1f Profile safety and
+<h3 id="51f-profile-safety-and-recovery">5.1f Profile safety and
 recovery</h3>
 <p>Feature profiles must be safe, explainable, reversible, and
 recoverable.</p>
@@ -1197,8 +679,8 @@ prevents silent enablement of recovery-sensitive features.</li>
 <li><strong>Show what changed</strong> produces a plain-text summary
 after profile switches.</li>
 </ul>
-<h3 id="g-feature-registry-and-user-profiles">5.1g Feature registry and
-user profiles</h3>
+<h3 id="51g-feature-registry-and-user-profiles">5.1g Feature registry
+and user profiles</h3>
 <p>Quill’s feature-profile system is a first-class product surface, not
 a cosmetic preference layer.</p>
 <ul>
@@ -1232,8 +714,8 @@ user overrides.</li>
 <li><strong>Feature metadata</strong>: each feature declares risk,
 maturity, privacy, and network labels for use in settings and help.</li>
 </ul>
-<h3 id="d-power-search-regex-and-special-characters">5.1d Power search,
-regex, and special characters</h3>
+<h3 id="51d-power-search-regex-and-special-characters">5.1d Power
+search, regex, and special characters</h3>
 <p>Search and Unicode cleanup are first-class accessibility features,
 not power-user extras.</p>
 <ul>
@@ -1261,7 +743,7 @@ inspection view that describes invisible characters textually.</li>
 <li><strong>Unicode cleanup</strong>: normalization and cleanup commands
 remove or rewrite common noisy characters with a preview first.</li>
 </ul>
-<h3 id="e-feature-flags-and-profiles">5.1e Feature flags and
+<h3 id="51e-feature-flags-and-profiles">5.1e Feature flags and
 profiles</h3>
 <p>Quill should stay calm by default and unlock power features
 intentionally.</p>
@@ -1286,7 +768,7 @@ desired.</li>
 status-bar cells, help topics, and settings pages only surface features
 appropriate to the active profile.</li>
 </ul>
-<h3 id="documents-and-the-editor">5.2 Documents and the editor</h3>
+<h3 id="52-documents-and-the-editor">5.2 Documents and the editor</h3>
 <ul>
 <li>The editor is a multi-line <code>wx.TextCtrl</code> with
 <code>wx.TE_MULTILINE | wx.TE_RICH2 | wx.TE_NOHIDESEL | wx.TE_AUTO_URL</code>.
@@ -1313,7 +795,7 @@ modified document.</li>
 <li>Quill does not restore previous documents on launch by default.
 Opt-in setting available.</li>
 </ul>
-<h3 id="file-operations">5.3 File operations</h3>
+<h3 id="53-file-operations">5.3 File operations</h3>
 <ul>
 <li><code>Ctrl+N</code> new blank document.</li>
 <li><code>Ctrl+O</code> open via standard <code>wx.FileDialog</code>.
@@ -1464,24 +946,18 @@ bundles.</li>
 place. For rendered/extracted formats, opens Save As.</li>
 <li><code>Ctrl+Shift+S</code> opens Save As directly.</li>
 <li>Recent files: last N (default 10, range 5 to 50). If empty, announce
-“No recent files.”</li>
+"No recent files."</li>
 <li>File Explorer integration: settings panel lets the user register
-Quill with Windows for chosen extensions and add an “Open with Quill”
+Quill with Windows for chosen extensions and add an "Open with Quill"
 verb.</li>
 </ul>
-<h3 id="a-extended-format-support">5.3a Extended format support</h3>
+<h3 id="53a-extended-format-support">5.3a Extended format support</h3>
 <p>The table below lists every format family Quill adds, why each
 matters, and how Quill renders it. Every renderer follows the same
 rules: present text in a standard edit field, preserve the original
 file, escalate to the enhanced extractor or AI repair only when local
 extraction is poor and the user asks.</p>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Format family</th>
@@ -1535,7 +1011,7 @@ fails</td>
 <code>prc</code>, <code>pdb</code>, <code>tcr</code></td>
 <td>EPUB-only support excludes most Kindle and older e-book
 libraries</td>
-<td>Reuse Calibre’s conversion engine where present (plugin in v1.1) or
+<td>Reuse Calibre's conversion engine where present (plugin in v1.1) or
 bundled minimal readers for the open formats</td>
 </tr>
 <tr>
@@ -1589,7 +1065,7 @@ for braille back-translation; export to BRF</td>
 <tr>
 <td><strong>MHTML and web archives</strong></td>
 <td><code>mhtml</code>/<code>mht</code>, <code>warc</code>,
-<code>wacz</code>, browser “single file” saves, Safari
+<code>wacz</code>, browser "single file" saves, Safari
 <code>.webarchive</code></td>
 <td>Saved web pages are the second-most common research artefact after
 PDF</td>
@@ -1601,7 +1077,7 @@ HTML</td>
 <td><code>svg</code></td>
 <td>SVG is text; titles, descriptions, and <code>&lt;text&gt;</code>
 content carry semantic meaning often inaccessible elsewhere</td>
-<td>Show as XML in edit field plus a “Reading View” that extracts
+<td>Show as XML in edit field plus a "Reading View" that extracts
 titles, descriptions, and text in document order</td>
 </tr>
 <tr>
@@ -1621,7 +1097,7 @@ formats</td>
 exported); <code>.msg</code> and <code>.pst</code> are pure Microsoft
 and historically painful</td>
 <td>Headers as a labelled block, body as plain text, attachments listed
-with “Open in Quill” actions; <code>pst</code> and <code>mbox</code> get
+with "Open in Quill" actions; <code>pst</code> and <code>mbox</code> get
 an index UI</td>
 </tr>
 <tr>
@@ -1666,8 +1142,8 @@ reporting in the <code>!</code> palette mode</td>
 <td><code>ipynb</code>, <code>qmd</code>, <code>rmd</code></td>
 <td>Data science and research; notebooks are JSON and unreadable in
 basic editors</td>
-<td>Linearised: each cell becomes a section with role header (“Code cell
-3”, “Markdown cell 4”, “Output of cell 3”), outputs included where
+<td>Linearised: each cell becomes a section with role header ("Code cell
+3", "Markdown cell 4", "Output of cell 3"), outputs included where
 text</td>
 </tr>
 <tr>
@@ -1732,10 +1208,9 @@ full Settings → Format Support page; the current beta already ships an
 External Tools and Format Support dialog that shows supported helpers,
 the capabilities they unlock, and copy-to-clipboard installation hints
 (never an automatic install).</p>
-<h4 id="editable-vs.-read-only-matrix">Editable vs. read-only
-matrix</h4>
+<h4 id="editable-vs-read-only-matrix">Editable vs. read-only matrix</h4>
 <p>Not every format we open is something a user should edit. Quill is
-explicit about which formats round-trip in place vs. require Save
+explicit about which formats round-trip in place vs. require Save
 As:</p>
 <ul>
 <li><strong>Save in place</strong>: every plain-text and
@@ -1759,7 +1234,7 @@ DRM-protected.</li>
 LibreOffice headless for legacy office), Quill ships a thin shim and
 offers a one-click plugin install from the Format Support page. Plugins
 announce their license clearly before installing.</p>
-<h3 id="pdf-handling-in-v1.0">5.4 PDF handling in v1.0</h3>
+<h3 id="54-pdf-handling-in-v10">5.4 PDF handling in v1.0</h3>
 <p>This section is the canonical, scoped statement of what Quill 1.0
 does with PDF files. Anything not listed here is explicitly out of scope
 for v1.0 and tracked in the backlog (<a
@@ -1776,13 +1251,13 @@ page markers so page navigation is exact.</li>
 <li><strong>Page navigation.</strong> <code>Page Up</code> /
 <code>Page Down</code> move to the previous/next page marker.
 <code>Ctrl+G</code> opens Go To Page when page markers exist. The status
-bar’s Page cell shows <code>Page n of m</code>. Reaching the first or
+bar's Page cell shows <code>Page n of m</code>. Reaching the first or
 last page is announced.</li>
-<li><strong>Embedded bookmarks.</strong> Bookmarks (Adobe’s outline)
+<li><strong>Embedded bookmarks.</strong> Bookmarks (Adobe's outline)
 become Quill bookmarks for that document and appear in the Outline
 Navigator (5.16) under their original hierarchy. They are read-only with
 respect to the original PDF; renaming, adding, and deleting affect
-Quill’s own bookmark store.</li>
+Quill's own bookmark store.</li>
 <li><strong>Password-protected PDFs.</strong> On open, Quill prompts for
 the password through a standard modal dialog. The password is used
 in-memory only and is never written to disk, never logged, never sent
@@ -1831,7 +1306,7 @@ plain-text forms.</li>
 </ol>
 <p><strong>What v1.0 does not ship (deferred to backlog)</strong></p>
 <ul>
-<li><strong>Tier 2 “enhanced local” extractor.</strong> No pure-Python
+<li><strong>Tier 2 "enhanced local" extractor.</strong> No pure-Python
 local layout analyser meets the v1.0 quality bar. v1.0 has tier 1 and
 tier 3 only.</li>
 <li><strong>Heading synthesis from font-size analysis</strong> when no
@@ -1847,7 +1322,7 @@ inside the PDF). Not in v1.0.</li>
 <li><strong>Tagged-structure tree editor.</strong> Reading the structure
 summary is in; editing it is backlog.</li>
 </ul>
-<h3 id="improve-reading-order">5.5 Improve reading order</h3>
+<h3 id="55-improve-reading-order">5.5 Improve reading order</h3>
 <p>A general action under Tools and the command palette:</p>
 <ul>
 <li>For text-based documents, sends the current document text to the
@@ -1861,7 +1336,7 @@ document.</li>
 <li>Result opens as a new unsaved document; Save defaults to Save
 As.</li>
 </ul>
-<h3 id="html-and-markdown">5.6 HTML and Markdown</h3>
+<h3 id="56-html-and-markdown">5.6 HTML and Markdown</h3>
 <ul>
 <li>HTML files open as plain text in the editor.</li>
 <li><code>File &gt; Preview as HTML</code> writes a temporary HTML file
@@ -1875,13 +1350,13 @@ HTML file.</li>
 <code>.docx</code> via <code>python-docx</code>, preserving headings,
 lists, links, tables, code blocks.</li>
 </ul>
-<h3 id="find-and-replace">5.7 Find and replace</h3>
+<h3 id="57-find-and-replace">5.7 Find and replace</h3>
 <p>Find in Quill is designed to feel like Microsoft editors and Visual
 Studio Code at the same time: F3 just works once a term is known, the
 search term is remembered everywhere it makes sense, and everything is
 announced.</p>
 <p><strong>The search term, the central concept.</strong> Quill
-maintains a single “current search term” per editor. The term is set by
+maintains a single "current search term" per editor. The term is set by
 any of:</p>
 <ul>
 <li>typing in the Find dialog and pressing Enter,</li>
@@ -1890,10 +1365,10 @@ becomes the search term),</li>
 <li>pressing <code>Ctrl+F3</code> with no selection (the word under the
 cursor becomes the search term),</li>
 <li>restoring it from session storage on launch (when enabled),</li>
-<li>arrow-selecting a previous term from the Find dialog’s history
+<li>arrow-selecting a previous term from the Find dialog's history
 dropdown.</li>
 </ul>
-<p>The status bar’s <strong>Search term</strong> cell (5.1b) displays
+<p>The status bar's <strong>Search term</strong> cell (5.1b) displays
 the current search term and its options. <code>Enter</code> on the cell
 reopens Find pre-filled.</p>
 <p><strong>Keystrokes</strong></p>
@@ -1907,9 +1382,9 @@ search.</li>
 the current search term without opening any dialog. If no term is set,
 F3 opens Find with focus in the input. If a term is set, F3 simply
 selects the next match and announces line + context. At end of document,
-search wraps to the start (announced as “Wrapped to top”).</li>
+search wraps to the start (announced as "Wrapped to top").</li>
 <li><code>Shift+F3</code> does the same in reverse, wrapping at the
-start to the end (“Wrapped to bottom”).</li>
+start to the end ("Wrapped to bottom").</li>
 <li><code>Ctrl+F3</code> sets the current word or selection as the
 search term and advances. <code>Ctrl+Shift+F3</code> sets it and
 retreats. This is the Visual Studio convention.</li>
@@ -1926,7 +1401,7 @@ is one step.</li>
 <li><code>Esc</code> from any Find or Replace dialog closes it and
 returns focus to the editor at the previous cursor position (not at the
 last match unless the user pressed Enter).</li>
-<li><strong>“Not found”</strong> is always spoken, never silent. After
+<li><strong>"Not found"</strong> is always spoken, never silent. After
 two consecutive not-found beeps, Quill suggests opening Find All to
 verify the term.</li>
 </ul>
@@ -1963,8 +1438,8 @@ the spoken slice.</li>
 <li>On regex error: a single sentence, no traceback.</li>
 </ul>
 <p><strong>Find in current selection.</strong> When the editor has a
-non-empty selection at the moment Find or Replace is opened, the “In
-selection” checkbox is pre-checked; Replace All scopes its work to the
+non-empty selection at the moment Find or Replace is opened, the "In
+selection" checkbox is pre-checked; Replace All scopes its work to the
 selection. F3 and Shift+F3 continue to operate document-wide regardless,
 because muscle memory expects that.</p>
 <p><strong>Find next while typing.</strong> When the Find dialog is
@@ -1974,8 +1449,8 @@ interfere with F3; the search term is preserved until the user clears it
 Search).</p>
 <p><strong>Project-wide Find (Find in Folder)</strong> is deferred to
 v1.2.</p>
-<h3 id="spell-checking-magical-local-first">5.8 Spell checking (magical,
-local-first)</h3>
+<h3 id="58-spell-checking-magical-local-first">5.8 Spell checking
+(magical, local-first)</h3>
 <p>This section was significantly expanded in v0.2 of this PRD. See <a
 href="#6-spell-checking-deep-dive">section 6</a> for the full design and
 the decision rationale.</p>
@@ -1993,15 +1468,15 @@ boundary if the user opts in.</li>
 inline suggestion popup (a small modal list, fully keyboard
 driven).</li>
 <li>Suggestions come from Hunspell plus an n-gram reranker trained on
-the user’s writing for personalised top-3 suggestions.</li>
+the user's writing for personalised top-3 suggestions.</li>
 <li>Personal dictionary persists per user; per-document dictionary
 persists in a sidecar file.</li>
-<li>Multiple simultaneous dictionaries: e.g. English (UK) plus a
-technical jargon list plus the document’s own dictionary, merged with
+<li>Multiple simultaneous dictionaries: e.g. English (UK) plus a
+technical jargon list plus the document's own dictionary, merged with
 priority.</li>
 <li>All entirely local. No cloud round-trip ever for spell check.</li>
 </ul>
-<h3 id="word-count-and-navigation">5.9 Word count and navigation</h3>
+<h3 id="59-word-count-and-navigation">5.9 Word count and navigation</h3>
 <ul>
 <li><code>Ctrl+Shift+W</code> reports words, characters, and paragraphs.
 Reports on selection if present.</li>
@@ -2010,8 +1485,10 @@ markers (PDF). Announces page on move.</li>
 <li><code>Ctrl+G</code> opens Go To Line, or Go To Page when page
 markers exist.</li>
 </ul>
-<h3 id="bookmarks">5.10 Bookmarks</h3>
+<h3 id="510-bookmarks">5.10 Bookmarks</h3>
 <ul>
+<li>Bookmarks are <strong>named jump points</strong> intended for
+durable anchors a user wants to revisit by name.</li>
 <li><code>Ctrl+B</code> sets a bookmark at the current position. Prompts
 for a name.</li>
 <li>Stored per bookmark: name, line number, column, ~120 characters of
@@ -2019,12 +1496,12 @@ surrounding text, document path, ISO timestamp.</li>
 <li><code>Ctrl+Shift+G</code> opens Bookmarks Manager.</li>
 <li>On jump: if the stored line still contains the surrounding text, go
 there. If not, search for the surrounding text and update the bookmark.
-If still not found, fall back to line number and announce “approximate
-position.”</li>
+If still not found, fall back to line number and announce "approximate
+position."</li>
 <li>Bookmarks for saved documents persist in
 <code>%APPDATA%\Quill\bookmarks\&lt;hash&gt;.json</code>.</li>
 </ul>
-<h3 id="selection-helpers-and-where-am-i">5.11 Selection helpers and
+<h3 id="511-selection-helpers-and-where-am-i">5.11 Selection helpers and
 Where Am I</h3>
 <ul>
 <li><code>Ctrl+Shift+,</code> marks selection anchor;
@@ -2033,8 +1510,8 @@ Where Am I</h3>
 word count, modified state, page if available. In dialogs: structured
 description of the current field.</li>
 </ul>
-<h3 id="command-palette-visual-studio-code-style">5.12 Command palette
-(Visual Studio Code style)</h3>
+<h3 id="512-command-palette-visual-studio-code-style">5.12 Command
+palette (Visual Studio Code style)</h3>
 <p>This is a centrepiece of v0.2. See <a
 href="#7-command-palette-deep-dive">section 7</a> for the complete
 design.</p>
@@ -2066,7 +1543,7 @@ href="#8-keymap-and-keystroke-reassignment">section 8</a>).</li>
 with a <code>wx.SearchCtrl</code> on top. All accessible via stock
 screen-reader behaviour.</li>
 </ul>
-<h3 id="document-backups">5.13 Document backups</h3>
+<h3 id="513-document-backups">5.13 Document backups</h3>
 <ul>
 <li>On every save of an existing file, the previous saved bytes are
 copied to
@@ -2082,7 +1559,7 @@ days, never delete the most recent 5.</li>
 <li>Crash recovery: autosave snapshot every 30 seconds while a document
 is dirty; on launch, Quill offers to recover any orphan snapshots.</li>
 </ul>
-<h3 id="settings">5.14 Settings</h3>
+<h3 id="514-settings">5.14 Settings</h3>
 <p><code>Ctrl+,</code> opens Settings, organised in a
 <code>wx.Treebook</code>:</p>
 <ul>
@@ -2093,7 +1570,7 @@ AI</strong>, <strong>Files</strong>, <strong>Appearance</strong>,
 href="#8-keymap-and-keystroke-reassignment">section 8</a>),
 <strong>Privacy</strong>.</li>
 </ul>
-<h3 id="plugin-system-v1.1">5.15 Plugin system (v1.1)</h3>
+<h3 id="515-plugin-system-v11">5.15 Plugin system (v1.1)</h3>
 <ul>
 <li>Plugins are Python packages discovered in
 <code>%APPDATA%\Quill\plugins</code>.</li>
@@ -2102,9 +1579,9 @@ settings pages, palette entries, and <strong>default
 keybindings</strong> (which the user can override).</li>
 <li>Plugin manifest must declare network and filesystem use.</li>
 </ul>
-<h3 id="outline-navigator-heading-tree">5.16 Outline Navigator (heading
-tree)</h3>
-<p>One of Quill’s signature productivity wins for readers and writers.
+<h3 id="516-outline-navigator-heading-tree">5.16 Outline Navigator
+(heading tree)</h3>
+<p>One of Quill's signature productivity wins for readers and writers.
 Opens a tree of every heading in the current document, fully accessible,
 and lets the user jump anywhere in two keystrokes.</p>
 <ul>
@@ -2137,7 +1614,7 @@ screen readers handle it natively.</li>
 <li><strong>EPUB</strong>: <code>nav.xhtml</code> first, falling back to
 <code>toc.ncx</code>.</li>
 <li><strong>PDF</strong>: embedded document bookmarks (the same tree
-shown in Adobe Reader’s bookmarks pane); also synthesised from font-size
+shown in Adobe Reader's bookmarks pane); also synthesised from font-size
 analysis when no bookmarks exist (opt-in, off by default).</li>
 <li><strong>DAISY</strong>: navigation document.</li>
 <li><strong>Subtitle files</strong>: chapter markers if present;
@@ -2172,7 +1649,7 @@ headings appear inline with document switching.</li>
 <li>Targets: build the tree for any text-based document up to 1 MB in
 under 50 ms; up to 10 MB in under 500 ms.</li>
 </ul>
-<h3 id="jump-by-structure-shortcuts">5.17 Jump-by-structure
+<h3 id="517-jump-by-structure-shortcuts">5.17 Jump-by-structure
 shortcuts</h3>
 <p>In-editor navigation by document structure, alongside the Outline
 dialog:</p>
@@ -2191,7 +1668,8 @@ HTML.</li>
 block; <code>Ctrl+Alt+E</code> to the end.</li>
 <li>All shortcuts reassignable.</li>
 </ul>
-<h3 id="line-and-block-operations">5.18 Line and block operations</h3>
+<h3 id="518-line-and-block-operations">5.18 Line and block
+operations</h3>
 <p>VS Code-style editor productivity, all standard text-control
 operations:</p>
 <ul>
@@ -2207,7 +1685,7 @@ space.</li>
 <li><code>Tab</code> / <code>Shift+Tab</code> on a multi-line selection:
 indent or outdent.</li>
 <li><code>Ctrl+/</code>: toggle line comment using the current
-document’s comment marker (<code>#</code>, <code>//</code>,
+document's comment marker (<code>#</code>, <code>//</code>,
 <code>&lt;!-- --&gt;</code>, etc.).</li>
 <li><code>Ctrl+Shift+/</code>: toggle block comment where
 supported.</li>
@@ -2216,13 +1694,13 @@ supported.</li>
 Remove Duplicate Lines, Reverse Lines, Trim Trailing Whitespace, Convert
 Indent (tabs↔︎spaces), Normalize Whitespace, Wrap to Column N.</li>
 <li><strong>Smart list continuation</strong> (Markdown, opt-in):
-pressing Enter on a <code>-</code>, <code>*</code>, or <code>1.</code>
-line continues the list and increments numeric markers; pressing Enter
-on an empty list item ends the list.</li>
+pressing Enter on a <code>- </code>, <code>* </code>, or
+<code>1. </code> line continues the list and increments numeric markers;
+pressing Enter on an empty list item ends the list.</li>
 <li><strong>Bracket and quote auto-pair</strong> (off by default;
 per-format toggle in Settings). Never enabled in plain text.</li>
 </ul>
-<h3 id="document-statistics-and-reading-metrics">5.19 Document
+<h3 id="519-document-statistics-and-reading-metrics">5.19 Document
 statistics and reading metrics</h3>
 <p>Local, instant, never sends content anywhere.</p>
 <ul>
@@ -2243,8 +1721,8 @@ title says so explicitly.</li>
 <li>Status bar shows running word count for the current document or
 selection.</li>
 </ul>
-<h3 id="accessibility-auditor">5.20 Accessibility auditor</h3>
-<p>Quill’s audience is exactly the audience that needs to
+<h3 id="520-accessibility-auditor">5.20 Accessibility auditor</h3>
+<p>Quill's audience is exactly the audience that needs to
 <em>produce</em> accessible documents. v1.0 ships a first-class
 auditor.</p>
 <ul>
@@ -2271,7 +1749,7 @@ language metadata, password protection.</li>
 message, and “Why this matters” explanation. <code>Enter</code> jumps to
 the issue, <code>Delete</code> dismisses for the session,
 <code>Ctrl+I</code> ignores the rule in this document (persisted in the
-document’s sidecar).</li>
+document's sidecar).</li>
 <li>Two companion catalogs:
 <ul>
 <li><strong>Alt-text catalog</strong> (<code>Ctrl+Alt+I</code>): every
@@ -2284,7 +1762,7 @@ internal-vs-external; copy URLs.</li>
 <li>Audit completes in under 200 ms for documents up to 100 KB; up to
 5 s for documents up to 5 MB.</li>
 </ul>
-<h3 id="table-mode-for-markdown-and-html-tables">5.21 Table mode for
+<h3 id="521-table-mode-for-markdown-and-html-tables">5.21 Table mode for
 Markdown and HTML tables</h3>
 <p>When the editor cursor enters a Markdown pipe table, a Markdown grid
 table, or an HTML <code>&lt;table&gt;</code>, Quill enters Table Mode
@@ -2307,7 +1785,7 @@ the column header in the title.</li>
 and pads columns on every edit so the underlying text stays readable as
 plain text.</li>
 </ul>
-<h3 id="editor-essentials">5.22 Editor essentials</h3>
+<h3 id="522-editor-essentials">5.22 Editor essentials</h3>
 <p>A group of small, individually unremarkable features whose absence
 would feel cheap. All ship in v1.0.</p>
 <ul>
@@ -2357,8 +1835,8 @@ line groups, offers a difference list, and supports synchronized compare
 navigation. Diff hunks remain navigable with <code>Ctrl+]</code> /
 <code>Ctrl+[</code>.</li>
 </ul>
-<h3 id="recent-locations-history-browser-style-backforward">5.23 Recent
-locations history (browser-style back/forward)</h3>
+<h3 id="523-recent-locations-history-browser-style-backforward">5.23
+Recent locations history (browser-style back/forward)</h3>
 <ul>
 <li><code>Ctrl+Alt+Left</code> moves back through cursor jump points;
 <code>Ctrl+Alt+Right</code> moves forward.</li>
@@ -2374,9 +1852,11 @@ Stock <code>wx.ListBox</code>.</li>
 nearby text so jumps survive small edits exactly as bookmarks do
 (5.10).</li>
 </ul>
-<h3 id="mark-ring">5.24 Mark ring</h3>
+<h3 id="524-mark-ring">5.24 Mark ring</h3>
 <p>A second, lighter-weight navigation system for power users. Inspired
-by Emacs but adapted to Windows muscle memory.</p>
+by Emacs but adapted to Windows muscle memory. Marks are
+<strong>temporary jump points</strong>; bookmarks (5.10) are named and
+more durable.</p>
 <ul>
 <li><code>Ctrl+</code>Space (overloaded carefully; the editor does not
 need plain Ctrl+Space) sets an anonymous mark at the cursor; status bar
@@ -2394,7 +1874,7 @@ persist across sessions in v1.0.</li>
 whom <code>Ctrl+Space</code> collides with screen-reader features; the
 conflict detector (8.4) flags the well-known cases at install time.</li>
 </ul>
-<h3 id="read-aloud-secondary-voice-not-the-screen-reader">5.25 Read
+<h3 id="525-read-aloud-secondary-voice-not-the-screen-reader">5.25 Read
 Aloud (secondary voice, not the screen reader)</h3>
 <p>Quill ships a read-aloud feature that uses a
 <strong>secondary</strong> voice the user picks from a list. It
@@ -2413,33 +1893,33 @@ the next sentence; <code>Ctrl+Alt+,</code> previous.</li>
 word.</li>
 <li>Highlight follows: the editor cursor moves to the start of the
 currently spoken sentence so when read-aloud stops, the user is exactly
-where they last heard. The status bar’s Read Aloud cell shows
+where they last heard. The status bar's Read Aloud cell shows
 progress.</li>
 <li>Selection-only mode: when invoked with a selection, read-aloud reads
 only the selection and stops at the end.</li>
 <li>Voice, speed, pitch, volume all configurable. Three named profiles
 (Reading, Proofreading, Skim) save preferred values.</li>
-<li>The read-aloud voice never overrides the screen reader’s
+<li>The read-aloud voice never overrides the screen reader's
 announcements; if a screen reader speaks something while read-aloud is
 active, read-aloud continues but is briefly ducked.</li>
 </ul>
-<h3 id="number-lines-and-strip-line-numbers">5.26 Number lines and strip
-line numbers</h3>
+<h3 id="526-number-lines-and-strip-line-numbers">5.26 Number lines and
+strip line numbers</h3>
 <p>A small tool that addresses a real recurring user request.</p>
 <ul>
 <li><code>Tools → Number Lines…</code> opens a dialog with format
 options: <code>1.</code>, <code>[1]</code>, <code>1:</code>,
 <code>1)</code>, <code>001 </code>, and a custom Python
 <code>str.format</code> template using <code>{n}</code>.</li>
-<li>Start index, increment, zero-padding, and “only number non-blank
-lines” options.</li>
+<li>Start index, increment, zero-padding, and "only number non-blank
+lines" options.</li>
 <li>Applies to the whole document or selection.</li>
 <li><code>Tools → Strip Line Numbers</code> reverses by regex; the regex
 used to add numbers is also the regex used to strip them.</li>
 <li>Undo is one step; the tool reports <code>Numbered 482 lines</code>
 or <code>Stripped numbers from 482 lines</code>.</li>
 </ul>
-<h3 id="open-from-url">5.27 Open from URL</h3>
+<h3 id="527-open-from-url">5.27 Open from URL</h3>
 <ul>
 <li><code>Ctrl+Alt+O</code> opens a small dialog with a URL field.
 Accepts <code>http://</code>, <code>https://</code>, raw GitHub URLs,
@@ -2457,14 +1937,14 @@ prompt for confirmation.</li>
 <li>All TLS errors and 4xx/5xx responses are reported with a single
 readable sentence, no stack traces.</li>
 </ul>
-<h3 id="format-aware-bracket-and-quote-navigation">5.28 Format-aware
+<h3 id="528-format-aware-bracket-and-quote-navigation">5.28 Format-aware
 bracket and quote navigation</h3>
 <ul>
 <li><code>Ctrl+]</code> and <code>Ctrl+[</code> already navigate by
 block in editor-mode (5.17); when inside a code-aware context (code
 file, Markdown code fence, HTML tag), they instead jump to the matching
 bracket, quote, fence, or HTML tag.</li>
-<li><code>Ctrl+Shift+\</code> is the explicit “Match Bracket” command
+<li><code>Ctrl+Shift+\</code> is the explicit "Match Bracket" command
 (also reachable from Navigate menu).</li>
 <li><code>Ctrl+Shift+]</code> extends the selection from the cursor to
 the matching bracket.</li>
@@ -2474,8 +1954,8 @@ supported languages; Markdown respects fence boundaries.</li>
 <code>Matched bracket on line N, column C</code> so screen-reader users
 do not lose context.</li>
 </ul>
-<h3 id="format-menu-text-transforms-no-styling">5.29 Format menu (text
-transforms, no styling)</h3>
+<h3 id="529-format-menu-text-transforms-no-styling">5.29 Format menu
+(text transforms, no styling)</h3>
 <p>A dedicated menu surfacing transforms that are otherwise reachable
 via Tools or shortcuts. The menu exists because discoverability matters
 more than purity.</p>
@@ -2496,13 +1976,12 @@ Insert Markdown Tag… (semantic snippet picker).</li>
 <code>Ctrl+Alt+1</code> through <code>Ctrl+Alt+6</code>.</li>
 <li>Re-flow: Wrap to Column…, Re-flow Paragraph.</li>
 </ul>
-<h3 id="a-magical-html-and-markdown-tag-picker">5.29a Magical HTML and
-Markdown tag picker</h3>
+<h3 id="529a-magical-html-and-markdown-tag-picker">5.29a Magical HTML
+and Markdown tag picker</h3>
 <ul>
 <li><code>Format → Insert HTML Tag…</code> opens a keyboard-first picker
 of common tags (<code>section</code>, <code>article</code>, headings,
-list/table tags, inline emphasis, links, images, code).<br />
-</li>
+list/table tags, inline emphasis, links, images, code).</li>
 <li>After selecting a tag, Quill prompts for optional attributes in a
 compact <code>key=value; key2=value2</code> format and inserts valid tag
 text into the editor.</li>
@@ -2526,7 +2005,8 @@ format-aware inserter: markdown links in Markdown docs,
 <code>&lt;a href&gt;</code> in HTML docs, and <code>text (url)</code>
 form in plain text.</li>
 </ul>
-<h3 id="bookmark-export-and-import">5.30 Bookmark export and import</h3>
+<h3 id="530-bookmark-export-and-import">5.30 Bookmark export and
+import</h3>
 <ul>
 <li><code>Tools → Bookmarks → Export…</code> writes the bookmark set for
 the current document to a single JSON file alongside its hash so it
@@ -2539,7 +2019,7 @@ suffix; identical positions are merged.</li>
 writes every bookmark across every document the user has ever opened,
 useful for moving machines.</li>
 </ul>
-<h3 id="trusted-locations-office-style">5.31 Trusted locations
+<h3 id="531-trusted-locations-office-style">5.31 Trusted locations
 (Office-style)</h3>
 <ul>
 <li><code>Settings → Privacy → Trusted Locations</code> is a list of
@@ -2553,13 +2033,13 @@ enable them explicitly.</li>
 <li>The trusted locations list is editable, exportable, and
 importable.</li>
 </ul>
-<h3 id="jump-list-and-shell-integration">5.32 Jump List and shell
+<h3 id="532-jump-list-and-shell-integration">5.32 Jump List and shell
 integration</h3>
 <ul>
 <li>Windows Taskbar Jump List shows Recent Files (last 10) and Pinned
 Files; Tasks include <code>New Document</code>, <code>Open File…</code>,
 and <code>Open from URL…</code>.</li>
-<li>Implementation via <code>pywin32</code>’s
+<li>Implementation via <code>pywin32</code>'s
 <code>ICustomDestinationList</code>.</li>
 <li>Shell context menu entries (registered from
 <code>Settings → Files</code>):
@@ -2574,10 +2054,17 @@ implies a folder-tree panel).</li>
 <li>All shell verbs install per-user (no admin elevation required) and
 uninstall cleanly.</li>
 </ul>
-<h3 id="diagnostics-and-bug-reporting">5.33 Diagnostics and bug
+<h3 id="533-diagnostics-and-bug-reporting">5.33 Diagnostics and bug
 reporting</h3>
 <ul>
-<li><code>Help → Save Diagnostics…</code> writes a zip with:
+<li><code>Help → Report a Bug…</code> is the unified support flow. It
+opens an in-app review screen with the report summary and destination
+URL, supports optional diagnostics zip generation, copies the
+environment summary to the clipboard, and then opens a pre-filled
+Community Access support-hub issue form in the default browser with no
+logs; the user reviews and submits manually.</li>
+<li><code>Help → Save Diagnostics…</code> remains available for
+standalone diagnostics export and writes a zip with:
 <ul>
 <li>the last 7 days of logs (action names and outcomes only; no document
 content),</li>
@@ -2590,13 +2077,8 @@ locale).</li>
 </ul></li>
 <li>Nothing leaves the machine. The user chooses where to save the zip
 and what to do with it.</li>
-<li><code>Help → Report a Bug…</code> first opens an in-app review
-screen with the report summary and destination URL, copies the
-environment summary to the clipboard, and then opens a pre-filled
-Community Access support-hub issue form in the default browser with no
-logs; the user reviews and submits manually.</li>
 </ul>
-<h3 id="welcome-and-keyboard-reference">5.34 Welcome and Keyboard
+<h3 id="534-welcome-and-keyboard-reference">5.34 Welcome and Keyboard
 Reference</h3>
 <ul>
 <li><strong>Welcome</strong> opens a tutorial document in a new tab that
@@ -2605,7 +2087,7 @@ find/F3, spell check, and accessibility audit. The document is editable;
 users can save their own annotated copy.</li>
 <li><strong>Keyboard Reference</strong> is auto-generated from the
 current keymap and opens as a Markdown document in the editor. It is
-grouped by menu, includes the “when” context for each binding, and
+grouped by menu, includes the "when" context for each binding, and
 updates the next time the user opens it after any rebind. Because it is
 just a document, users can search it with Find, jump with the Outline
 Navigator, and print it.</li>
@@ -2614,9 +2096,9 @@ appears once per launch as a small dismissible dialog with a single tip
 drawn from real palette actions, each tip a one-liner with a
 <code>Try it</code> button that runs the action.</li>
 </ul>
-<h3 id="notifications-centre">5.35 Notifications centre</h3>
+<h3 id="535-notifications-centre">5.35 Notifications centre</h3>
 <ul>
-<li>The status bar’s <strong>Notifications</strong> cell holds Quill’s
+<li>The status bar's <strong>Notifications</strong> cell holds Quill's
 announcements: available updates, recovered autosave snapshots offered
 on launch, finished AI tasks, finished long-running OCR or extraction
 jobs, and any plugin messages.</li>
@@ -2624,9 +2106,9 @@ jobs, and any plugin messages.</li>
 (stock <code>wx.ListBox</code> with timestamps); Delete dismisses
 individual entries; <code>Shift+Delete</code> dismisses all.</li>
 <li>Quill never raises toast or balloon notifications. All asynchronous
-events surface here and on the status bar’s Background Tasks cell.</li>
+events surface here and on the status bar's Background Tasks cell.</li>
 </ul>
-<h3 id="what-changed-on-save-opt-in">5.36 “What changed on save”
+<h3 id="536-what-changed-on-save-opt-in">5.36 "What changed on save"
 (opt-in)</h3>
 <ul>
 <li>Off by default. When on
@@ -2638,7 +2120,7 @@ cheap on documents up to 5 MB.</li>
 <li>Useful for ambient awareness during long editing sessions; trivially
 ignorable for users who prefer silence.</li>
 </ul>
-<h3 id="link-tools">5.37 Link tools</h3>
+<h3 id="537-link-tools">5.37 Link tools</h3>
 <p>A small family of related commands that make working with links
 comfortable for screen-reader users.</p>
 <ul>
@@ -2667,13 +2149,13 @@ announces the target without opening it
 <li><strong>Copy link target</strong> (<code>Ctrl+Alt+K</code>): copies
 the URL of the link under the cursor.</li>
 </ul>
-<h3 id="document-properties-and-front-matter">5.38 Document properties
-and front-matter</h3>
+<h3 id="538-document-properties-and-front-matter">5.38 Document
+properties and front-matter</h3>
 <ul>
 <li><strong>Document properties dialog</strong>
 (<code>File → Document Properties…</code>): edit document language
 (BCP-47 tag), title, author, description, keywords. For DOCX, EPUB,
-HTML, ODT these write into the document’s metadata in place; for plain
+HTML, ODT these write into the document's metadata in place; for plain
 text, Markdown, reStructuredText, AsciiDoc, Org, and Typst they write
 into a sidecar <code>&lt;filename&gt;.quill.yml</code>. The document
 language drives the spell-check dictionary stack automatically.</li>
@@ -2691,15 +2173,15 @@ per project) are highlighted.</li>
 gives them sensible widgets (date picker for dates, multi-line for
 description, etc.). Unknown keys get a plain text field.</li>
 </ul>
-<h3 id="autosave-control-and-persistent-undo">5.39 Autosave control and
-persistent undo</h3>
+<h3 id="539-autosave-control-and-persistent-undo">5.39 Autosave control
+and persistent undo</h3>
 <ul>
 <li><strong>Autosave</strong> is on by default at 30-second intervals.
 The status bar gains an <strong>Autosave</strong> cell showing
 <code>Autosave: 30 s</code> or <code>Autosave: off</code>. Enter cycles
 15 s, 30 s, 60 s, 5 min, off. Settings dialog exposes the same plus a
 custom interval.</li>
-<li><strong>Persistent undo</strong> keeps each document’s undo stack
+<li><strong>Persistent undo</strong> keeps each document's undo stack
 alongside its autosave snapshots. Reopening a recently closed document
 restores up to 100 undo steps. Off by default for plain-text files
 larger than 5 MB. Stored in
@@ -2709,8 +2191,8 @@ auto-pruned at 30 days.</li>
 <code>…snap.tmp</code> and rename to <code>…snap</code> on flush so a
 power loss mid-write cannot corrupt the recovery store.</li>
 </ul>
-<h3 id="paragraph-line-and-footnote-refinements">5.40 Paragraph, line,
-and footnote refinements</h3>
+<h3 id="540-paragraph-line-and-footnote-refinements">5.40 Paragraph,
+line, and footnote refinements</h3>
 <ul>
 <li><strong>Join paragraph</strong> (<code>Ctrl+Shift+J</code>):
 collapses a wrapped paragraph (the kind produced by plain-text email or
@@ -2726,8 +2208,8 @@ re-numbering in document order. Re-running removes them. Idempotent.
 Works in HTML, AsciiDoc, reStructuredText, Org, Typst as well.</li>
 <li><strong>Footnote helper</strong>:
 <ul>
-<li><code>Ctrl+Alt+.</code> (period) inserts a Markdown footnote pair at
-the cursor and jumps the cursor into the definition block; pressing
+<li><code>Ctrl+Alt+. </code> (period) inserts a Markdown footnote pair
+at the cursor and jumps the cursor into the definition block; pressing
 <code>Ctrl+Alt+.</code> again returns to the reference site.</li>
 <li><code>Tools → Renumber Footnotes</code> reorders footnote labels
 into document order (1, 2, 3…), updating both references and
@@ -2736,7 +2218,7 @@ definitions.</li>
 (<code>[#]_</code>) and Pandoc-style inline notes.</li>
 </ul></li>
 </ul>
-<h3 id="search-and-replace-preview-and-saved-searches">5.41
+<h3 id="541-search-and-replace-preview-and-saved-searches">5.41
 Search-and-replace preview and saved searches</h3>
 <ul>
 <li><strong>Replace preview</strong>: when a Replace All would change
@@ -2752,9 +2234,10 @@ as if F3 had been pressed. Stored in
 <code>%APPDATA%\Quill\saved-searches.json</code>,
 exportable/importable.</li>
 </ul>
-<h3 id="sort-and-transform-details">5.42 Sort and transform details</h3>
+<h3 id="542-sort-and-transform-details">5.42 Sort and transform
+details</h3>
 <p><code>Tools → Sort Selected Lines…</code> and the related transforms
-(5.18) are spec’d here in full:</p>
+(5.18) are spec'd here in full:</p>
 <ul>
 <li>Direction: ascending or descending.</li>
 <li>Case sensitivity: on or off.</li>
@@ -2765,30 +2248,30 @@ exportable/importable.</li>
 dates; sort chronologically.</li>
 <li>Header row: preserved as the first line if checked.</li>
 <li>Stable sort always; equal lines preserve their relative order.</li>
-<li>Remove Duplicate Lines: optional “keep first” vs. “keep last”;
+<li>Remove Duplicate Lines: optional "keep first" vs. "keep last";
 reports <code>Removed 13 duplicate lines, 287 remain</code>.</li>
 <li>Reverse Lines: simple reverse, preserves blank lines.</li>
 </ul>
 <h3
-id="save-all-with-conflict-detection-and-per-file-format-memory">5.43
+id="543-save-all-with-conflict-detection-and-per-file-format-memory">5.43
 Save All with conflict detection and per-file format memory</h3>
 <ul>
 <li><strong>Save All</strong> (<code>Ctrl+Alt+S</code> reserved; default
-is <code>Ctrl+Shift+Alt+S</code> so it doesn’t clash with Document
+is <code>Ctrl+Shift+Alt+S</code> so it doesn't clash with Document
 Statistics) saves every modified document. If the external watcher
 detects that one or more files changed on disk since they were opened,
 Save All opens a per-file resolution dialog: Keep Mine, Take Theirs,
 Open Diff. Defaults to Keep Mine with no destructive action until the
 user confirms.</li>
 <li><strong>Per-file format memory</strong>: Quill remembers per-path
-the user’s last choices for encoding, line endings, wrap, indent width,
+the user's last choices for encoding, line endings, wrap, indent width,
 tabs-vs-spaces, and spell-check language. On reopening the file those
 settings are restored. Setting toggle:
 <code>Settings → Files → Remember per-file format choices</code> (on by
 default). Storage in <code>%APPDATA%\Quill\file-prefs.json</code>, keyed
 by SHA-1 of the path.</li>
 </ul>
-<h3 id="per-document-scratchpad">5.44 Per-document scratchpad</h3>
+<h3 id="544-per-document-scratchpad">5.44 Per-document scratchpad</h3>
 <ul>
 <li><code>Ctrl+Alt+N</code> opens a small non-modal Scratchpad window
 tied to the current document. The Scratchpad is a second
@@ -2803,7 +2286,7 @@ note).</li>
 <li>Scratchpads use the same spell-check stack as their parent document
 but are excluded from accessibility audits.</li>
 </ul>
-<h3 id="section-folding-announce-only">5.45 Section folding
+<h3 id="545-section-folding-announce-only">5.45 Section folding
 (announce-only)</h3>
 <p>A folding model designed for screen-reader users: folded ranges are
 summarised aloud and never visually hidden in a way that confuses the
@@ -2822,7 +2305,8 @@ unfolds on jump.</li>
 <li>Outline Navigator (5.16) is the primary navigation tool; folding is
 the in-editor companion.</li>
 </ul>
-<h3 id="spell-check-ignore-directives-and-manual-bilingual-flag">5.46
+<h3
+id="546-spell-check-ignore-directives-and-manual-bilingual-flag">5.46
 Spell-check ignore directives and manual bilingual flag</h3>
 <ul>
 <li><strong>Per-document ignore directives</strong>. Quill honours a
@@ -2830,7 +2314,7 @@ magic comment that lists words to ignore in this document only:
 <ul>
 <li>HTML / Markdown:
 <code>&lt;!-- quill: ignore-spell "frobnicate", "wibble" --&gt;</code></li>
-<li>Plain text and code (using the file’s comment marker):
+<li>Plain text and code (using the file's comment marker):
 <code># quill: ignore-spell frobnicate, wibble</code></li>
 <li>YAML / TOML front-matter:
 <code>quill_ignore_spell: [frobnicate, wibble]</code></li>
@@ -2845,7 +2329,7 @@ paragraph. Per-paragraph auto-detection remains in the backlog; this
 manual flow is reliable today.</li>
 </ul>
 <h3
-id="word-boundary-mode-trailing-whitespace-case-change-announcement">5.47
+id="547-word-boundary-mode-trailing-whitespace-case-change-announcement">5.47
 Word boundary mode, trailing whitespace, case-change announcement</h3>
 <ul>
 <li><strong>Word boundary mode</strong>
@@ -2857,14 +2341,14 @@ prose.</li>
 for log files.</li>
 <li><strong>Programmer</strong>: also breaks on <code>_</code>,
 <code>-</code>, <code>.</code>, and case transitions
-(<code>getFoo</code> is three “words”: <code>get</code>,
+(<code>getFoo</code> is three "words": <code>get</code>,
 <code>Foo</code>, plus the case boundary). Best for code.</li>
 </ul></li>
 <li>The mode affects <code>Ctrl+Left</code>/<code>Right</code>,
 <code>Ctrl+Delete</code>/<code>Backspace</code>, double-click selection,
 word count, and the spell-check tokeniser.</li>
 <li><strong>Trailing whitespace announcement</strong>: when the cursor
-lands on a line that ends with trailing whitespace, the status bar’s
+lands on a line that ends with trailing whitespace, the status bar's
 Line/Column cell appends <code>(trailing whitespace)</code> and a
 screen-reader-friendly hint is available via Where Am I. No visual
 highlight; no extra speech while typing.</li>
@@ -2874,8 +2358,8 @@ apply to the whole document because nothing was selected, the
 announcement explicitly says so and reminds the user
 <code>Press Ctrl+Z to undo full-document case change</code>.</li>
 </ul>
-<h3 id="multi-format-export-and-reading-view">5.48 Multi-format export
-and reading view</h3>
+<h3 id="548-multi-format-export-and-reading-view">5.48 Multi-format
+export and reading view</h3>
 <ul>
 <li><strong>Export panel</strong> (<code>File → Export…</code>): one
 dialog with target format choices: HTML, DOCX, plain text, Markdown,
@@ -2891,21 +2375,21 @@ their level, lists rendered with consistent markers, code blocks framed
 by a horizontal rule. Editing is disabled in reading view (the cell
 announces this); toggle off to edit.</li>
 </ul>
-<h3 id="welcome-back-snapshot">5.49 Welcome-back snapshot</h3>
+<h3 id="549-welcome-back-snapshot">5.49 Welcome-back snapshot</h3>
 <ul>
 <li>On launch, if the user closed Quill cleanly with N documents open
 last time, a single prompt offers
 <code>Reopen the 3 documents from your last session?</code> with Yes /
 No / Show me.</li>
-<li>“Show me” opens a small list of the documents (paths, last cursor
+<li>"Show me" opens a small list of the documents (paths, last cursor
 positions) and lets the user pick a subset.</li>
-<li>Always opt-in per launch; the global “restore session” setting is
+<li>Always opt-in per launch; the global "restore session" setting is
 separate and stays off by default.</li>
 </ul>
-<h3 id="per-document-keymap-override-with-explicit-consent">5.50
+<h3 id="550-per-document-keymap-override-with-explicit-consent">5.50
 Per-document keymap override (with explicit consent)</h3>
 <ul>
-<li>A document’s sidecar <code>.quill.yml</code> may declare a
+<li>A document's sidecar <code>.quill.yml</code> may declare a
 <code>keymap_override</code> block.</li>
 <li>Quill never applies it silently. On opening such a document, the
 user sees a one-time confirmation:
@@ -2918,7 +2402,7 @@ never global.</li>
 (announced as <code>keymap override active</code>) whenever an override
 is in effect.</li>
 </ul>
-<h3 id="settings-export-import-and-partitioned-reset">5.51 Settings
+<h3 id="551-settings-export-import-and-partitioned-reset">5.51 Settings
 export, import, and partitioned reset</h3>
 <ul>
 <li><code>Settings → Export…</code> writes a single zip containing
@@ -2926,7 +2410,7 @@ settings, keymap, templates, snippets, personal dictionary, saved
 searches, and bookmarks. API keys are excluded; the user is told so
 explicitly in the dialog.</li>
 <li><code>Settings → Import…</code> previews every change in a stock
-<code>wx.ListBox</code> and requires Enter to commit. Conflicts (e.g. a
+<code>wx.ListBox</code> and requires Enter to commit. Conflicts (e.g. a
 keymap rebind that contradicts the current keymap) are flagged
 inline.</li>
 <li><code>Settings → Reset to Defaults…</code> opens a partitioned reset
@@ -2934,7 +2418,7 @@ dialog with checkboxes for: Keymap, Appearance, Spell-check learning,
 Templates and snippets, Recent files, Bookmarks, Everything. Never
 silent; every reset shows a confirmation listing what will be lost.</li>
 </ul>
-<h3 id="document-fingerprint">5.52 Document fingerprint</h3>
+<h3 id="552-document-fingerprint">5.52 Document fingerprint</h3>
 <ul>
 <li>Every saved document has a SHA-256 fingerprint of its bytes shown in
 <code>File → Document Properties…</code> and copyable from a
@@ -2945,7 +2429,7 @@ comparison.</li>
 <li>The fingerprint also surfaces in the diagnostics bundle (5.33) for
 any open document, scrubbed of path.</li>
 </ul>
-<h3 id="unicode-insert">5.53 Unicode insert</h3>
+<h3 id="553-unicode-insert">5.53 Unicode insert</h3>
 <ul>
 <li><code>Ctrl+Alt+U</code> opens a search dialog over the Unicode name
 database (<code>unicodedata</code> from the standard library). Type any
@@ -2959,7 +2443,7 @@ prefix to scope.</li>
 smart quotes, currency symbols, mathematical operators.</li>
 <li>Recent characters list keeps the last 20.</li>
 </ul>
-<h3 id="idle-time-prefetch">5.54 Idle-time prefetch</h3>
+<h3 id="554-idle-time-prefetch">5.54 Idle-time prefetch</h3>
 <ul>
 <li>When the user opens a file from a folder, Quill background-extracts
 the next and previous files alphabetically into the in-memory document
@@ -2970,7 +2454,7 @@ prefetch.</li>
 <li>Opt-out switch in
 <code>Settings → General → Prefetch neighbouring files</code>.</li>
 </ul>
-<h3 id="atomic-on-disk-stores">5.55 Atomic on-disk stores</h3>
+<h3 id="555-atomic-on-disk-stores">5.55 Atomic on-disk stores</h3>
 <ul>
 <li>All Quill-managed JSON stores (bookmarks, settings, keymap, recent,
 saved searches, file prefs, notes index) write to
@@ -2980,10 +2464,10 @@ On startup, if the primary store fails to parse, Quill renames it to
 <code>&lt;store&gt;.broken-&lt;timestamp&gt;.json</code>, falls back to
 the <code>.bak</code>, and announces
 <code>Recovered &lt;store&gt; from backup</code>.</li>
-<li>This eliminates the worst class of “my bookmarks vanished after a
-crash” bugs.</li>
+<li>This eliminates the worst class of "my bookmarks vanished after a
+crash" bugs.</li>
 </ul>
-<h3 id="first-run-onboarding">5.56 First-run onboarding</h3>
+<h3 id="556-first-run-onboarding">5.56 First-run onboarding</h3>
 <p>A five-step welcome flow the first time Quill launches. Each step is
 a normal modal page (no carousel, no animation). Skip is always
 available; the chosen values are written through the same Settings code
@@ -3006,7 +2490,7 @@ on later.</li>
 <code>%APPDATA%\Quill\onboarding-complete.json</code>. Re-running
 <code>Help → Run Onboarding Again</code> reopens the flow without
 resetting anything else.</p>
-<h3 id="privacy-summary">5.57 Privacy summary</h3>
+<h3 id="557-privacy-summary">5.57 Privacy summary</h3>
 <ul>
 <li>A single-screen plain-language statement of what Quill does and does
 not send over the network. Linked from
@@ -3020,7 +2504,7 @@ explicit per-action confirmation; the only outbound calls v1.0 makes
 without confirmation are the manual update check and the optional
 crash-report upload (5.71), both opt-in.</li>
 </ul>
-<h3 id="licenses-screen">5.58 Licenses screen</h3>
+<h3 id="558-licenses-screen">5.58 Licenses screen</h3>
 <ul>
 <li><code>Help → Licenses</code> opens
 <code>THIRD-PARTY-NOTICES.md</code> (auto-generated at build time,
@@ -3029,7 +2513,7 @@ crash-report upload (5.71), both opt-in.</li>
 text, and a one-line use justification.</li>
 <li>Required for procurement; required by some bundled licenses.</li>
 </ul>
-<h3 id="crash-recovery-transparency">5.59 Crash recovery
+<h3 id="559-crash-recovery-transparency">5.59 Crash recovery
 transparency</h3>
 <p>When Quill detects an autosave snapshot newer than the on-disk file
 on launch:</p>
@@ -3046,14 +2530,14 @@ separate labelled <code>wx.StaticText</code> so it reads cleanly.</li>
 on-disk file is <strong>never</strong> overwritten without an explicit
 Save.</li>
 </ul>
-<h3 id="read-only-document-mode">5.60 Read-only document mode</h3>
+<h3 id="560-read-only-document-mode">5.60 Read-only document mode</h3>
 <ul>
 <li><code>View → Read-Only Mode</code> (<code>Ctrl+Shift+L</code> by
-default) toggles the editor’s editability without touching file
+default) toggles the editor's editability without touching file
 permissions.</li>
 <li>Toggle state is per-document; announced when toggled
 (<code>Read-only mode on</code> / <code>off</code>).</li>
-<li>Status bar’s <strong>Modified state</strong> cell shows
+<li>Status bar's <strong>Modified state</strong> cell shows
 <code>Read-only</code> while on; attempts to type are silently ignored
 and a single discreet announcement
 (<code>Editor is read-only; press Ctrl+Shift+L to allow editing</code>)
@@ -3061,7 +2545,8 @@ fires the first time per session.</li>
 <li>All navigation, Find, Outline, Read Aloud, Statistics, and
 Accessibility Audit continue to work.</li>
 </ul>
-<h3 id="file-related-menu-helpers">5.61 File-related menu helpers</h3>
+<h3 id="561-file-related-menu-helpers">5.61 File-related menu
+helpers</h3>
 <ul>
 <li><code>File → Reveal in File Explorer</code> opens Explorer with the
 current file selected.</li>
@@ -3071,7 +2556,7 @@ clipboard with a confirmation announcement.</li>
 <li><code>File → Show Containing Folder in Quill</code> is deferred to
 v1.1 (depends on the folder panel).</li>
 </ul>
-<h3 id="open-recent-enhancements">5.62 Open Recent enhancements</h3>
+<h3 id="562-open-recent-enhancements">5.62 Open Recent enhancements</h3>
 <ul>
 <li><code>File → Open Recent</code> includes per-entry <strong>Pin /
 Unpin</strong> and a top-level <strong>Open All Pinned</strong>
@@ -3081,12 +2566,12 @@ appear at the top of the submenu.</li>
 <li>Pinned entries are persisted in <code>recent.json</code> and survive
 Clear Recent (which only clears unpinned entries).</li>
 </ul>
-<h3 id="document-timeline">5.63 Document timeline</h3>
+<h3 id="563-document-timeline">5.63 Document timeline</h3>
 <ul>
 <li><code>Tools → Document Timeline…</code> opens a chronological list
 (stock <code>wx.ListBox</code>) of every backup and autosave snapshot
 for the current document, with timestamp, size, and source (save backup
-vs. autosave snapshot).</li>
+vs. autosave snapshot).</li>
 <li>Each row has <strong>Open in new tab</strong>, <strong>Compare with
 current</strong>, and <strong>Restore</strong> (with confirmation)
 actions.</li>
@@ -3094,8 +2579,8 @@ actions.</li>
 UI on top.</li>
 <li>Per-document, never global.</li>
 </ul>
-<h3 id="sentence-and-paragraph-navigation">5.64 Sentence and paragraph
-navigation</h3>
+<h3 id="564-sentence-and-paragraph-navigation">5.64 Sentence and
+paragraph navigation</h3>
 <ul>
 <li><code>Ctrl+Up</code> / <code>Ctrl+Down</code> already navigate by
 paragraph (standard wx behaviour).</li>
@@ -3110,25 +2595,25 @@ language pack and is user-extendable in Settings.</li>
 <li><code>Ctrl+Shift+Alt+Right</code> / <code>Ctrl+Shift+Alt+Left</code>
 extend the selection by sentence.</li>
 </ul>
-<h3 id="word-count-goal-per-document">5.65 Word-count goal per
+<h3 id="565-word-count-goal-per-document">5.65 Word-count goal per
 document</h3>
 <ul>
 <li><code>File → Document Properties…</code> gains a <strong>Word
 goal</strong> integer field (0 disables).</li>
-<li>The status bar’s <strong>Word count</strong> cell appends
+<li>The status bar's <strong>Word count</strong> cell appends
 <code>(243 of 1500)</code> when a goal is set; on crossing the threshold
 Quill announces <code>Word goal reached: 1500 words</code>.</li>
 <li>The goal is stored alongside other metadata in the document
 container or in the <code>.quill.yml</code> sidecar.</li>
 </ul>
-<h3 id="reading-position-memory-per-document">5.66 Reading position
+<h3 id="566-reading-position-memory-per-document">5.66 Reading position
 memory per document</h3>
 <ul>
 <li>On close, Quill records cursor line/column and scroll offset for the
 current document.</li>
 <li>On reopen, the cursor is restored; the status bar announces
 <code>Restored to line N</code> on first focus into the editor.</li>
-<li>Storage keyed by the document’s path SHA-1 in
+<li>Storage keyed by the document's path SHA-1 in
 <code>file-prefs.json</code> (10.5).</li>
 <li>Setting toggle
 <code>Settings → Editing → Restore reading position</code> (on by
@@ -3136,7 +2621,7 @@ default).</li>
 <li>Independent of Welcome-Back snapshot (5.49); works even when only a
 single document is opened directly from Explorer.</li>
 </ul>
-<h3 id="compare-with-clipboard">5.67 Compare with clipboard</h3>
+<h3 id="567-compare-with-clipboard">5.67 Compare with clipboard</h3>
 <ul>
 <li><code>Tools → Compare With Clipboard</code> runs the unified-diff
 machinery (5.22) with the current document as <code>before</code> and
@@ -3146,17 +2631,17 @@ email.</li>
 <li>Refuses if the clipboard is empty or larger than 5 MB; explains
 why.</li>
 </ul>
-<h3 id="insert-from-file">5.68 Insert from file</h3>
+<h3 id="568-insert-from-file">5.68 Insert from file</h3>
 <ul>
-<li><code>File → Insert From File…</code> inserts another file’s text at
+<li><code>File → Insert From File…</code> inserts another file's text at
 the current cursor without opening it as a separate document.</li>
 <li>Uses the same format detection as Open; for non-text formats Quill
 extracts plain text and confirms before inserting.</li>
 <li>Files over 1 MB show a confirmation dialog with the byte count and
 the first line of content.</li>
 </ul>
-<h3 id="selection-statistics-direct-shortcut">5.69 Selection-statistics
-direct shortcut</h3>
+<h3 id="569-selection-statistics-direct-shortcut">5.69
+Selection-statistics direct shortcut</h3>
 <ul>
 <li><code>Ctrl+Alt+Shift+S</code> runs Document Statistics scoped to the
 current selection without first opening the full-document dialog.</li>
@@ -3164,7 +2649,7 @@ current selection without first opening the full-document dialog.</li>
 <code>Statistics — Selection</code>.</li>
 <li>Reassignable like any other binding.</li>
 </ul>
-<h3 id="audio-cue-catalogue-opt-in">5.70 Audio cue catalogue
+<h3 id="570-audio-cue-catalogue-opt-in">5.70 Audio cue catalogue
 (opt-in)</h3>
 <ul>
 <li>A small set of subtle, brief, screen-reader-respectful audio cues.
@@ -3187,7 +2672,7 @@ chime.</li>
 so they never block.</li>
 <li>Per-cue on/off in Settings.</li>
 </ul>
-<h3 id="quiet-mode">5.71 Quiet mode</h3>
+<h3 id="571-quiet-mode">5.71 Quiet mode</h3>
 <ul>
 <li><code>View → Quiet Mode</code> (<code>Ctrl+Alt+Q</code> by default)
 is a single toggle that:
@@ -3205,7 +2690,7 @@ completion).</li>
 <li>Useful for high-focus writing sessions; state is per-session and not
 persisted.</li>
 </ul>
-<h3 id="temporary-trust-for-untrusted-location-opens">5.72 Temporary
+<h3 id="572-temporary-trust-for-untrusted-location-opens">5.72 Temporary
 trust for untrusted-location opens</h3>
 <ul>
 <li>The Trusted Locations prompt (5.31) gains a third button:
@@ -3215,7 +2700,7 @@ locations.</li>
 <li>Useful for one-off opens from Downloads or temp folders without
 expanding the trust footprint.</li>
 </ul>
-<h3 id="settings-search">5.73 Settings search</h3>
+<h3 id="573-settings-search">5.73 Settings search</h3>
 <ul>
 <li>A search field at the top of the Settings dialog
 (<code>Ctrl+F</code> when focus is in Settings).</li>
@@ -3227,19 +2712,19 @@ match is announced.</li>
 tree.</li>
 <li>The synonym list is gettext-translated alongside labels.</li>
 </ul>
-<h3 id="in-app-changelog-and-update-transparency">5.74 In-app changelog
-and update transparency</h3>
+<h3 id="574-in-app-changelog-and-update-transparency">5.74 In-app
+changelog and update transparency</h3>
 <ul>
 <li><code>Help → Release Notes</code> opens a Markdown document with one
 section per version. Auto-generated from <code>CHANGELOG.md</code> at
 build time.</li>
 <li>The manual update dialog (5.34, 10.12) links to the release notes
 for the version it is offering.</li>
-<li>Past release notes remain reachable through the document’s own
+<li>Past release notes remain reachable through the document's own
 outline (5.16).</li>
 </ul>
-<h3 id="crash-report-opt-in-per-recovery">5.75 Crash-report opt-in (per
-recovery)</h3>
+<h3 id="575-crash-report-opt-in-per-recovery">5.75 Crash-report opt-in
+(per recovery)</h3>
 <ul>
 <li>When Quill recovers from a crash, the recovery dialog includes an
 opt-in checkbox: <strong>Send crash details to the Quill team (no
@@ -3253,7 +2738,7 @@ long-term opt-in.</li>
 <li>Crash reports include logs, environment, and the last 50 commands,
 never document content or API keys.</li>
 </ul>
-<h3 id="interactive-compare-mode">5.76 Interactive compare mode</h3>
+<h3 id="576-interactive-compare-mode">5.76 Interactive compare mode</h3>
 <p>Quill provides two complementary comparison workflows: an accessible
 interactive compare session and a generated diff report.</p>
 <ul>
@@ -3292,8 +2777,8 @@ Professional, Developer and Power Text, and Full Quill; it is quiet in
 Essential.</li>
 </ul>
 <hr />
-<h2 id="spell-checking-deep-dive">6. Spell checking deep dive</h2>
-<h3 id="the-tinyspell-question">6.1 The TinySpell question</h3>
+<h2 id="6-spell-checking-deep-dive">6. Spell checking deep dive</h2>
+<h3 id="61-the-tinyspell-question">6.1 The TinySpell question</h3>
 <p>TinySpell is a small, fast Windows spell-checker that watches the
 clipboard or current input field and alerts on misspellings. It is
 genuinely useful for many users. So the question is: should Quill
@@ -3314,8 +2799,8 @@ do much better.</li>
 <li><strong>Per-document and per-paragraph language detection.</strong>
 Multi-language documents need language switches mid-stream. An external
 tool will not know.</li>
-<li><strong>Suggestion ranking that learns.</strong> TinySpell’s
-suggestion order is fixed. Quill ranks suggestions using the user’s own
+<li><strong>Suggestion ranking that learns.</strong> TinySpell's
+suggestion order is fixed. Quill ranks suggestions using the user's own
 writing and the surrounding sentence, which is the single biggest
 quality-of-life upgrade in modern spell check.</li>
 <li><strong>Offline guarantee.</strong> Quill commits to spell check
@@ -3331,8 +2816,8 @@ plugin</strong> for v1.1 for users who already rely on TinySpell
 elsewhere and want a unified personal dictionary. That plugin
 imports/exports the personal dictionary file and otherwise stays out of
 the way.</p>
-<h3 id="engine-architecture-quill-spell">6.2 Engine architecture: “Quill
-Spell”</h3>
+<h3 id="62-engine-architecture-quill-spell">6.2 Engine architecture:
+"Quill Spell"</h3>
 <p>Quill Spell is a layered local engine:</p>
 <ul>
 <li><strong>Layer 1: Tokeniser.</strong> Unicode-aware word splitter
@@ -3352,7 +2837,7 @@ word wins.</li>
 <code>cyhunspell</code>. Dictionaries shipped: en-US, en-GB, en-CA,
 en-AU, es-ES, es-MX, fr-FR, de-DE, pt-BR, pl-PL, ja-JP (with MeCab).
 Others available via a one-click downloader.</li>
-<li><strong>Layer 4: Suggestion engine.</strong> Combines Hunspell’s
+<li><strong>Layer 4: Suggestion engine.</strong> Combines Hunspell's
 edit-distance suggestions with a character-level n-gram model and a
 small contextual reranker (a tiny on-device transformer; runs on CPU in
 &lt;10 ms per call). Top 5 suggestions, ranked by combined score.</li>
@@ -3368,7 +2853,7 @@ Markdown link target. Those regions are skipped by default. Settings let
 the user enable code spell checking with a programming-aware
 dictionary.</li>
 </ul>
-<h3 id="user-experience">6.3 User experience</h3>
+<h3 id="63-user-experience">6.3 User experience</h3>
 <ul>
 <li><strong>Status indicator.</strong> The status bar shows the active
 dictionary stack as a short label, for example
@@ -3395,8 +2880,8 @@ Detected automatically from a magic comment on the first line if
 present.</li>
 <li><strong>Magic touches.</strong>
 <ul>
-<li>When you add a word, Quill says “Added <word> to your personal
-dictionary” or “Added <word> to this document’s dictionary” so you
+<li>When you add a word, Quill says "Added <word> to your personal
+dictionary" or "Added <word> to this document's dictionary" so you
 always know where it went.</li>
 <li>When you reject the same suggestion three times for the same
 misspelling, Quill quietly asks once whether you want to add the
@@ -3409,10 +2894,10 @@ names.</li>
 </ul></li>
 </ul>
 <hr />
-<h2 id="command-palette-deep-dive">7. Command palette deep dive</h2>
-<p>The command palette is modelled directly on Visual Studio Code’s,
+<h2 id="7-command-palette-deep-dive">7. Command palette deep dive</h2>
+<p>The command palette is modelled directly on Visual Studio Code's,
 adapted for screen readers.</p>
-<h3 id="opening-and-dismissing">7.1 Opening and dismissing</h3>
+<h3 id="71-opening-and-dismissing">7.1 Opening and dismissing</h3>
 <ul>
 <li><code>Ctrl+Shift+P</code> opens the palette in command mode.</li>
 <li><code>F1</code> does the same.</li>
@@ -3423,7 +2908,7 @@ prefix.</li>
 <li><code>Tab</code> from the input moves into the list.
 <code>Shift+Tab</code> returns to the input.</li>
 </ul>
-<h3 id="prefix-modes">7.2 Prefix modes</h3>
+<h3 id="72-prefix-modes">7.2 Prefix modes</h3>
 <p>A single edit field, one list. The first character of the input may
 be a mode prefix:</p>
 <table>
@@ -3484,7 +2969,7 @@ be a mode prefix:</p>
 </table>
 <p>These prefixes are themselves reassignable (see <a
 href="#8-keymap-and-keystroke-reassignment">section 8</a>).</p>
-<h3 id="matching">7.3 Matching</h3>
+<h3 id="73-matching">7.3 Matching</h3>
 <ul>
 <li>Fuzzy subsequence match across the visible label.</li>
 <li>Each match scored by: subsequence tightness, prefix bonus,
@@ -3492,7 +2977,7 @@ word-boundary bonus, recency, frequency.</li>
 <li>Top 100 results displayed, lazily.</li>
 <li>Ties broken alphabetically.</li>
 </ul>
-<h3 id="rows">7.4 Rows</h3>
+<h3 id="74-rows">7.4 Rows</h3>
 <p>Each row in command mode shows three regions, all announced as one
 string by the screen reader (with internal punctuation chosen to read
 well):</p>
@@ -3502,35 +2987,35 @@ well):</p>
 Spell Check Document — F7 — Quill
 Find Next — F3 — Quill
 Pandoc: Convert to DOCX — Ctrl+Alt+P — Plugin: Pandoc Bridge</code></pre>
-<h3 id="inline-keybinding-edit">7.5 Inline keybinding edit</h3>
+<h3 id="75-inline-keybinding-edit">7.5 Inline keybinding edit</h3>
 <p>While the palette is open and a command is highlighted:</p>
 <ul>
 <li><code>Right Arrow</code> enters keybinding edit mode for that
 command.</li>
-<li>A small inline edit prompt says “Press the new shortcut, or Escape
-to cancel, or Delete to unassign.”</li>
+<li>A small inline edit prompt says "Press the new shortcut, or Escape
+to cancel, or Delete to unassign."</li>
 <li>The next keystroke (chord or sequence) becomes the binding.</li>
 <li>Conflicts are detected immediately and announced (see <a
 href="#84-conflict-handling">section 8.4</a>).</li>
 <li><code>Enter</code> commits, <code>Esc</code> cancels.</li>
 </ul>
-<h3 id="recently-used-and-pinned">7.6 Recently used and pinned</h3>
+<h3 id="76-recently-used-and-pinned">7.6 Recently used and pinned</h3>
 <ul>
 <li>The most recently run 10 commands always appear at the top when the
 palette opens fresh, before any typing.</li>
 <li>Users can pin commands with <code>Shift+Enter</code> from the
 palette. Pinned commands always appear above recents.</li>
 </ul>
-<h3 id="help">7.7 Help</h3>
+<h3 id="77-help">7.7 Help</h3>
 <ul>
 <li><code>?</code> plus Enter, or <code>Ctrl+Shift+?</code>, shows a
-“How to use the Command Palette” topic in the palette itself: a list of
+"How to use the Command Palette" topic in the palette itself: a list of
 prefixes, their meanings, and their shortcuts, each line runnable with
 Enter to invoke an example.</li>
 <li>Where Am I (<code>Ctrl+Shift+I</code>) in the palette announces:
 current mode, number of matches, selected entry, current binding.</li>
 </ul>
-<h3 id="accessibility-specifics">7.8 Accessibility specifics</h3>
+<h3 id="78-accessibility-specifics">7.8 Accessibility specifics</h3>
 <ul>
 <li>The palette is a non-modal top-level <code>wx.Frame</code> over the
 main window with focus capture. Underlying widgets are a
@@ -3540,30 +3025,30 @@ scripts.</li>
 <li>Each list update fires a single accessibility event with the count
 of results; we do not spam announcements as the user types.</li>
 <li>Live region is set on the help/result line below the list for status
-messages such as “Keybinding updated” and “Conflict with Find
-Next.”</li>
+messages such as "Keybinding updated" and "Conflict with Find
+Next."</li>
 </ul>
 <hr />
-<h2 id="keymap-and-keystroke-reassignment">8. Keymap and keystroke
+<h2 id="8-keymap-and-keystroke-reassignment">8. Keymap and keystroke
 reassignment</h2>
 <p>Every Quill action is identified by a stable command id
 (<code>quill.editor.save</code>, <code>quill.palette.open</code>,
 <code>quill.spell.checkDocument</code>, etc.) and may have zero, one, or
 many keybindings.</p>
-<h3 id="where-keystrokes-live">8.1 Where keystrokes live</h3>
+<h3 id="81-where-keystrokes-live">8.1 Where keystrokes live</h3>
 <p>Three layers, in priority order:</p>
 <ol type="1">
 <li><strong>User keymap</strong>
 (<code>%APPDATA%\Quill\keymap.json</code>). User edits win.</li>
 <li><strong>Profile keymap</strong> (optional, shipped alternatives).
-For example, “Word-like”, “Vim-friendly”, “Emacs-friendly”. The user
+For example, "Word-like", "Vim-friendly", "Emacs-friendly". The user
 picks one as the base.</li>
 <li><strong>Default keymap</strong> (built into Quill).</li>
 </ol>
 <p>The effective keymap is the merge of these three, with user &gt;
 profile &gt; default.</p>
-<h3 id="keyboard-settings-page">8.2 Keyboard settings page</h3>
-<p><code>Ctrl+,</code> then “Keyboard” (or palette
+<h3 id="82-keyboard-settings-page">8.2 Keyboard settings page</h3>
+<p><code>Ctrl+,</code> then "Keyboard" (or palette
 <code>=keyboard</code>).</p>
 <p>The page contains:</p>
 <ul>
@@ -3581,43 +3066,43 @@ report mode, fully accessible) with columns:
 </ul></li>
 <li><strong>Buttons</strong>: Add, Change, Remove, Reset to default,
 Reset all to profile, Import, Export.</li>
-<li>A <strong>“Press a key” capture field</strong> for visual users who
+<li>A <strong>"Press a key" capture field</strong> for visual users who
 want to find what a chord does today.</li>
 </ul>
-<h3 id="editing-a-single-binding">8.3 Editing a single binding</h3>
+<h3 id="83-editing-a-single-binding">8.3 Editing a single binding</h3>
 <p>Three equivalent ways:</p>
 <ol type="1">
 <li>From the command palette: highlight a command and press
 <code>Right Arrow</code>.</li>
 <li>From the Keyboard settings page: select the row and press
 <code>Change</code> (or <code>Enter</code>).</li>
-<li>From the menu bar: every menu item has a context-menu entry “Change
-keybinding”.</li>
+<li>From the menu bar: every menu item has a context-menu entry "Change
+keybinding".</li>
 </ol>
-<p>In all three, the same small “Press the new shortcut” capture dialog
+<p>In all three, the same small "Press the new shortcut" capture dialog
 appears. It:</p>
 <ul>
-<li>Captures any chord or two-key sequence (VS Code style,
-e.g. <code>Ctrl+K Ctrl+S</code>).</li>
+<li>Captures any chord or two-key sequence (VS Code style, e.g.
+<code>Ctrl+K Ctrl+S</code>).</li>
 <li>Announces the captured keystroke as it is built.</li>
 <li>Refuses to capture purely modifier keys.</li>
 <li>Refuses to capture keystrokes reserved by the OS or by the active
 screen reader (NVDA, JAWS, Narrator) and explains which one it conflicts
 with.</li>
 </ul>
-<h3 id="conflict-handling">8.4 Conflict handling</h3>
+<h3 id="84-conflict-handling">8.4 Conflict handling</h3>
 <p>When a keystroke is already used:</p>
 <ul>
-<li>The dialog announces the conflict: “Ctrl+G is currently used by Go
-To Line in editor context.”</li>
+<li>The dialog announces the conflict: "Ctrl+G is currently used by Go
+To Line in editor context."</li>
 <li>Three choices, each on its own button: <strong>Replace</strong> (the
 old command becomes unbound and the new one is bound),
-<strong>Add</strong> (both commands have this binding; the active “when”
+<strong>Add</strong> (both commands have this binding; the active "when"
 context disambiguates), <strong>Cancel</strong>.</li>
-<li>“Add” is only offered when contexts are distinct. Same-context dual
+<li>"Add" is only offered when contexts are distinct. Same-context dual
 binding is not allowed for safety.</li>
 </ul>
-<h3 id="when-contexts">8.5 “When” contexts</h3>
+<h3 id="85-when-contexts">8.5 "When" contexts</h3>
 <p>Each command declares which contexts it is valid in:</p>
 <ul>
 <li><code>editor</code> — focus is in the main editor.</li>
@@ -3632,7 +3117,7 @@ extracted from PDF.</li>
 </ul>
 <p>Contexts can be combined with <code>&amp;&amp;</code> in advanced
 editing.</p>
-<h3 id="profiles-in-detail">8.6 Profiles in detail</h3>
+<h3 id="86-profiles-in-detail">8.6 Profiles in detail</h3>
 <ul>
 <li><strong>System</strong>: clean, modern Windows conventions
 (default).</li>
@@ -3643,7 +3128,7 @@ off by default in the profile selector but available to install.</li>
 <li><strong>Emacs-friendly</strong>: chord-heavy bindings
 (<code>Ctrl+X Ctrl+S</code> etc.), again via the chord engine.</li>
 </ul>
-<h3 id="storage-format">8.7 Storage format</h3>
+<h3 id="87-storage-format">8.7 Storage format</h3>
 <p><code>keymap.json</code> is plain JSON, human readable, version
 controlled friendly:</p>
 <div class="sourceCode" id="cb3"><pre
@@ -3657,33 +3142,33 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;quill.editor.gotoLine&quot;</span><span class="fu">,</span> <span class="dt">&quot;key&quot;</span><span class="fu">:</span> <span class="st">&quot;Ctrl+G&quot;</span><span class="fu">,</span> <span class="dt">&quot;when&quot;</span><span class="fu">:</span> <span class="st">&quot;editor &amp;&amp; !format:pdf&quot;</span> <span class="fu">}</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h3 id="import-export-sync">8.8 Import, export, sync</h3>
+<h3 id="88-import-export-sync">8.8 Import, export, sync</h3>
 <ul>
 <li>Export the active keymap to a single JSON file.</li>
 <li>Import from a file (with a preview dialog showing every
 change).</li>
 <li>Sync via a user-chosen folder (OneDrive, Dropbox, Syncthing). Quill
-watches the file and reloads on change, announcing “Keymap reloaded from
-disk.”</li>
+watches the file and reloads on change, announcing "Keymap reloaded from
+disk."</li>
 </ul>
-<h3 id="safety-net">8.9 Safety net</h3>
+<h3 id="89-safety-net">8.9 Safety net</h3>
 <ul>
-<li>A “Reset all keybindings” button exists at the bottom of the
+<li>A "Reset all keybindings" button exists at the bottom of the
 Keyboard settings page.</li>
 <li>Recovery: if <code>keymap.json</code> is corrupt, Quill renames it
 to <code>keymap.broken-&lt;timestamp&gt;.json</code> and falls back to
 defaults, announcing what happened.</li>
 </ul>
 <hr />
-<h2 id="accessibility-wcag-2.2-aa-conformance-and-certification">9.
+<h2 id="9-accessibility-wcag-22-aa-conformance-and-certification">9.
 Accessibility, WCAG 2.2 AA conformance, and certification</h2>
-<p>Accessibility is not a feature set; it is the product’s contract with
-its users. This section is the canonical reference for what “accessible”
+<p>Accessibility is not a feature set; it is the product's contract with
+its users. This section is the canonical reference for what "accessible"
 means for Quill, how it is engineered, how it is tested, how regressions
 are caught, and how a Voluntary Product Accessibility Template (VPAT)
 Accessibility Conformance Report (ACR) is generated for procurement.</p>
-<h3 id="compliance-posture-and-target-standards">9.1 Compliance posture
-and target standards</h3>
+<h3 id="91-compliance-posture-and-target-standards">9.1 Compliance
+posture and target standards</h3>
 <p>Quill targets the following standards in full at v1.0 release:</p>
 <ul>
 <li><strong>WCAG 2.2 Level AA</strong> (W3C Recommendation, October
@@ -3701,11 +3186,11 @@ including chapters 5, 6, 7, 9, 11, and 12 as applicable).</li>
 are honoured wherever Quill exposes ARIA-equivalent semantics through
 MSAA/UIA (combobox patterns for the palette, treeview patterns for the
 Outline Navigator, listbox patterns for issue panels).</li>
-<li><strong>Microsoft’s Accessibility Insights for Windows</strong>
+<li><strong>Microsoft's Accessibility Insights for Windows</strong>
 baseline (every CI build is run through Accessibility Insights and must
 produce zero errors and zero warnings on covered axes).</li>
 </ul>
-<h3 id="conformance-posture-statement-will-appear-in-the-acr">9.2
+<h3 id="92-conformance-posture-statement-will-appear-in-the-acr">9.2
 Conformance posture statement (will appear in the ACR)</h3>
 <blockquote>
 <p>Quill 1.0 <strong>supports</strong> WCAG 2.2 Level A and Level AA
@@ -3715,7 +3200,7 @@ supports</strong> Level AAA criteria 1.4.6 (Contrast Enhanced) and
 video-only media; criteria specific to such media are <strong>not
 applicable</strong>.</p>
 </blockquote>
-<h3 id="wcag-2.2-aa-conformance-matrix">9.3 WCAG 2.2 AA conformance
+<h3 id="93-wcag-22-aa-conformance-matrix">9.3 WCAG 2.2 AA conformance
 matrix</h3>
 <p>The following matrix lists every Level A and AA Success Criterion,
 how Quill meets it, and where it is tested. Each row is a contract: a CI
@@ -3723,13 +3208,6 @@ test exists for every “Tested by” entry, and a regression fails the
 build.</p>
 <h4 id="principle-1-perceivable">Principle 1: Perceivable</h4>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>SC</th>
@@ -3880,13 +3358,6 @@ moves away</td>
 </table>
 <h4 id="principle-2-operable">Principle 2: Operable</h4>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>SC</th>
@@ -4074,13 +3545,6 @@ cells; verified per-theme</td>
 </table>
 <h4 id="principle-3-understandable">Principle 3: Understandable</h4>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>SC</th>
@@ -4095,7 +3559,7 @@ cells; verified per-theme</td>
 <td>3.1.1</td>
 <td>Language of Page</td>
 <td>A</td>
-<td>The application’s UI language is declared via <code>wx.Locale</code>
+<td>The application's UI language is declared via <code>wx.Locale</code>
 and exposed to MSAA</td>
 <td>Locale tests</td>
 </tr>
@@ -4198,13 +3662,6 @@ paste-and-store via DPAPI; no cognitive-test puzzle</td>
 </table>
 <h4 id="principle-4-robust">Principle 4: Robust</h4>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>SC</th>
@@ -4242,15 +3699,9 @@ SR-agnostic announcement channel (9.6)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="screen-reader-compatibility-matrix">9.4 Screen-reader
+<h3 id="94-screen-reader-compatibility-matrix">9.4 Screen-reader
 compatibility matrix</h3>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Reader</th>
@@ -4299,11 +3750,11 @@ status-bar cell updates; ships in the installer</td>
 </tr>
 </tbody>
 </table>
-<h3 id="screen-reader-announcement-architecture">9.5 Screen-reader
+<h3 id="95-screen-reader-announcement-architecture">9.5 Screen-reader
 announcement architecture</h3>
 <p>Quill speaks to the user through three independent channels, all of
-which deliver the same content. This is what “never goes quiet when you
-needed it to speak” means in code.</p>
+which deliver the same content. This is what "never goes quiet when you
+needed it to speak" means in code.</p>
 <ol type="1">
 <li><strong>Stock control announcements</strong> — wx widgets carry
 their own MSAA/UIA semantics; the SR speaks them automatically on focus
@@ -4318,8 +3769,8 @@ and Narrator pick this up natively; JAWS reads it through the bundled
 optional script.</li>
 <li><strong>Direct SR APIs (graceful degradation)</strong> — when a
 detected SR is running, Quill may use its direct API for higher-priority
-announcements (NVDA’s <code>nvdaControllerClient.dll</code>
-<code>nvdaController_speakText</code>, JAWS’ <code>jfwapi.dll</code>
+announcements (NVDA's <code>nvdaControllerClient.dll</code>
+<code>nvdaController_speakText</code>, JAWS' <code>jfwapi.dll</code>
 <code>JFWSayString</code>, Narrator via UIA notification). This is used
 only when the live region path is too slow for time-sensitive feedback
 (find result during F3 chaining, spell-check next misspelling). The
@@ -4329,7 +3780,29 @@ direct call is preferred only when (a) a registered SR is detected and
 <p>All three channels are funnelled through a single
 <code>quill.a11y.announce(text, *, priority='normal', interruptible=True)</code>
 function, so there is exactly one code path to test.</p>
-<h3 id="keyboard-accessibility-gates">9.6 Keyboard accessibility
+<p>Quill exposes an explicit announcement backend selector in Settings
+and command surfaces. Supported modes are <code>auto</code>,
+<code>legacy</code>, <code>prism</code>, and <code>sounds</code>, with
+<code>auto</code> as default. <code>auto</code> chooses the best backend
+for the current screen-reader/runtime context and falls back
+deterministically when a backend is unavailable.</p>
+<h3 id="951-announcement-backend-provenance">9.5.1 Announcement backend
+provenance</h3>
+<p>The <code>prism</code> backend in Quill is derived from the
+architecture and behavior patterns published in the open-source Prism
+project:</p>
+<ul>
+<li>Source: <a
+href="https://github.com/ethindp/prism">https://github.com/ethindp/prism</a></li>
+<li>Scope borrowed: screen-reader announcement abstraction approach,
+backend-oriented dispatch model, and parity-focused announcement
+reliability goals.</li>
+<li>Quill adaptation: integrated into Quill's existing
+<code>quill.a11y.announce(...)</code> funnel and profile/feature
+controls, while preserving Quill's own command, diagnostics, and privacy
+conventions.</li>
+</ul>
+<h3 id="96-keyboard-accessibility-gates">9.6 Keyboard accessibility
 gates</h3>
 <ul>
 <li><strong>Keyboard parity matrix</strong>: every menu item, every
@@ -4351,7 +3824,8 @@ captures a new keystroke, Quill checks it against a curated static list
 of well-known NVDA, JAWS, and Narrator chords and refuses the capture
 with an explanation.</li>
 </ul>
-<h3 id="visual-accessibility-gates">9.7 Visual accessibility gates</h3>
+<h3 id="97-visual-accessibility-gates">9.7 Visual accessibility
+gates</h3>
 <ul>
 <li><strong>Themes</strong>: System (follows Windows), Light, Dark, High
 Contrast (follows Windows High Contrast tokens), Custom (user-defined
@@ -4379,12 +3853,12 @@ matrix).</li>
 <li><strong>Target size</strong>: every clickable target ≥ 24x24
 device-independent pixels; status-bar cells ≥ 28x24.</li>
 </ul>
-<h3 id="cognitive-accessibility-gates">9.8 Cognitive accessibility
+<h3 id="98-cognitive-accessibility-gates">9.8 Cognitive accessibility
 gates</h3>
 <ul>
 <li><strong>Consistent vocabulary</strong>: a controlled vocabulary
-document drives every string (e.g. “document” not “file” or “buffer”;
-“selection” not “highlight”); enforced by a linter over translation
+document drives every string (e.g. "document" not "file" or "buffer";
+"selection" not "highlight"); enforced by a linter over translation
 source files.</li>
 <li><strong>Plain-language baseline</strong>: UI strings target a Flesch
 reading ease of 60 or higher; Tools (the Document Statistics engine) is
@@ -4402,7 +3876,7 @@ tooltip names the action and the result, not the implementation.</li>
 <li><strong>No autoplay</strong>: no audio, video, or animation starts
 without explicit user action.</li>
 </ul>
-<h3 id="accessibility-testing-pipeline">9.9 Accessibility testing
+<h3 id="99-accessibility-testing-pipeline">9.9 Accessibility testing
 pipeline</h3>
 <p>Three layers run on every PR and every release branch.</p>
 <ol type="1">
@@ -4436,7 +3910,7 @@ nightly)</strong>
 <ul>
 <li>A custom SAPI 5 speech driver records every utterance into a
 transcript file.</li>
-<li>NVDA is launched with the recording driver via NVDA’s command-line;
+<li>NVDA is launched with the recording driver via NVDA's command-line;
 Quill is driven through a scripted scenario set (open, find, F3 chain,
 palette, outline jump, spell check fix, keymap rebind, restore backup,
 AI confirm-and-cancel).</li>
@@ -4450,7 +3924,7 @@ available; Narrator runs via UIA notifications.</li>
 </ol>
 <p>No PR merges with any of these failing. A failure can be waived only
 by the accessibility lead, with an issue link and an expiry date.</p>
-<h3 id="vpat-acr-generation">9.10 VPAT / ACR generation</h3>
+<h3 id="910-vpat--acr-generation">9.10 VPAT / ACR generation</h3>
 <ul>
 <li>The conformance matrix in 9.3 is the source of truth.</li>
 <li>A script (<code>tools/gen_vpat.py</code>) renders the matrix into an
@@ -4460,7 +3934,7 @@ Word document, plus a markdown ACR for the website.</li>
 the corresponding test.</li>
 <li>VPATs cover WCAG 2.2, Section 508, and EN 301 549.</li>
 </ul>
-<h3 id="certification-path">9.11 Certification path</h3>
+<h3 id="911-certification-path">9.11 Certification path</h3>
 <ul>
 <li>v1.0 self-certifies WCAG 2.2 AA, Section 508 (revised), and EN 301
 549 v3.2.1 via the ACR.</li>
@@ -4470,8 +3944,8 @@ in a <code>compliance/</code> folder of the repository.</li>
 <li>Outstanding findings have target dates and a public regression
 register.</li>
 </ul>
-<h3 id="gated-regressions-ci-must-pass-list">9.12 Gated regressions (CI
-must-pass list)</h3>
+<h3 id="912-gated-regressions-ci-must-pass-list">9.12 Gated regressions
+(CI must-pass list)</h3>
 <p>A build is blocked when any of the following regresses:</p>
 <ul>
 <li>Any cell in the WCAG matrix transitions from passing to
@@ -4489,7 +3963,7 @@ Inspect.exe parity test.</li>
 <li>Any SR transcript diff exceeds tolerance.</li>
 </ul>
 <hr />
-<h2 id="technical-infrastructure">10. Technical infrastructure</h2>
+<h2 id="10-technical-infrastructure">10. Technical infrastructure</h2>
 <p>This section is the canonical engineering blueprint for Quill. It
 defines the module structure, every dependency (pinned, licensed,
 justified), the per-feature technical specifications, the threading and
@@ -4497,7 +3971,7 @@ concurrency model, the data layout, the build and packaging pipeline,
 supply-chain integrity, observability, the plugin runtime, the update
 mechanism, the security architecture, the development workflow, and the
 coding standards.</p>
-<h3 id="module-map-and-responsibilities">10.1 Module map and
+<h3 id="101-module-map-and-responsibilities">10.1 Module map and
 responsibilities</h3>
 <pre><code>quill/
   core/                       Pure-Python; no UI imports
@@ -4578,21 +4052,14 @@ responsibilities</h3>
     a11y_audit.py             Local accessibility audit runner
   tests/
     unit/  integration/  a11y/  perf/  fixtures/</code></pre>
-<h3 id="complete-dependency-manifest">10.2 Complete dependency
+<h3 id="102-complete-dependency-manifest">10.2 Complete dependency
 manifest</h3>
 <p>Every direct dependency is listed below with the pinned version range
 Quill 1.0 will ship against, the license, the reason it is in the tree,
 and any constraints. Pins are tight in production builds and loose in
 development.</p>
-<h4 id="runtime-python">10.2.1 Runtime, Python</h4>
+<h4 id="1021-runtime-python">10.2.1 Runtime, Python</h4>
 <table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-<col style="width: 20%" />
-</colgroup>
 <thead>
 <tr>
 <th>Package</th>
@@ -4875,14 +4342,9 @@ deflists</td>
 </tr>
 </tbody>
 </table>
-<h4 id="native-binaries-bundled">10.2.2 Native binaries bundled</h4>
+<h4 id="1022-native-binaries-bundled">10.2.2 Native binaries
+bundled</h4>
 <table>
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr>
 <th>Binary</th>
@@ -4921,13 +4383,8 @@ pl-PL, ja-JP)</td>
 </table>
 <p>LibreOffice, Calibre, Ghostscript, and unrar are <strong>not</strong>
 bundled; they are optional plugin dependencies (v1.1).</p>
-<h4 id="build-and-dev-tooling">10.2.3 Build and dev tooling</h4>
+<h4 id="1023-build-and-dev-tooling">10.2.3 Build and dev tooling</h4>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>Tool</th>
@@ -4998,7 +4455,7 @@ bundled; they are optional plugin dependencies (v1.1).</p>
 </tr>
 </tbody>
 </table>
-<h4 id="license-posture">10.2.4 License posture</h4>
+<h4 id="1024-license-posture">10.2.4 License posture</h4>
 <ul>
 <li>Quill itself is <strong>MIT-licensed</strong> (default; final
 decision still tracked in Open Questions).</li>
@@ -5016,21 +4473,13 @@ which keeps us outside the AGPL trigger.</li>
 at build time; the build fails if any new package lacks a license
 entry.</li>
 </ul>
-<h3 id="per-feature-technical-specifications">10.3 Per-feature technical
-specifications</h3>
+<h3 id="103-per-feature-technical-specifications">10.3 Per-feature
+technical specifications</h3>
 <p>Each feature in section 5 has an engineering spec here. The full
 table is large; the canonical form lives in
 <code>docs/engineering/</code> once development begins. The table below
 is the v1.0 commitment.</p>
-<table style="width:100%;">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
+<table>
 <thead>
 <tr>
 <th>Feature</th>
@@ -5045,11 +4494,10 @@ is the v1.0 commitment.</p>
 <tr>
 <td>Editor surface (5.2)</td>
 <td><code>ui.editor</code></td>
-<td><code>wx.TextCtrl</code> with
-<code>wx.TE_MULTILINE | wx.TE_RICH2 | wx.TE_NOHIDESEL | wx.TE_AUTO_URL</code></td>
-<td>UI thread</td>
-<td>In-memory document buffer</td>
-<td>Native stock control; MSAA edit role</td>
+<td><code>wx.TextCtrl</code> with `wx.TE_MULTILINE</td>
+<td>wx.TE_RICH2</td>
+<td>wx.TE_NOHIDESEL</td>
+<td>wx.TE_AUTO_URL`</td>
 </tr>
 <tr>
 <td>Outline Navigator (5.16)</td>
@@ -5267,8 +4715,8 @@ Windows.Media.SpeechSynthesis WinRT</td>
 </tr>
 </tbody>
 </table>
-<h3 id="threading-and-concurrency-model">10.4 Threading and concurrency
-model</h3>
+<h3 id="104-threading-and-concurrency-model">10.4 Threading and
+concurrency model</h3>
 <ul>
 <li><strong>UI thread</strong>: owns all wx widgets and the editor
 buffer. Never blocks for more than 16 ms.</li>
@@ -5301,7 +4749,7 @@ thread; workers receive snapshots and return new snapshots;
 (<code>ruff</code> custom rule) that flags <code>threading.Lock</code>
 outside <code>platform/</code>.</li>
 </ul>
-<h3 id="data-layout-canonical">10.5 Data layout (canonical)</h3>
+<h3 id="105-data-layout-canonical">10.5 Data layout (canonical)</h3>
 <pre><code>%APPDATA%\Quill\
   settings.json             Validated by jsonschema; .bak kept
   keymap.json               Validated; .bak kept; quarantine on corrupt
@@ -5345,8 +4793,8 @@ outside <code>platform/</code>.</li>
 <code>quill/core/schemas/</code>. All writes are atomic
 (<code>tempfile.NamedTemporaryFile</code> in the same directory +
 <code>os.replace</code>).</p>
-<h3 id="packaging-signing-supply-chain">10.6 Packaging, signing, supply
-chain</h3>
+<h3 id="106-packaging-signing-supply-chain">10.6 Packaging, signing,
+supply chain</h3>
 <ul>
 <li><strong>Frozen build</strong>: PyInstaller with one-folder layout
 (faster start than one-file). UPX disabled (no compression; SmartScreen
@@ -5387,7 +4835,8 @@ with English Tesseract data and English/UK + Spanish/French/German
 Hunspell dictionaries. A <strong>Quill Lite</strong> option ships at ~90
 MB and downloads dictionaries and Tesseract on first use.</li>
 </ul>
-<h3 id="build-and-dev-environment">10.7 Build and dev environment</h3>
+<h3 id="107-build-and-dev-environment">10.7 Build and dev
+environment</h3>
 <ul>
 <li><strong>Python 3.12</strong> pinned via
 <code>uv python install</code>.</li>
@@ -5408,8 +4857,8 @@ minutes.</li>
 launches NVDA against Quill, replays a scenario, and writes a transcript
 to <code>out/</code>.</li>
 </ul>
-<h3 id="continuous-integration-and-delivery">10.8 Continuous integration
-and delivery</h3>
+<h3 id="108-continuous-integration-and-delivery">10.8 Continuous
+integration and delivery</h3>
 <ul>
 <li><strong>Provider</strong>: GitHub Actions.</li>
 <li><strong>Matrix</strong>: Windows 10 22H2, Windows 11 24H2; Python
@@ -5442,7 +4891,7 @@ manifest.</li>
 <li><strong>Triage SLA</strong>: SR transcript diffs reviewed within 24
 hours.</li>
 </ul>
-<h3 id="observability">10.9 Observability</h3>
+<h3 id="109-observability">10.9 Observability</h3>
 <ul>
 <li><strong>Logging</strong>: stdlib <code>logging</code>, rotating file
 handler, INFO level by default. Log records contain action name,
@@ -5459,7 +4908,7 @@ cleartext example shown before opt-in.</li>
 (<code>core.events</code>) records the last 50 commands and notable
 lifecycle events; these are what Help → Save Diagnostics ships.</li>
 </ul>
-<h3 id="plugin-runtime-v1.0-surface-v1.1-full">10.10 Plugin runtime
+<h3 id="1010-plugin-runtime-v10-surface-v11-full">10.10 Plugin runtime
 (v1.0 surface, v1.1 full)</h3>
 <ul>
 <li><strong>v1.0</strong>: the plugin loader skeleton exists; only
@@ -5481,13 +4930,13 @@ pip-installed plugins).</li>
 plugins keep their settings.</li>
 <li><strong>Sandboxing (v1.1)</strong>: each plugin runs in its own
 thread; network and subprocess calls require an explicit per-action
-consent or a setting that whitelists the plugin’s manifest-declared
+consent or a setting that whitelists the plugin's manifest-declared
 hosts; UI surfaces created by plugins must pass the same accessibility
 static checks as core.</li>
 <li><strong>Versioning</strong>: plugins declare the Quill API version
 they target; the loader rejects mismatched majors.</li>
 </ul>
-<h3 id="security-architecture">10.11 Security architecture</h3>
+<h3 id="1011-security-architecture">10.11 Security architecture</h3>
 <ul>
 <li><strong>Secrets</strong>: AI provider keys stored via DPAPI
 (<code>platform.windows.dpapi</code>); never in plain text on disk;
@@ -5521,19 +4970,19 @@ with <code>atheris</code>; (b) keymap overrides require explicit consent
 <li><strong>Responsible disclosure</strong>: a <code>SECURITY.md</code>
 file documents the disclosure email and PGP key.</li>
 </ul>
-<h3 id="update-mechanism">10.12 Update mechanism</h3>
+<h3 id="1012-update-mechanism">10.12 Update mechanism</h3>
 <ul>
 <li>v1.0 ships <strong>manual update check</strong>:
 <code>Help → Check for Updates…</code> fetches the signed manifest,
 verifies it, compares versions, offers to download the next stable.</li>
 <li>The download is verified (SHA-256) and Sigstore-attested; the
 installer is signed; the user runs it.</li>
-<li>A small in-app pre-update health check ensures the user’s editor has
+<li>A small in-app pre-update health check ensures the user's editor has
 no unsaved documents before launching the installer.</li>
 <li>Auto-update lands in v1.1 with a Squirrel-style delta channel.</li>
 </ul>
-<h3 id="internationalisation-infrastructure">10.13 Internationalisation
-infrastructure</h3>
+<h3 id="1013-internationalisation-infrastructure">10.13
+Internationalisation infrastructure</h3>
 <ul>
 <li>All UI strings flow through <code>gettext</code>; the
 <code>_()</code> callable is the sole permitted lookup.</li>
@@ -5547,14 +4996,14 @@ control; full RTL UI is v1.2.</li>
 <li>A translation portal (Weblate or Crowdin) is set up at v1.0 beta;
 community translators are credited in About.</li>
 </ul>
-<h3 id="performance-budgets-and-instrumentation">10.14 Performance
+<h3 id="1014-performance-budgets-and-instrumentation">10.14 Performance
 budgets and instrumentation</h3>
 <p>All performance targets in §11 are enforced by
 <code>tests/perf/</code>. Each test asserts against a budget;
 regressions over 15% fail the build. Microbenchmarks live next to the
 code they measure. Real-world startup time is measured by a stopwatch
-fixture that uses Windows’ high-resolution timer.</p>
-<h3 id="coding-standards-and-review">10.15 Coding standards and
+fixture that uses Windows' high-resolution timer.</p>
+<h3 id="1015-coding-standards-and-review">10.15 Coding standards and
 review</h3>
 <ul>
 <li><strong>Style</strong>: ruff format (PEP 8 with relaxed line length
@@ -5579,8 +5028,8 @@ accessibility lead.</li>
 accessibility regression) within 24 h; P1 (function broken) within 5
 business days; P2 within the next release.</li>
 </ul>
-<h3 id="module-ownership-and-solid-boundaries">10.16 Module ownership
-and SOLID boundaries</h3>
+<h3 id="1016-module-ownership-and-solid-boundaries">10.16 Module
+ownership and SOLID boundaries</h3>
 <ul>
 <li><code>core/*</code> knows nothing about <code>wx</code>; tested
 without UI; can be reused by a future TUI or web front-end.</li>
@@ -5599,18 +5048,18 @@ ABC with <code>complete</code>, <code>improve_reading_order</code>,
 <li><code>plugins/api.py</code> is the only file plugins import from;
 everything else is internal.</li>
 </ul>
-<h3 id="magic-by-construction">10.17 Magic, by construction</h3>
+<h3 id="1017-magic-by-construction">10.17 Magic, by construction</h3>
 <p>The engineering choices above add up to the user-visible magic the
 product promises:</p>
 <ul>
 <li>Stock controls everywhere keep MSAA/UIA pristine; speech is correct
 without scripts.</li>
 <li>Atomic writes plus <code>.bak</code> plus autosave plus persistent
-undo make “I lost work” almost impossible.</li>
+undo make "I lost work" almost impossible.</li>
 <li>A single announcement funnel keeps speech behaviour identical across
 NVDA, JAWS, and Narrator.</li>
-<li>Pinned, audited dependencies and reproducible builds keep “works on
-my machine” out of the loop.</li>
+<li>Pinned, audited dependencies and reproducible builds keep "works on
+my machine" out of the loop.</li>
 <li>A small command registry plus a three-layer keymap plus a
 discoverable palette mean every feature is reachable, learnable, and
 rebindable.</li>
@@ -5618,7 +5067,7 @@ rebindable.</li>
 regress; if it slips, the build fails.</li>
 </ul>
 <hr />
-<h2 id="performance-targets">11. Performance targets</h2>
+<h2 id="11-performance-targets">11. Performance targets</h2>
 <ul>
 <li>Cold start to blank document: under 1.5 seconds on a 2020-era
 laptop.</li>
@@ -5634,7 +5083,7 @@ seconds.</li>
 <li>Autosave write: under 50 ms, non-blocking.</li>
 </ul>
 <hr />
-<h2 id="privacy-and-security">12. Privacy and security</h2>
+<h2 id="12-privacy-and-security">12. Privacy and security</h2>
 <ul>
 <li>Local first. Nothing leaves the machine without an explicit
 per-action confirmation.</li>
@@ -5650,8 +5099,8 @@ disclosure.</li>
 provider supplies it) before sending.</li>
 </ul>
 <hr />
-<h2 id="internationalisation-and-localisation">13. Internationalisation
-and localisation</h2>
+<h2 id="13-internationalisation-and-localisation">13.
+Internationalisation and localisation</h2>
 <ul>
 <li>All UI strings wrapped in <code>_()</code> from
 <code>gettext</code>.</li>
@@ -5662,7 +5111,7 @@ German, Brazilian Portuguese, Polish, Japanese.</li>
 downloader for others.</li>
 </ul>
 <hr />
-<h2 id="telemetry">14. Telemetry</h2>
+<h2 id="14-telemetry">14. Telemetry</h2>
 <ul>
 <li>Off by default. The setting is presented in plain language, with an
 example payload shown verbatim before opt-in.</li>
@@ -5670,23 +5119,23 @@ example payload shown verbatim before opt-in.</li>
 counts.</li>
 </ul>
 <hr />
-<h2 id="success-metrics">15. Success metrics</h2>
+<h2 id="15-success-metrics">15. Success metrics</h2>
 <ul>
 <li>Time to open a typical PDF and reach the first searchable word.</li>
 <li>Number of screen-reader announcement regressions per release
 (target: zero).</li>
 <li>Crash-free sessions per week (target: 99.5 percent).</li>
-<li>User-reported “I lost work” incidents (target: zero, hard).</li>
+<li>User-reported "I lost work" incidents (target: zero, hard).</li>
 <li>Spell-check first-suggestion acceptance rate after 30 days of use
 (target: above 70 percent).</li>
 <li>Command palette task completion time vs menu navigation (target: at
 least 2x faster for top 20 commands).</li>
 <li>Adoption: monthly active users among the NVDA add-on community.</li>
 <li>Qualitative: 20+ unsolicited testimonials in the first 6 months
-saying “this feels calm.”</li>
+saying "this feels calm."</li>
 </ul>
 <hr />
-<h2 id="release-plan">16. Release plan</h2>
+<h2 id="16-release-plan">16. Release plan</h2>
 <p>v1.0 is locked to features we can build and ship at the highest
 quality bar with no novel research dependencies and no fragile
 third-party requirements. Anything that requires unproven libraries,
@@ -5697,7 +5146,7 @@ href="#17-backlog-and-deferred-items">section 17</a>.</p>
 A</strong>: a defined library exists, a known engineering path is
 mapped, accessibility behaviour is predictable, and a working prototype
 can be produced in a single sprint.</p>
-<h3 id="v0.9-alpha-internal-6-weeks">16.1 v0.9 alpha (internal, 6
+<h3 id="161-v09-alpha-internal-6-weeks">16.1 v0.9 alpha (internal, 6
 weeks)</h3>
 <ul>
 <li>Application shell, multi-document, menu bar, status bar.</li>
@@ -5717,7 +5166,7 @@ read-only.</li>
 <li>NVDA announcement plumbing; baseline JAWS and Narrator behaviour via
 stock controls.</li>
 </ul>
-<h3 id="v1.0-beta-8-weeks-after-0.9">16.2 v1.0 beta (8 weeks after
+<h3 id="162-v10-beta-8-weeks-after-09">16.2 v1.0 beta (8 weeks after
 0.9)</h3>
 <p>Adds, in order of priority:</p>
 <ul>
@@ -5732,13 +5181,13 @@ read, ODS read (as table), ODP read.</li>
 <li>EPUB read.</li>
 <li>PDF reading: <strong>tier 1 local extraction only</strong> (layered
 <code>pdfplumber</code> + <code>pypdfium2</code>, scored per page) plus
-PDF embedded bookmarks. Tier 2 “enhanced local” is removed from v1.0;
+PDF embedded bookmarks. Tier 2 "enhanced local" is removed from v1.0;
 tier 3 AI is moved to v1.0 release.</li>
 <li>Markdown preview-as-HTML, export to HTML, export to DOCX; HTML
 preview.</li>
 <li>Word count and document statistics (5.19); Accessibility Auditor
 (5.20); Table Mode (5.21); Editor Essentials (5.22).</li>
-<li>File associations and “Open with Quill” verb; Jump List integration
+<li>File associations and "Open with Quill" verb; Jump List integration
 (5.32).</li>
 <li>Full Command Palette with all prefixes; full Keymap editor with
 profiles and inline rebinding.</li>
@@ -5760,7 +5209,7 @@ bracket nav (5.28), Format menu (5.29).</li>
 Path, Copy Name (5.61); Open Recent pin/unpin (5.62).</li>
 <li>Settings search (5.73); In-app changelog (5.74).</li>
 </ul>
-<h3 id="v1.0-release-4-weeks-after-beta">16.3 v1.0 release (4 weeks
+<h3 id="163-v10-release-4-weeks-after-beta">16.3 v1.0 release (4 weeks
 after beta)</h3>
 <p>Adds and hardens:</p>
 <ul>
@@ -5806,7 +5255,7 @@ memory (5.66); Compare with clipboard (5.67); Insert from file (5.68);
 Selection statistics shortcut (5.69); Audio cues opt-in (5.70); Quiet
 mode (5.71); Temporary trust (5.72); Crash-report opt-in (5.75).</li>
 </ul>
-<h3 id="v1.1">16.4 v1.1</h3>
+<h3 id="164-v11">16.4 v1.1</h3>
 <p>Plugin system; TinySpell interop plugin (dictionary sync only);
 additional AI providers; Pandoc bridge; Whisper transcription importer;
 LibreOffice headless bridge plugin (raises legacy <code>.doc</code>,
@@ -5815,14 +5264,15 @@ quality from C to A); Calibre bridge plugin (raises <code>azw3</code>,
 <code>mobi</code>, <code>fb2</code>, <code>lit</code> to A); braille
 back-translation via liblouis; auto-update; spell-check contextual
 reranker (opt-in experimental); DjVu, comics, WARC, MSG/PST/MBOX.</p>
-<h3 id="v1.2">16.5 v1.2</h3>
+<h3 id="165-v12">16.5 v1.2</h3>
 <p>Right-to-left UI; additional languages; optional split view (still
 standard controls); reading-order learning per document; contextual
 reranker promoted to default; per-paragraph language detection; project
 workspaces and Find in Folder; chat-export readers (WhatsApp, Telegram,
 Slack, Discord, Teams, Zoom, Otter, ChatGPT) as plugins.</p>
 <hr />
-<h2 id="backlog-and-deferred-items">17. Backlog and deferred items</h2>
+<h2 id="17-backlog-and-deferred-items">17. Backlog and deferred
+items</h2>
 <p>Everything below is intentionally out of v1.0. Each item is either
 yellow (achievable but requires more engineering than the v1.0 quality
 bar permits in time) or red (depends on unstable third-party formats,
@@ -5831,14 +5281,9 @@ promise without measurement).</p>
 <p>The organising principle is simple: <strong>v1.0 ships only
 Confidence A. Confidence B and C land in v1.1–1.3 behind opt-in plugins
 and feature flags, with quality grades shown to the user.</strong></p>
-<h3 id="format-support-deferred-to-plugins-v1.1">17.1 Format support
+<h3 id="171-format-support-deferred-to-plugins-v11">17.1 Format support
 deferred to plugins (v1.1+)</h3>
 <table>
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr>
 <th>Format</th>
@@ -5875,7 +5320,7 @@ LibreOffice</td>
 <tr>
 <td>Kindle <code>.azw3</code>, <code>.mobi</code>, FB2, LIT, LRF, PRC,
 PDB, TCR</td>
-<td>Best handled by Calibre’s conversion engine</td>
+<td>Best handled by Calibre's conversion engine</td>
 <td>Calibre Bridge</td>
 </tr>
 <tr>
@@ -5949,7 +5394,7 @@ maintenance</td>
 </tr>
 </tbody>
 </table>
-<h3 id="features-deferred">17.2 Features deferred</h3>
+<h3 id="172-features-deferred">17.2 Features deferred</h3>
 <ul>
 <li><strong>Spell-check contextual reranker.</strong> Ships as opt-in
 experimental in v1.1 once measured uplift over Hunspell-alone is
@@ -5957,7 +5402,7 @@ demonstrated on a labelled corpus.</li>
 <li><strong>Per-paragraph automatic language detection</strong> for the
 spell-check dictionary stack. Short paragraphs and code-mixed text make
 this unreliable today.</li>
-<li><strong>Tier-2 “enhanced local” PDF extractor.</strong> No
+<li><strong>Tier-2 "enhanced local" PDF extractor.</strong> No
 pure-Python local layout analyser meets the bar. v1.0 ships tier 1
 (local) and tier 3 (opt-in AI). A real tier 2 returns when there is a
 credible local model.</li>
@@ -5982,7 +5427,7 @@ conflicts with screen-reader navigation patterns.</li>
 Backlog.</li>
 <li><strong>Per-file-class backup retention policy.</strong> v1.0 ships
 a single global retention rule (5.13). v1.1 introduces per-format-class
-defaults (e.g. 100 backups for source code, 25 for long-form documents)
+defaults (e.g. 100 backups for source code, 25 for long-form documents)
 once we have telemetry on user save patterns.</li>
 <li><strong>Single-line compose box mode.</strong> A small,
 screen-reader-optimised composer dialog whose Enter sends back to the
@@ -5990,7 +5435,7 @@ main editor at the cursor. Useful for slow-speech users; needs user
 testing to confirm it is worth the surface area. Backlog for v1.1.</li>
 </ul>
 <h3
-id="explicitly-out-of-scope-for-quill-any-version-unless-re-evaluated">17.4
+id="174-explicitly-out-of-scope-for-quill-any-version-unless-re-evaluated">17.4
 Explicitly out of scope for Quill (any version unless re-evaluated)</h3>
 <p>Quill is opinionated about what it is <em>not</em>. The following are
 intentionally and permanently out of scope unless a future PRD revision
@@ -6003,7 +5448,7 @@ emphasis textually.</li>
 <li><strong>Real-time collaborative editing.</strong> Not in v1.x. The
 architecture does not preclude it; we are not committing to it.</li>
 <li><strong>Cloud-sync of documents.</strong> Sync is for keymap and
-settings only (8.8). Document storage stays on the user’s machine and
+settings only (8.8). Document storage stays on the user's machine and
 chosen cloud-drive folder.</li>
 <li><strong>Mobile, web, macOS, or Linux ports.</strong> Cross-platform
 is post-v2 at earliest. The <code>core/</code> layer has no
@@ -6012,7 +5457,7 @@ is post-v2 at earliest. The <code>core/</code> layer has no
 <li><strong>Voice input / dictation.</strong> Use Windows dictation;
 Quill does not reinvent it.</li>
 <li><strong>AI authoring assistant.</strong> No autocomplete, no
-paragraph rewriting, no “continue my thought” in v1.0. The AI surface is
+paragraph rewriting, no "continue my thought" in v1.0. The AI surface is
 strictly reading-order repair and OCR escalation — both opt-in, both
 gated.</li>
 <li><strong>Project workspaces and Find in Folder.</strong> Deferred to
@@ -6029,7 +5474,7 @@ opt-in, off out of the box.</li>
 <li><strong>Anything that breaks DRM.</strong> Quill will not include or
 escalate to tooling that removes DRM from any file, including KFX.</li>
 </ul>
-<h3 id="confidence-grades-shown-to-the-user">17.3 Confidence grades
+<h3 id="173-confidence-grades-shown-to-the-user">17.3 Confidence grades
 shown to the user</h3>
 <p>The Format Support settings page displays a grade per format:</p>
 <ul>
@@ -6047,12 +5492,8 @@ a file of a non-A format, with one line of context (“Kindle
 with Calibre installed”) so expectations are set before the user hits
 Enter.</p>
 <hr />
-<h2 id="risks-and-mitigations">18. Risks and mitigations</h2>
+<h2 id="18-risks-and-mitigations">18. Risks and mitigations</h2>
 <table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <thead>
 <tr>
 <th>Risk</th>
@@ -6102,7 +5543,7 @@ evaluation only after stable base</td>
 </tbody>
 </table>
 <hr />
-<h2 id="open-questions">19. Open questions</h2>
+<h2 id="19-open-questions">19. Open questions</h2>
 <ol type="1">
 <li>License: MIT for maximum adoption, or GPL to keep derivatives open.
 Leaning MIT.</li>
@@ -6116,7 +5557,7 @@ community input.</li>
 by default, given screen-reader users often prefer single chords?</li>
 </ol>
 <hr />
-<h2 id="why-this-can-be-magical">20. Why this can be magical</h2>
+<h2 id="20-why-this-can-be-magical">20. Why this can be magical</h2>
 <p>The magic is not in any single feature. It is in the absence of
 friction:</p>
 <ul>
@@ -6140,7 +5581,7 @@ never goes quiet when you needed it to speak.</li>
 faithful on the page, and quietly delightful every time you reach for
 it.</p>
 <hr />
-<h2 id="project-delivery-todo-living-checklist">21. Project delivery
+<h2 id="21-project-delivery-todo-living-checklist">21. Project delivery
 TODO (living checklist)</h2>
 <p>Last updated: 2026-05-28</p>
 <p>Todo counts: <strong>160 total</strong> | <strong>160
@@ -6148,8 +5589,8 @@ completed</strong> | <strong>0 remaining</strong></p>
 <p>This is the implementation checklist for v1.0.0 and immediate
 post-1.0 foundations. It is intentionally granular and will be updated
 in-place as work lands.</p>
-<h3 id="application-shell-and-document-lifecycle">21.1 Application shell
-and document lifecycle</h3>
+<h3 id="211-application-shell-and-document-lifecycle">21.1 Application
+shell and document lifecycle</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Bootstrap wxPython app
 shell with menu bar, editor, status bar.</label></li>
@@ -6170,8 +5611,8 @@ region cycling across all declared regions.</label></li>
 <li><label><input type="checkbox" checked="" />Show live caret position
 in status bar (<code>Ln</code>, <code>Col</code>).</label></li>
 <li><label><input type="checkbox" checked="" />Add configurable status
-bar item layout (reorder + hide/show) through Status Bar Settings
-settings.</label></li>
+bar item layout (reorder + hide/show) through Status Bar
+Settings.</label></li>
 <li><label><input type="checkbox" checked="" />Show insert/overwrite
 mode in the status bar (<code>INS</code> /
 <code>OVR</code>).</label></li>
@@ -6192,7 +5633,7 @@ Recent Files action.</label></li>
 <li><label><input type="checkbox" checked="" />Add Save As Plain Text
 command.</label></li>
 </ul>
-<h3 id="core-editing-and-formatting">21.2 Core editing and
+<h3 id="212-core-editing-and-formatting">21.2 Core editing and
 formatting</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Open/save/save-as for
@@ -6254,8 +5695,8 @@ invocation.</label></li>
 commands (<code>Alt+Shift+Left</code> / <code>Alt+Shift+Right</code>)
 for Markdown/HTML headings.</label></li>
 </ul>
-<h3 id="navigation-search-structure-and-links">21.3 Navigation, search,
-structure, and links</h3>
+<h3 id="213-navigation-search-structure-and-links">21.3 Navigation,
+search, structure, and links</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Go To Line with optional
 column target (<code>line,column</code>).</label></li>
@@ -6282,7 +5723,7 @@ back/forward ring.</label></li>
 <li><label><input type="checkbox" checked="" />Match bracket and
 structural navigation.</label></li>
 </ul>
-<h3 id="metrics-spell-and-tools">21.4 Metrics, spell, and tools</h3>
+<h3 id="214-metrics-spell-and-tools">21.4 Metrics, spell, and tools</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Word count and baseline
 document stats.</label></li>
@@ -6301,7 +5742,7 @@ workflow and interactive compare mode.</label></li>
 <li><label><input type="checkbox" checked="" />Read-aloud controls and
 voice selection.</label></li>
 </ul>
-<h3 id="a-trust-and-verification">21.4a Trust and verification</h3>
+<h3 id="214a-trust-and-verification">21.4a Trust and verification</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Document intake report on
 open.</label></li>
@@ -6311,8 +5752,8 @@ with source reference text.</label></li>
 for PDF-derived documents.</label></li>
 <li><label><input type="checkbox" checked="" />Bad extraction support
 package command.</label></li>
-<li><label><input type="checkbox" checked="" />Context-sensitive “What
-Can I Do Here?” help.</label></li>
+<li><label><input type="checkbox" checked="" />Context-sensitive "What
+Can I Do Here?" help.</label></li>
 <li><label><input type="checkbox" checked="" />Safe mode startup for
 troubleshooting.</label></li>
 <li><label><input type="checkbox" checked="" />Portable mode clarity and
@@ -6320,7 +5761,7 @@ first-run storage choice.</label></li>
 <li><label><input type="checkbox" checked="" />Golden document corpus
 for release verification.</label></li>
 </ul>
-<h3 id="b-power-search">21.4b Power search</h3>
+<h3 id="214b-power-search">21.4b Power search</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Plain text, whole word,
 regular expression, and wildcard search modes.</label></li>
@@ -6331,8 +5772,8 @@ tokens and explanations.</label></li>
 <li><label><input type="checkbox" checked="" />Replace-all preview
 before apply.</label></li>
 </ul>
-<h3 id="persistence-safety-and-recovery">21.5 Persistence, safety, and
-recovery</h3>
+<h3 id="215-persistence-safety-and-recovery">21.5 Persistence, safety,
+and recovery</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Persistent settings
 store.</label></li>
@@ -6353,7 +5794,7 @@ and file trust prompts.</label></li>
 <li><label><input type="checkbox" checked="" />Notification center
 persistence model.</label></li>
 </ul>
-<h3 id="command-palette-and-keymap-system">21.6 Command palette and
+<h3 id="216-command-palette-and-keymap-system">21.6 Command palette and
 keymap system</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Command registry and
@@ -6372,7 +5813,7 @@ conflict detection and capture dialog.</label></li>
 <li><label><input type="checkbox" checked="" />Import/export/reset
 keymap workflows.</label></li>
 </ul>
-<h3 id="format-support-and-io-coverage">21.7 Format support and I/O
+<h3 id="217-format-support-and-io-coverage">21.7 Format support and I/O
 coverage</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Base text/markdown
@@ -6399,7 +5840,7 @@ safety checks.</label></li>
 <li><label><input type="checkbox" checked="" />Open from URL baseline
 (HTTP/HTTPS text fetch; advanced safety checks pending).</label></li>
 </ul>
-<h3 id="accessibility-and-ux-hardening">21.8 Accessibility and UX
+<h3 id="218-accessibility-and-ux-hardening">21.8 Accessibility and UX
 hardening</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Screen-reader
@@ -6415,7 +5856,7 @@ theme validation.</label></li>
 <li><label><input type="checkbox" checked="" />Controlled vocabulary +
 plain-language linting hooks.</label></li>
 </ul>
-<h3 id="windows-integration">21.9 Windows integration</h3>
+<h3 id="219-windows-integration">21.9 Windows integration</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Shell integration (Open
 With, file associations, jump list).</label></li>
@@ -6428,19 +5869,21 @@ mapping with Windows settings sync.</label></li>
 <li><label><input type="checkbox" checked="" />Installer flow (Inno
 Setup) and portable build variant.</label></li>
 </ul>
-<h3 id="ai-ocr-and-optional-network-features-deferred-to-v1.1">21.10 AI,
-OCR, and optional network features (deferred to v1.1)</h3>
+<h3 id="2110-ai-ocr-and-optional-network-features-deferred-to-v11">21.10
+AI, OCR, and optional network features (deferred to v1.1)</h3>
 <p>Deferred to v1.1:</p>
 <ul>
 <li>AI provider abstraction and per-provider adapters.</li>
 <li>Explicit consent-gated network action layer.</li>
 <li>Reading-order repair pipeline (opt-in).</li>
 <li>Task progress and cancellation UX for long-running operations.</li>
+</ul>
+<ul class="task-list">
 <li><label><input type="checkbox" checked="" />Signed update manifest
 fetch and verification.</label></li>
 </ul>
-<h3 id="engineering-quality-gates-and-release">21.11 Engineering quality
-gates and release</h3>
+<h3 id="2111-engineering-quality-gates-and-release">21.11 Engineering
+quality gates and release</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Python project scaffold,
 lint/type/test tooling baseline.</label></li>
@@ -6459,7 +5902,7 @@ pipeline for Windows artefacts.</label></li>
 <li><label><input type="checkbox" checked="" />Third-party notices
 generation and license gate.</label></li>
 </ul>
-<h3 id="documentation-and-readiness">21.12 Documentation and
+<h3 id="2112-documentation-and-readiness">21.12 Documentation and
 readiness</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Engineering docs baseline
@@ -6475,11 +5918,11 @@ report (ACR/VPAT) generation toolchain.</label></li>
 <li><label><input type="checkbox" checked="" />Diagnostics bundle
 specification and support runbook.</label></li>
 </ul>
-<h3 id="profile-safety-and-recovery">21.13 Profile safety and
+<h3 id="2113-profile-safety-and-recovery">21.13 Profile safety and
 recovery</h3>
 <ul class="task-list">
-<li><label><input type="checkbox" checked="" />Add a “Why Don’t I See a
-Feature?” help command.</label></li>
+<li><label><input type="checkbox" checked="" />Add a "Why Don’t I See a
+Feature?" help command.</label></li>
 <li><label><input type="checkbox" checked="" />Add profile switch
 preview and change summary text.</label></li>
 <li><label><input type="checkbox" checked="" />Add undo for the last
@@ -6498,12 +5941,12 @@ guide content.</label></li>
 dependency, and maturity labels for features.</label></li>
 <li><label><input type="checkbox" checked="" />Add profile import safety
 validation and locked feature protection.</label></li>
-<li><label><input type="checkbox" checked="" />Add “Show what changed”
+<li><label><input type="checkbox" checked="" />Add "Show what changed"
 reporting after profile switches.</label></li>
 <li><label><input type="checkbox" checked="" />Add feature-flag coverage
 tests for new commands and surfaces.</label></li>
 </ul>
-<h3 id="feature-registry-and-profiles">21.14 Feature registry and
+<h3 id="2114-feature-registry-and-profiles">21.14 Feature registry and
 profiles</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Add a central feature
@@ -6532,7 +5975,7 @@ labels for risk, maturity, privacy, and network impact.</label></li>
 <li><label><input type="checkbox" checked="" />Add profile comparison
 preview in the Profiles and Features page.</label></li>
 </ul>
-<h3 id="macro-and-compare-expansion">21.15 Macro and compare
+<h3 id="2115-macro-and-compare-expansion">21.15 Macro and compare
 expansion</h3>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />Implement macro command

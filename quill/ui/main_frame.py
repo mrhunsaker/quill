@@ -1734,11 +1734,7 @@ class MainFrame:
         search_menu.Append(self._id_find, self._menu_label("&Find...", "edit.find"))
         search_menu.Append(
             self._id_replace,
-            self._menu_label("&Replace...", "edit.replace"),
-        )
-        search_menu.Append(
-            self._id_replace_all,
-            self._menu_label("Rep&lace All...", "edit.replace_all"),
+            self._menu_label("&Replace...", "edit.replace_all"),
         )
         search_menu.AppendSeparator()
         search_menu.Append(

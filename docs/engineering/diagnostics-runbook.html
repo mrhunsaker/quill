@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>diagnostics-runbook</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="diagnostics-bundle-specification-and-support-runbook">Diagnostics
+bundle specification and support runbook</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Quill diagnostics are a user-exported bundle for support and bug
+triage. The bundle is explicit opt-in and never auto-sent.</p>
+<h2 id="bundle-contents">Bundle contents</h2>
+<ol type="1">
+<li><code>metadata.json</code>
+<ul>
+<li>Quill version</li>
+<li>OS version</li>
+<li>Python runtime version</li>
+<li>timestamp (UTC)</li>
+</ul></li>
+<li><code>recent-actions.json</code>
+<ul>
+<li>last 50 command/event entries from the in-process event stream</li>
+</ul></li>
+<li><code>settings-redacted.json</code>
+<ul>
+<li>non-secret user settings (theme, wrap mode, limits, feature
+toggles)</li>
+</ul></li>
+<li><code>keymap.json</code>
+<ul>
+<li>active keymap</li>
+</ul></li>
+<li><code>logs/</code>
+<ul>
+<li>recent log files (up to 14 days)</li>
+</ul></li>
+<li><code>crash/</code> (if present)
+<ul>
+<li>last crash traceback dump</li>
+</ul></li>
+</ol>
+<h2 id="exclusions-and-redaction">Exclusions and redaction</h2>
+<ol type="1">
+<li>Never include document body text.</li>
+<li>Never include AI provider keys, tokens, or raw credential
+material.</li>
+<li>File paths are included only when user explicitly checks "include
+file paths"; otherwise hashed paths are used.</li>
+<li>URL query strings are stripped by default in diagnostics
+metadata.</li>
+</ol>
+<h2 id="support-workflow">Support workflow</h2>
+<ol type="1">
+<li>User runs <strong>Help → Save Diagnostics…</strong></li>
+<li>Quill previews included artifacts and redaction rules.</li>
+<li>User confirms output path.</li>
+<li>Quill writes
+<code>quill-diagnostics-YYYYMMDD-HHMMSS.zip</code>.</li>
+<li>User attaches the zip to the Community Access support form or
+another support ticket if requested.</li>
+</ol>
+<h2 id="triage-checklist">Triage checklist</h2>
+<ol type="1">
+<li>Confirm version and environment from
+<code>metadata.json</code>.</li>
+<li>Review <code>recent-actions.json</code> for the failing action
+sequence.</li>
+<li>Correlate with log timestamps.</li>
+<li>If crash dump exists, map traceback to current source and known
+issues.</li>
+<li>Record triage outcome and next action in issue labels/comments.</li>
+</ol>
+</body>
+</html>

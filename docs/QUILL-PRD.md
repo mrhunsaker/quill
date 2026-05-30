@@ -725,7 +725,8 @@ A dedicated menu surfacing transforms that are otherwise reachable via Tools or 
 
 ### 5.33 Diagnostics and bug reporting
 
-- `Help → Save Diagnostics…` writes a zip with:
+- `Help → Report a Bug…` is the unified support flow. It opens an in-app review screen with the report summary and destination URL, supports optional diagnostics zip generation, copies the environment summary to the clipboard, and then opens a pre-filled Community Access support-hub issue form in the default browser with no logs; the user reviews and submits manually.
+- `Help → Save Diagnostics…` remains available for standalone diagnostics export and writes a zip with:
   - the last 7 days of logs (action names and outcomes only; no document content),
   - settings (with API keys redacted),
   - the active keymap,
@@ -733,7 +734,6 @@ A dedicated menu surfacing transforms that are otherwise reachable via Tools or 
   - the screen-reader detection result and version (if available),
   - basic environment info (Windows build, Python build, wxPython build, locale).
 - Nothing leaves the machine. The user chooses where to save the zip and what to do with it.
-- `Help → Report a Bug…` first opens an in-app review screen with the report summary and destination URL, copies the environment summary to the clipboard, and then opens a pre-filled Community Access support-hub issue form in the default browser with no logs; the user reviews and submits manually.
 
 ### 5.34 Welcome and Keyboard Reference
 

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>module-contracts</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="module-contracts">Module contracts</h1>
+<p>This file defines implementation contracts currently enforced in code
+and tests.</p>
+<h2 id="quillcoredocument"><code>quill.core.document</code></h2>
+<ul>
+<li><code>Document</code> owns the active text buffer metadata
+(<code>path</code>, <code>encoding</code>, <code>line_ending</code>,
+<code>modified</code>, <code>revision</code>).</li>
+<li><code>set_text()</code> marks the document modified and increments
+revision only on actual content change.</li>
+<li><code>mark_saved()</code> clears modified state and optionally
+updates path.</li>
+</ul>
+<h2 id="quillcorecommands"><code>quill.core.commands</code></h2>
+<ul>
+<li>Command IDs are unique.</li>
+<li>Unknown command execution raises <code>KeyError</code>.</li>
+<li>Registry listing is stable and sorted by title.</li>
+<li>Keybinding lookup is queryable by command id.</li>
+</ul>
+<h2 id="quilliotext"><code>quill.io.text</code></h2>
+<ul>
+<li><code>read_text_document(path)</code> returns an unmodified
+<code>Document</code> snapshot from disk.</li>
+<li><code>write_text_document(document, path?)</code> requires an
+explicit or existing path.</li>
+<li>Writes preserve configured line-ending policy and update document
+saved state.</li>
+</ul>
+<h2 id="quillcorestorage"><code>quill.core.storage</code></h2>
+<ul>
+<li>JSON writes are atomic (<code>*.tmp</code> then replace).</li>
+<li>Reads are tolerant to missing files via caller-provided
+defaults.</li>
+</ul>
+<h2 id="quillcoresettings"><code>quill.core.settings</code></h2>
+<ul>
+<li>Settings are loaded from <code>%APPDATA%\Quill\settings.json</code>
+or <code>QUILL_DATA_DIR</code>.</li>
+<li><code>recent_files_limit</code> is clamped to
+<code>[1, 50]</code>.</li>
+</ul>
+<h2 id="quillcorekeymap"><code>quill.core.keymap</code></h2>
+<ul>
+<li>Default keymap is always present.</li>
+<li>Persisted overrides merge over defaults and must be string-to-string
+entries.</li>
+</ul>
+<h2 id="quillcorerecent"><code>quill.core.recent</code></h2>
+<ul>
+<li>Recent file updates are deduplicated (most recent first) and
+limit-bounded.</li>
+</ul>
+<h2 id="quillcoresearch"><code>quill.core.search</code></h2>
+<ul>
+<li>Search supports literal and regex modes.</li>
+<li>Case sensitivity and whole-word matching are explicit options.</li>
+<li>Replace operations return both updated text and replacement
+count.</li>
+</ul>
+<h2 id="quillcoretagging"><code>quill.core.tagging</code></h2>
+<ul>
+<li>HTML insertion supports picked tags with optional attribute parsing
+(<code>key=value; key2=value2</code>).</li>
+<li>Void HTML tags are emitted as self-closing snippets.</li>
+<li>Markdown tagging emits structured snippets (headings, lists,
+links/images, code, table, footnotes).</li>
+</ul>
+<h2 id="quilluimain_frame"><code>quill.ui.main_frame</code></h2>
+<ul>
+<li>Title reflects document name and modified status.</li>
+<li>Status bar channel 0 is action/result announcements; channel 1 is
+path.</li>
+<li>Menu labels reflect current keymap bindings.</li>
+<li><code>File &gt; Open Recent</code> is rebuilt from persisted
+recent-file state.</li>
+</ul>
+</body>
+</html>

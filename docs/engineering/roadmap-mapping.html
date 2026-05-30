@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>roadmap-mapping</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="prd-roadmap-mapping">PRD roadmap mapping</h1>
+<p>This maps implemented work to PRD release slices.</p>
+<h2 id="implemented-now-alpha-foundations">Implemented now (alpha
+foundations)</h2>
+<ul>
+<li>Application shell with menu/status/editor</li>
+<li>Text and HTML open/save</li>
+<li>Config/data format readers baseline
+(JSON/YAML/TOML/XML/CSV/TSV)</li>
+<li>Notebook and SQLite read-only renderers</li>
+<li>DOCX read-only text extraction path</li>
+<li>EPUB/RTF/ODT baseline read-only text extraction paths</li>
+<li>EPUB navigator dialog with chapter tree + preview and
+open-selected-chapter flow</li>
+<li>Recent files</li>
+<li>Settings/keymap persistence baseline</li>
+<li>Keymap import/export/reset workflows (Tools menu)</li>
+<li>Command palette baseline</li>
+<li>Command palette fuzzy ranking with persisted frequency/recency
+tie-breakers</li>
+<li>Command palette prefix modes (<code>&gt;</code>, <code>?</code>,
+<code>:</code>, <code>~</code>) with scoped filtering</li>
+<li>Find and replace-all baseline</li>
+<li>Word count and go-to-line utility commands</li>
+<li>Go-to-line parser supports <code>line,column</code> targeting</li>
+<li>HTML tag/attribute picker and markdown tagging picker</li>
+<li>Format-aware insert-link command (<code>Ctrl+K</code>)</li>
+<li>Follow-link command (<code>Ctrl+Enter</code>) with cursor URL
+extraction</li>
+<li>Find next/previous navigation (<code>F3</code> /
+<code>Shift+F3</code>)</li>
+<li>Find-all-matches summary (<code>Alt+F3</code>)</li>
+<li>Surface-aware bold/italic + heading (<code>Ctrl+Alt+1..6</code>) for
+Markdown/HTML documents</li>
+<li>Heading-level adjust commands (<code>Alt+Shift+Left</code> /
+<code>Alt+Shift+Right</code>) for Markdown/HTML heading lines</li>
+<li>Format text transforms (upper/lower/title/sentence/toggle case)</li>
+<li>Format line operations (move up/down, duplicate, delete, join)</li>
+<li>Format comment and indentation operations (toggle line/block
+comment, indent/outdent)</li>
+<li>Dedicated format insert commands (list submenu, code block,
+footnote) for Markdown/HTML</li>
+<li>Guided table insertion workflow (Markdown/HTML table builder)</li>
+<li>Code-block insertion with optional language hints for Markdown
+fences and HTML <code>language-*</code> classes</li>
+<li>Edit selection helpers (Select Line and Select Paragraph
+commands)</li>
+<li>Tabbed multi-document switcher with close semantics</li>
+<li>Recent-document keyboard cycling via <code>Ctrl+Tab</code> /
+<code>Ctrl+Shift+Tab</code></li>
+<li>Single-instance handoff IPC for second-launch file-open
+requests</li>
+<li>Edit selection expansion commands (select block, select to
+line/document boundaries)</li>
+<li>Extend Selection mode (<code>F8</code>) for shiftless Word-style
+selection growth</li>
+<li>Mark ring commands (set, pop, exchange point/mark, list marks)</li>
+<li>Optional system tray mode (send to tray, restore, tray exit)</li>
+<li>Context menus across editor/status bar/frame with keyboard
+Application/Menu-key support</li>
+<li>File workflow quick wins (Open from URL baseline, Save As Plain
+Text, Clear Recent Files)</li>
+<li>File workflow commands (Save All, Reload from Disk, Restore Backup
+dialog)</li>
+<li>File menu sessions submenu for open-document switching</li>
+<li>Open from URL safety flow (host/size confirmation and cross-host
+redirect prompt)</li>
+<li>Go To Page baseline navigation command</li>
+<li>Heading and block navigation commands (Navigate menu)</li>
+<li>Outline navigator command with heading jump dialog</li>
+<li>Match-bracket and structural navigation commands</li>
+<li>F6/Shift+F6 region cycling between primary UI regions</li>
+<li>Status bar caret indicator (<code>Ln</code>, <code>Col</code>) and
+customizable status item order/visibility</li>
+<li>Status bar insert/overwrite mode indicator (<code>INS</code> /
+<code>OVR</code>)</li>
+<li>Full status-bar interactive cell model with keyboard activation and
+accessible Help/About entries</li>
+<li>Trust and verification layer: document intake reports,
+copy-with-source, extraction quality review, and bad-extraction
+reports</li>
+<li>Power search layer: regex/whole-word/wildcard search modes, regex
+helper, and previewed replace-all</li>
+<li>Recent-location back/forward ring navigation</li>
+<li>View-level soft-wrap toggle with persisted setting</li>
+<li>Dark mode toggle in View with persisted theme state</li>
+<li>Persistent find/replace query history</li>
+<li>Atomic JSON persistence</li>
+<li>Backup/autosave infrastructure primitives</li>
+<li>Integration-test corpus baseline under
+<code>tests/integration</code></li>
+<li>Accessibility transcript capture hooks for test harnesses</li>
+<li>Welcome guide and generated keyboard-reference document
+commands</li>
+<li>Performance smoke suite baseline under
+<code>tests/performance</code></li>
+<li>Third-party notices generation and license-gate tooling script</li>
+<li>Accessibility conformance report (ACR/VPAT) generation script and
+template</li>
+<li>Screen-reader detection baseline with adaptive startup hinting</li>
+<li>Region entry/exit announcement consistency for modal dialogs</li>
+<li>Keyboard trap audit and tab-order snapshot command</li>
+<li>Accessibility audit command and report panel</li>
+<li>Link inventory and alt-text catalog tool</li>
+<li>Compare-with-file diff workflow</li>
+<li>DPAPI key storage baseline for provider credentials</li>
+<li>Trusted locations store and untrusted file-open prompts</li>
+<li>Startup crash-recovery prompt with autosave restore option</li>
+<li>Signed update manifest verification and Check for Updates
+workflow</li>
+<li>Keymap editor UI with conflict detection and capture workflow</li>
+<li>Notification center persistence model with stored update/recovery
+entries</li>
+<li>Contrast and low-vision theme validation command/report</li>
+<li>Optional persistent-undo mode with on-disk undo history</li>
+<li>Spell-check dialog, dictionary scopes, and next-misspelling
+navigation</li>
+<li>As-you-type spell-check toggle with status hints</li>
+<li>Accessibility-focused test suite and Windows CI workflow
+automation</li>
+<li>Controlled-vocabulary plain-language lint hooks and CLI checker</li>
+<li>Windows installer flow and portable build template</li>
+<li>PDF extraction baseline with quality scoring</li>
+<li>OCR bridge baseline with consent/progress UI</li>
+</ul>
+<h2 id="next-high-priority-implementation-targets">Next high-priority
+implementation targets</h2>
+<ul>
+<li>Multi-document session model</li>
+<li>Complete file-menu/session/print set</li>
+<li>Read-aloud controls with voice selection</li>
+<li>Windows shell integration and high-contrast sync</li>
+<li>SBOM + signed build/release provenance pipeline</li>
+<li>Deferred to v1.1: AI provider abstraction, consent-gated network
+actions, reading-order repair, task progress/cancellation</li>
+<li>Deferred to v1.1: GLOW expansion beyond the first native audit/fix
+slice, including findings navigation, export-readiness workflows, and
+extraction-aware review for PDF and EPUB.</li>
+<li>Delivered in Quill 0.1 Beta: multi-format documentation release
+pipeline for the user guide and announcement, including maintained
+Markdown, HTML, and EPUB artifacts.</li>
+<li>Delivered in Quill 0.1.1 Beta: a unified in-app Help -&gt; Report a
+Bug flow with optional diagnostics generation, in-app summary review,
+and Community Access support-form handoff.</li>
+</ul>
+</body>
+</html>

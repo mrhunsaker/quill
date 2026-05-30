@@ -193,7 +193,8 @@ Quill then goes further with selection and navigation-aware editing:
 - **Recent Marks (Ring)** commands let you set a temporary mark, jump to previous marks, swap cursor and mark, and list recent marks while you move through an editing flow.
 - **Insert Link...** creates a format-aware link.
 - **Follow Link** opens the link under the caret.
-- **Find...** and **Replace All...** sit here as expected.
+- **Find...** and **Replace...** sit here as expected.
+- **Replace...** includes a **Replace All** action in the dialog, so bulk replacement stays in one place.
 - **Preferences...** opens the broader customization surface.
 
 ### View
@@ -430,16 +431,15 @@ If you only remember one thing about Help, remember this: it is a working surfac
 
 Use this path when Quill is behaving unexpectedly or when you want to send the team a feature request.
 
-1. Open **Help -> Save Diagnostics...**.
-2. Read the review screen and decide whether Quill should include plain file paths.
-3. Save the diagnostics bundle to a location you can find again easily.
-4. Open **Help -> Report a Bug...**.
-5. Read the in-app report summary Quill prepares for you.
-6. Choose **Open Support Form**.
-7. When the Community Access support page opens, describe the problem, what you expected, and what actually happened.
-8. Attach the diagnostics zip if it is relevant to the issue.
+1. Open **Help -> Report a Bug...**.
+2. Read the in-app report summary Quill prepares for you.
+3. Choose whether to include diagnostics, and whether to include plain file paths.
+4. If diagnostics are included, save the diagnostics bundle to a location you can find again easily.
+5. Choose **Open Support Form**.
+6. When the Community Access support page opens, describe the problem, what you expected, and what actually happened.
+7. Attach the diagnostics zip if it is relevant to the issue.
 
-If you do not need diagnostics, you can still open **Help -> Report a Bug...** directly. The key point is that the Help menu is the normal support route.
+This unified flow keeps support reporting in one place. If you only need diagnostics, **Help -> Save Diagnostics...** remains available as a standalone export command.
 
 ## Writing and Editing
 
@@ -478,7 +478,7 @@ Quill's search tools are both straightforward and layered.
 - `F3` finds next.
 - `Shift+F3` finds previous.
 - `Alt+F3` opens a find-all matches summary.
-- `Ctrl+H` opens Replace All.
+- `Ctrl+Shift+H` opens Replace.
 
 ### Search modes
 

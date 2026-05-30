@@ -100,4 +100,4 @@ This maps implemented work to PRD release slices.
 - Deferred to v1.1: AI provider abstraction, consent-gated network actions, reading-order repair, task progress/cancellation
 - Deferred to v1.1: GLOW expansion beyond the first native audit/fix slice, including findings navigation, export-readiness workflows, and extraction-aware review for PDF and EPUB.
 - Delivered in Quill 0.1 Beta: multi-format documentation release pipeline for the user guide and announcement, including maintained Markdown, HTML, and EPUB artifacts.
-- Delivered in Quill 0.1 Beta: in-app diagnostics export, in-app bug-report review, and a Community Access support-hub report-a-bug path suitable for broad testing.
+- Delivered in Quill 0.1.1 Beta: a unified in-app Help -> Report a Bug flow with optional diagnostics generation, in-app summary review, and Community Access support-form handoff.

@@ -9,6 +9,7 @@ Quill 0.1.1 Beta advances the 0.1 baseline with update-path hardening, status-ba
 - Completed status-bar interaction parity: focused cell context actions now include **Activate**, **Hide this item**, and **Status bar settings**.
 - Added **Restore Defaults** to Status Bar Settings and persisted layout changes.
 - Hardened **Help -> Check for Updates...** with guided installer handoff, including close-now support for clean setup.
+- Simplified the Search menu to a single **Replace...** entry; replace-all now lives in the Replace dialog and keeps the existing replace-all hotkey path.
 - Clarified naming and discoverability around **Workspace Snapshots**, **Recent Marks (Ring)**, and status-bar terminology.
 - Expanded regression coverage for search/extend-selection and no-selection transform behavior.
 - Added About-dialog acknowledgments for contributors and beta testers.
@@ -56,7 +57,7 @@ Quill also now has a more practical format-bridge story. With Pandoc available, 
 
 ### Support and feedback
 
-Quill 0.1 Beta uses the Help menu as its primary guided feedback route. `Help -> Save Diagnostics...` prepares a reviewable bundle, and `Help -> Report a Bug...` prepares the report in-app before opening the Community Access support form for user review and submission.
+Quill 0.1.1 Beta uses a unified Help-menu support flow. `Help -> Report a Bug...` now handles report preparation, optional diagnostics generation, in-app review, and support-form handoff in one guided path. `Help -> Save Diagnostics...` remains available for standalone diagnostics export.
 
 ### Notes
 
