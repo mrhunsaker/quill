@@ -385,6 +385,12 @@ These commands matter when Quill is acting as a trusted reader for imported form
 - Is this document safe to quote from directly?
 - Do I need to escalate this source for manual cleanup?
 
+Release-safety note for current beta validation:
+
+- Word files (`.doc`, `.docx`) open into the normal plain-text editing surface.
+- CSV/TSV files open into the normal plain-text editing surface.
+- Structured Word and CSV grid surfaces remain in the codebase behind an internal verification gate.
+
 #### GLOW
 
 - **GLOW Audit Current Document**

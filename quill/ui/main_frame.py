@@ -6484,16 +6484,27 @@ class MainFrame:
         self._set_status(build_intake_summary(loaded))
 
     def _resolve_csv_open_mode(self, path: Path) -> str:
+        if not self._experimental_structured_surfaces_enabled():
+            return "text"
         mode = getattr(self.settings, "csv_open_mode", "prompt")
         if mode in {"grid", "text"}:
             return mode
         return self._prompt_csv_open_mode(path)
 
     def _resolve_word_open_mode(self, path: Path) -> str:
+        if not self._experimental_structured_surfaces_enabled():
+            return "text"
         mode = getattr(self.settings, "word_open_mode", "prompt")
         if mode in {"structured", "text"}:
             return mode
         return self._prompt_word_open_mode(path)
+
+    def _experimental_structured_surfaces_enabled(self) -> bool:
+        # Release safety default: keep structured Word and CSV grid surfaces in
+        # the repository, but disable them unless explicitly enabled for
+        # internal verification.
+        raw = os.environ.get("QUILL_ENABLE_EXPERIMENTAL_SURFACES", "").strip().lower()
+        return raw in {"1", "true", "yes", "on"}
 
     def _prompt_csv_open_mode(self, path: Path) -> str:
         wx = self._wx

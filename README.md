@@ -25,8 +25,8 @@ Highlights in 0.1.2 include:
 - Insert menu with searchable Markdown/HTML insertion.
 - Word Prediction with `Ctrl+Space` plus HTML/Markdown tag IntelliSense.
 - New snippet system with `Ctrl+Alt+Space` insertion, trigger expansion, and starter packs.
-- CSV open-mode choice with remembered default and an accessible grid surface that can switch back to normal text editing.
-- Word open-mode choice with remembered default, including a structured Word view and normal text editing mode.
+- Release-safety default for 0.1.2 testing: Word and CSV open in the normal plain-text editor surface.
+- Structured Word view and CSV grid code paths remain in-repo behind an internal gate for continued verification.
 - Expanded structured intake for `.doc`/`.docx`, `.ppt`/`.pptx`, `.xlsx`/`.xls`, `.pages`, and low-confidence PDF fallback via MarkItDown when available.
 - Writing Assistant shell with prompt presets, generated tool suggestions, and a sandboxed Python runner.
 - AI Connection workflow from both Preferences and the AI menu, with provider-aware host defaults.

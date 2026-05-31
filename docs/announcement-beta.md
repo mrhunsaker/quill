@@ -26,7 +26,7 @@ This cycle also improves AI connection confidence and accessibility. The connect
 
 This cycle also strengthens customization with custom profiles (including opt-in inheritance or bare-bones starts), a quick profile picker on `Alt+Shift+P`, and cleaner status/title behavior by suppressing duplicate file-path reporting when full-path title mode is enabled.
 
-This cycle also expands document-intake depth. CSV and TSV files now prompt for open mode (special grid or normal text) with a remembered default and a quick in-tab way back to normal editing. Word documents now offer a structured Word view and normal text editing mode, both with remembered defaults, and table-heavy Word content is rendered into explicit screen-reader-friendly table narration in the structured view.
+This cycle also expands document-intake depth. For release-safe beta validation, Word and CSV/TSV currently open in the normal plain-text editing surface by default. Structured Word and CSV grid paths remain in the codebase behind an internal gate for continued verification before wider rollout.
 
 ## What makes Quill special
 

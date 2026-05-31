@@ -35,6 +35,8 @@ Quill 0.1.2 Beta expands Quill's writing flow with prediction, snippets, browser
 - Added structured **PowerPoint (.pptx) import** with slide titles as headings, bullet levels as nested lists, table extraction, and speaker-note extraction.
 - Added **Style Headings...** under Insert -> Heading to apply font family, size, and alignment to current-level or all headings in Markdown/HTML.
 - Added **Heading Organizer** (`Ctrl+Alt+Shift+H`) for keyboard-first heading promotion/demotion, section reordering, heading renaming, and accessibility validation before apply.
+- Added release-safety fallback for beta testing: Word (`.doc`, `.docx`) and CSV/TSV now open in the standard plain-text editing surface by default.
+- Kept structured Word and CSV grid implementations in-repo behind an internal gate for continued verification.
 - Removed duplicate path reporting by hiding the status-bar file path item when full path is already shown in the title bar.
 - Fixed intermittent unit-test file-locking in UI navigation tests by isolating `QUILL_DATA_DIR` per test.
 - Expanded docs and release notes for the complete 0.1.2 feature set.
