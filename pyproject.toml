@@ -50,7 +50,7 @@ dev = [
   "pytest-xdist>=3.6",
   "pytest-timeout>=2.3",
   "ruff>=0.6",
-  "mypy>=1.11",
+  "mypy>=2.1.0",
 ]
 
 [project.scripts]
