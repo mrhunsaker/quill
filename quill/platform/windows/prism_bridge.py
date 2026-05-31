@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, replace
 from importlib import import_module
 from typing import Any
@@ -97,9 +98,21 @@ class AnnouncementEngine:
 
     def announce(self, message: str) -> str | None:
         if self._runtime_backend is None:
-            # Only speak via system TTS when NO screen reader is running —
-            # otherwise it talks over Narrator/NVDA/JAWS (the screen reader
-            # already reads the UI through the accessibility API).
+            # macOS: hand the announcement to VoiceOver via the accessibility
+            # API. Never self-voice with pyttsx3 — that talks over VoiceOver
+            # (the system voice the user already hears). If VoiceOver is off the
+            # post is a harmless no-op.
+            if sys.platform == "darwin":
+                try:
+                    from quill.platform.macos.announce import announce as voiceover_announce
+
+                    voiceover_announce(message)
+                except Exception:  # noqa: BLE001
+                    pass
+                return None
+            # Windows/Linux: only speak via system TTS when NO screen reader is
+            # running — otherwise it talks over Narrator/NVDA/JAWS (the screen
+            # reader already reads the UI through the accessibility API).
             if (
                 self._state.requested_backend == "auto"
                 and pyttsx3 is not None

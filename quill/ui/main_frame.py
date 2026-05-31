@@ -282,9 +282,16 @@ from quill.core.trust import is_trusted_location, load_trusted_locations, save_t
 from quill.core.undo_store import load_undo_history, save_undo_history
 from quill.core.updates import (
     DEFAULT_UPDATE_MANIFEST_URL,
+    URLError,
+    GitHubRelease,
     UpdateManifest,
+    download_release_asset,
+    fetch_latest_release,
+    fetch_releases,
     fetch_update_manifest,
+    find_release,
     is_newer_version,
+    select_latest,
 )
 from quill.core.url_ops import format_content_length, host_for_url, is_cross_host_redirect
 from quill.core.yaml_structure import (
@@ -2266,9 +2273,7 @@ class MainFrame:
             self._menu_label("Toggle Soft &Wrap", "view.toggle_soft_wrap"),
         )
         view_menu.Check(self._id_toggle_soft_wrap, self.settings.soft_wrap)
-        view_menu.AppendCheckItem(
-            self._id_toggle_auto_side_preview, "&Auto Side-by-Side Preview"
-        )
+        view_menu.AppendCheckItem(self._id_toggle_auto_side_preview, "&Auto Side-by-Side Preview")
         view_menu.Check(self._id_toggle_auto_side_preview, self.settings.auto_side_preview)
         view_menu.AppendCheckItem(self._id_toggle_tab_control, "Show &Tab Control")
         view_menu.Check(self._id_toggle_tab_control, self.settings.show_tab_control)
@@ -2907,7 +2912,9 @@ class MainFrame:
         ai_menu.AppendSeparator()
         ai_menu.Append(self._id_ai_status_badge, "AI Status: Not checked")
         ai_menu.Enable(self._id_ai_status_badge, False)
-        ai_menu.Append(self._id_ai_status_detail, "AI Detail: Open AI Connection to verify settings")
+        ai_menu.Append(
+            self._id_ai_status_detail, "AI Detail: Open AI Connection to verify settings"
+        )
         ai_menu.Enable(self._id_ai_status_detail, False)
         ai_menu.Append(
             self._id_ask_quill_chat,
@@ -3226,6 +3233,9 @@ class MainFrame:
         self.frame.Bind(wx.EVT_MENU, lambda _e: self.open_preferences(), id=self._id_preferences)
         self.frame.Bind(wx.EVT_MENU, lambda _e: self.exit_app(), id=self._id_exit)
         self.frame.Bind(wx.EVT_MENU, lambda _e: self.show_about_quill(), id=self._id_about_quill)
+        # macOS routes the application-menu "About" to wx.ID_ABOUT — wire it to
+        # the same custom dialog so the Apple-menu About shows the links too.
+        self.frame.Bind(wx.EVT_MENU, lambda _e: self.show_about_quill(), id=wx.ID_ABOUT)
         self.frame.Bind(
             wx.EVT_MENU,
             lambda _e: self.show_context_help(),
@@ -7606,6 +7616,20 @@ class MainFrame:
             auto_updates.SetValue(self.settings.auto_check_updates)
             panel_sizer.Add(auto_updates, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
+            beta_updates = wx.CheckBox(
+                panel, label="Get beta updates (note: these may be unstable)"
+            )
+            beta_updates.SetValue(getattr(self.settings, "beta_updates", False))
+            beta_updates.SetName("Get beta updates, note these may be unstable")
+            panel_sizer.Add(beta_updates, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+            def _on_beta_toggle(event: object, _cb=beta_updates) -> None:
+                # Require the HTML consent gate before turning beta on.
+                if _cb.GetValue() and not self._confirm_beta_channel():
+                    _cb.SetValue(False)
+
+            beta_updates.Bind(wx.EVT_CHECKBOX, _on_beta_toggle)
+
             persistent_undo = wx.CheckBox(panel, label="Enable persistent undo")
             persistent_undo.SetValue(self.settings.persistent_undo)
             panel_sizer.Add(persistent_undo, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
@@ -7677,6 +7701,7 @@ class MainFrame:
                     "full_path" if title_path_choice.GetSelection() == 1 else "name"
                 ),
                 "auto_check_updates": bool(auto_updates.GetValue()),
+                "beta_updates": bool(beta_updates.GetValue()),
                 "persistent_undo": bool(persistent_undo.GetValue()),
                 "spellcheck_as_you_type": bool(spellcheck.GetValue()),
                 "intellisense_as_you_type": bool(intellisense.GetValue()),
@@ -7712,6 +7737,7 @@ class MainFrame:
         self.settings.auto_check_updates = bool(
             values.get("auto_check_updates", self.settings.auto_check_updates)
         )
+        self.settings.beta_updates = bool(values.get("beta_updates", self.settings.beta_updates))
         self.settings.persistent_undo = bool(
             values.get("persistent_undo", self.settings.persistent_undo)
         )
@@ -7779,9 +7805,7 @@ class MainFrame:
             if dialog.last_verification_ok:
                 self._set_status(f"Updated AI connection settings. Ready. {detail}")
             else:
-                self._set_status(
-                    f"Updated AI connection settings. Needs attention. {detail}"
-                )
+                self._set_status(f"Updated AI connection settings. Needs attention. {detail}")
         else:
             self._set_status("AI connection settings cancelled")
 
@@ -8219,31 +8243,74 @@ class MainFrame:
         self._refresh_title()
         self._set_status("Opened user guide")
 
-    def show_about_quill(self) -> None:
-        wx = self._wx
-        info = wx.adv.AboutDialogInfo()
-        info.SetName("Quill")
-        info.SetVersion(__version__)
-        info.SetDescription(
-            "Quill 0.1 Beta is a screen-reader-first writing and document environment "
-            "for Windows from Blind Information Technology Solutions (BITS) "
-            "and Community Access.\n\n"
-            "With sincere thanks to our contributors and beta testers:\n"
-            "Techopolis, Taylor Arndt, Michael Doise, Kayla Bentas, "
-            "Shane Popplestone, and Becky Knobb."
+    # Org links shown in the About dialog.
+    _ABOUT_LINKS: tuple[tuple[str, str], ...] = (
+        ("Community Access", "https://community-access.org"),
+        ("Blind Information Technology Solutions (BITS)", "https://bits-acb.org"),
+        ("Techopolis", "https://techopolis.app"),
+        ("GLOW (Community Access)", "https://letitglow.app"),
+    )
+
+    # Contributor / project profiles on GitHub.
+    _ABOUT_GITHUB_LINKS: tuple[tuple[str, str], ...] = (
+        ("Community Access on GitHub", "https://github.com/Community-Access"),
+        ("Taylor Arndt on GitHub", "https://github.com/taylorarndt"),
+        ("Michael Doise on GitHub", "https://github.com/mikedoise"),
+        ("Becky Knobb on GitHub", "https://github.com/BeckyK102125"),
+    )
+
+    # Open-source projects Quill is built with (credited in About).
+    _ABOUT_ACKNOWLEDGMENTS: str = (
+        "Quill is built with these open-source projects, with gratitude:\n\n"
+        "• wxPython / wxWidgets — application UI toolkit\n"
+        "• Prism (prismatoid) — screen-reader speech bridge (Windows)\n"
+        "• pyttsx3 — system text-to-speech\n"
+        "• llama.cpp / llama-cpp-python — on-device AI (Windows and Linux)\n"
+        "• pyenchant / Hunspell — spell checking\n"
+        "• SpeechRecognition — dictation\n"
+        "• keynote-parser and MarkItDown — document import\n"
+        "• pyobjc and py2app — macOS integration and packaging\n"
+        "• WordNet (Princeton University) — thesaurus data\n"
+        "• words_alpha — English word list\n"
+        "• DECtalk and Piper — bundled speech engines\n"
+        "• eSpeak NG — phoneme generation used by Piper\n"
+        "• Kokoro and VibeVoice — additional neural speech voices\n\n"
+        "On macOS, on-device AI uses Apple Foundation Models.\n"
+        "Each project is owned by its respective authors and used under its own license."
+    )
+
+    def _about_markdown(self) -> str:
+        def md_links(links: tuple[tuple[str, str], ...]) -> str:
+            return "\n".join(f"- [{name}]({url})" for name, url in links)
+
+        # Reuse the acknowledgments text as a markdown list.
+        acks = "\n".join(
+            (f"- {line[2:]}" if line.startswith("• ") else line)
+            for line in self._ABOUT_ACKNOWLEDGMENTS.splitlines()
         )
-        info.SetCopyright(
+        return (
+            f"# Quill 0.1 Beta\n\n"
+            f"Version {__version__}\n\n"
+            "Quill 0.1 Beta is a screen-reader-first writing and document environment "
+            "for Windows and Mac from Blind Information Technology Solutions (BITS) "
+            "and Community Access.\n\n"
+            "With sincere thanks to our contributors and beta testers: "
+            "Techopolis, Taylor Arndt, Michael Doise, Kayla Bentas, "
+            "Shane Popplestone, and Becky Knobb.\n\n"
+            "## Links\n\n" + md_links(self._ABOUT_LINKS) + "\n\n"
+            "## Contributors on GitHub\n\n" + md_links(self._ABOUT_GITHUB_LINKS) + "\n\n"
+            "## Open-source acknowledgments\n\n" + acks + "\n\n"
             "Copyright (c) Blind Information Technology Solutions (BITS) and Community Access"
         )
-        info.SetDevelopers(
-            [
-                "Blind Information Technology Solutions (BITS)",
-                "Community Access",
-                "Contributors and beta testers: Techopolis, Taylor Arndt, Michael Doise, "
-                "Kayla Bentas, Shane Popplestone, Becky Knobb",
-            ]
-        )
-        wx.adv.AboutBox(info)
+
+    def show_about_quill(self) -> None:
+        # Reuse the same WebView preview surface as the document preview/chat:
+        # render the About content (with all links) and open links in the browser.
+        from quill.core.browser_preview import render_preview_body
+        from quill.ui.preview_dialog import MarkdownPreviewDialog
+
+        body = render_preview_body(self._about_markdown(), "markdown")
+        MarkdownPreviewDialog(self.frame, "About Quill", body, open_links_externally=True).show()
         self._set_status("Opened About Quill")
 
     def show_whisperer_about_page(self) -> None:
@@ -11000,7 +11067,9 @@ class MainFrame:
             choices=engine_choices,
         ) as engine_dialog:
             current_engine = self.settings.read_aloud_engine.strip().lower() or "pyttsx3"
-            current_index = engine_values.index(current_engine) if current_engine in engine_values else 0
+            current_index = (
+                engine_values.index(current_engine) if current_engine in engine_values else 0
+            )
             engine_dialog.SetSelection(current_index)
             if self._show_modal_dialog(engine_dialog, _TITLE) != wx.ID_OK:
                 self._set_status("Read aloud settings cancelled")
@@ -11775,53 +11844,254 @@ class MainFrame:
         wx = self._wx
         current_version = getattr(getattr(self, "_updates", None), "current_version", "")
         if not current_version:
-            current_version = "0.0.0"
+            current_version = __version__ or "0.0.0"
 
+        beta = bool(getattr(self.settings, "beta_updates", False))
         self._set_status("Checking for updates...")
         try:
-            manifest = fetch_update_manifest(DEFAULT_UPDATE_MANIFEST_URL)
-        except (URLError, ValueError) as error:
+            releases = fetch_releases()
+        except (URLError, ValueError, OSError) as error:
             if silent_no_update:
                 self._record_notification(f"Update check failed: {error}", "update")
                 self._set_status("Update check failed")
                 return
-            self._show_message_box(
-                f"Could not verify update manifest: {error}",
+            self._html_info(
                 "Check for Updates",
-                wx.ICON_ERROR | wx.OK,
+                f"# Update check failed\n\nCould not check for updates:\n\n`{error}`",
             )
             self._set_status("Update check failed")
             self._record_notification("Update check failed", "update")
             return
-        if not is_newer_version(current_version, manifest.version):
-            if silent_no_update:
-                self._record_notification("Update check found no newer version", "update")
-                return
-            self._show_message_box(
-                f"You're up to date.\nCurrent: {current_version}\nAvailable: {manifest.version}",
-                "Check for Updates",
-                wx.ICON_INFORMATION | wx.OK,
+
+        latest_any = select_latest(releases, include_prereleases=True)
+        latest_stable = select_latest(releases, include_prereleases=False)
+
+        # If the running build is itself a prerelease, the user is already a beta
+        # tester — put them on the beta channel automatically (no consent needed).
+        current_match = find_release(releases, current_version)
+        if not beta and current_match is not None and current_match.prerelease:
+            self.settings.beta_updates = True
+            save_settings(self.settings)
+            beta = True
+            self._record_notification(
+                "You're running a beta build, so beta updates are enabled.", "update"
             )
-            self._set_status("No update available")
+
+        # The release for the user's current channel.
+        target = latest_any if beta else latest_stable
+        if target is not None and is_newer_version(current_version, target.version):
+            if silent_no_update:
+                self._record_notification(f"Update {target.version} found; downloading", "update")
+                self._download_update_release(target)
+                return
+            if self._show_update_available_dialog(current_version, target):
+                self._download_update_release(target)
+            else:
+                self._set_status("Update deferred")
+                self._record_notification(f"Update {target.version} deferred", "update")
+            return
+
+        # No update on the current channel. If a newer build exists but it's a
+        # PRERELEASE and the user is on stable, route them to the beta channel.
+        prerelease_available = (
+            not beta
+            and latest_any is not None
+            and latest_any.prerelease
+            and is_newer_version(current_version, latest_any.version)
+        )
+        if prerelease_available:
+            if silent_no_update:
+                self._record_notification(
+                    f"A beta build {latest_any.version} is available. "
+                    "Enable beta updates to install it.",
+                    "update",
+                )
+                self._set_status("Beta update available")
+                return
+            self._route_prerelease_to_beta(current_version, latest_any)
+            return
+
+        # Genuinely up to date.
+        if silent_no_update:
             self._record_notification("Update check found no newer version", "update")
             return
-        notes = manifest.notes or "(no release notes provided)"
-        result = self._show_message_box(
-            (
-                f"Current version: {current_version}\n"
-                f"Available version: {manifest.version}\n\n"
-                f"Release notes:\n{notes}\n\n"
-                "Open download page now?\n"
-                "Quill will need to close before you run the installer."
-            ),
-            "Check for Updates",
-            wx.ICON_INFORMATION | wx.YES_NO | wx.NO_DEFAULT,
-        )
-        if result != wx.YES:
-            self._set_status("Update deferred")
-            self._record_notification(f"Update {manifest.version} deferred", "update")
+        self._set_status("No update available")
+        self._record_notification("Update check found no newer version", "update")
+        if beta:
+            self._html_info(
+                "Check for Updates",
+                "# You're up to date\n\n"
+                "You're on the **beta** channel and running the newest build.\n\n"
+                f"**Current version:** {current_version}",
+            )
+        else:
+            self._offer_beta_switch(current_version, latest_stable)
+
+    def _route_prerelease_to_beta(self, current_version: str, release: GitHubRelease) -> None:
+        """A prerelease is available while on stable — enroll in beta (with the
+        consent gate), then offer the prerelease for download."""
+        if not self._confirm_beta_channel(release):
+            self._set_status("Stayed on the stable channel")
             return
-        self._open_update_download_flow(manifest)
+        self.settings.beta_updates = True
+        save_settings(self.settings)
+        self._set_status("Switched to the beta update channel")
+        self._announce("Beta updates enabled")
+        if self._show_update_available_dialog(current_version, release):
+            self._download_update_release(release)
+
+    def _render_html(self, markdown_text: str) -> str:
+        from quill.core.browser_preview import render_preview_body
+
+        return render_preview_body(markdown_text, "markdown")
+
+    def _html_info(self, title: str, markdown_text: str) -> None:
+        """Show an informational message in the WebView dialog (with an OK button)."""
+        from quill.ui.preview_dialog import HtmlMessageDialog
+
+        HtmlMessageDialog(
+            self.frame, title, self._render_html(markdown_text), [("OK", self._wx.ID_OK)]
+        ).show_modal()
+
+    def _show_update_available_dialog(self, current_version: str, release: GitHubRelease) -> bool:
+        from quill.ui.preview_dialog import HtmlMessageDialog
+
+        wx = self._wx
+        channel = "Beta / prerelease" if release.prerelease else "Stable"
+        notes = release.notes or "_(no release notes provided)_"
+        body = self._render_html(
+            f"# Update available: {release.version}\n\n"
+            f"**Channel:** {channel}  \n"
+            f"**Current version:** {current_version}\n\n"
+            "## Release notes\n\n" + notes
+        )
+        result = HtmlMessageDialog(
+            self.frame,
+            "Check for Updates",
+            body,
+            [("Later", wx.ID_CANCEL), ("Download update", wx.ID_OK)],
+        ).show_modal()
+        return result == wx.ID_OK
+
+    def _offer_beta_switch(
+        self, current_version: str, stable_release: GitHubRelease | None
+    ) -> None:
+        from quill.ui.preview_dialog import HtmlMessageDialog
+
+        wx = self._wx
+        stable_line = (
+            f"the latest stable release is {stable_release.version}"
+            if stable_release is not None
+            else "no stable release is published yet"
+        )
+        body = self._render_html(
+            "# You're up to date\n\n"
+            f"You're on the **stable** channel (current version {current_version}; "
+            f"{stable_line}).\n\n"
+            "Want earlier features sooner? The **beta** channel delivers prerelease "
+            "builds as soon as they're published.\n"
+        )
+        result = HtmlMessageDialog(
+            self.frame,
+            "Check for Updates",
+            body,
+            [("Stay on stable", wx.ID_CANCEL), ("Switch to beta...", wx.ID_YES)],
+        ).show_modal()
+        if result == wx.ID_YES and self._confirm_beta_channel():
+            self.settings.beta_updates = True
+            save_settings(self.settings)
+            self._set_status("Switched to the beta update channel")
+            self._announce("Beta updates enabled")
+            # Surface the latest prerelease right away so the user can install it,
+            # even if its version matches the current build (they opted into beta).
+            self._offer_latest_beta(current_version)
+
+    def _offer_latest_beta(self, current_version: str) -> None:
+        try:
+            release = fetch_latest_release(include_prereleases=True)
+        except (URLError, ValueError, OSError) as error:
+            self._html_info(
+                "Check for Updates",
+                f"# Update check failed\n\nCould not check beta updates: {error}",
+            )
+            return
+        if release is None:
+            self._html_info(
+                "Check for Updates",
+                "# No beta build yet\n\nNo beta (prerelease) build is available yet.",
+            )
+            return
+        if self._show_update_available_dialog(current_version, release):
+            self._download_update_release(release)
+
+    def _confirm_beta_channel(self, release: GitHubRelease | None = None) -> bool:
+        """HTML consent gate the user must agree to before beta updates turn on."""
+        from quill.ui.preview_dialog import HtmlMessageDialog
+
+        wx = self._wx
+        detected = (
+            f"A beta build (**{release.version}**) is available.\n\n" if release is not None else ""
+        )
+        body = self._render_html(
+            "# Enable beta updates?\n\n"
+            f"{detected}"
+            "Beta updates are **prerelease** builds. They get new features and fixes "
+            "first, but they **may be unstable** — expect rough edges, and occasional "
+            "bugs that could affect your documents.\n\n"
+            "- Beta builds are published as GitHub prereleases.\n"
+            "- You can switch back to stable anytime in Settings.\n"
+            "- Keep backups of important documents.\n\n"
+            "Do you understand and want to receive beta updates?"
+        )
+        result = HtmlMessageDialog(
+            self.frame,
+            "Beta updates",
+            body,
+            [("Cancel", wx.ID_CANCEL), ("I understand, enable beta", wx.ID_YES)],
+        ).show_modal()
+        return result == wx.ID_YES
+
+    def _download_update_release(self, release: GitHubRelease) -> None:
+        """Auto-download the release asset to <app data>/updates, off-thread.
+
+        If the release has no downloadable asset, open its page instead.
+        """
+        import threading
+
+        from quill.core.paths import app_data_dir
+
+        url = release.download_url or ""
+        if "/releases/download/" not in url:
+            if url and webbrowser.open(url):
+                self._set_status(f"Opened download page for {release.version}")
+                self._record_notification(f"Opened update page for {release.version}", "update")
+            else:
+                self._set_status("No downloadable update asset found")
+            return
+
+        target_dir = app_data_dir() / "updates"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / (url.rsplit("/", 1)[-1] or f"quill-{release.version}")
+        self._set_status(f"Downloading update {release.version}...")
+
+        def worker() -> None:
+            try:
+                download_release_asset(url, target)
+            except Exception as exc:  # noqa: BLE001
+                self._wx.CallAfter(
+                    self._record_notification, f"Update download failed: {exc}", "update"
+                )
+                self._wx.CallAfter(self._set_status, "Update download failed")
+                return
+            self._wx.CallAfter(
+                self._record_notification,
+                f"Update {release.version} downloaded to {target}",
+                "update",
+            )
+            self._wx.CallAfter(self._set_status, f"Downloaded update {release.version}")
+            self._wx.CallAfter(self._announce, f"Update {release.version} downloaded")
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def _open_update_download_flow(self, manifest: UpdateManifest) -> None:
         wx = self._wx
@@ -12990,9 +13260,7 @@ class MainFrame:
         timer = getattr(self, "_side_preview_timer", None)
         if timer is not None and timer.IsRunning():
             timer.Stop()
-        self._side_preview_timer = self._wx.CallLater(
-            250, self._update_side_preview, tab
-        )
+        self._side_preview_timer = self._wx.CallLater(250, self._update_side_preview, tab)
 
     def _update_side_preview(self, tab) -> None:
         text = tab.editor.GetValue()
@@ -13033,7 +13301,9 @@ class MainFrame:
         from quill.core.ai.model_manager import load_ai_enabled
 
         if not load_ai_enabled():
-            self._set_status("AI is turned off. Enable 'Use Artificial Intelligence' in the AI menu.")
+            self._set_status(
+                "AI is turned off. Enable 'Use Artificial Intelligence' in the AI menu."
+            )
             return
         self._apply_style_to_assistant()
         tool_catalog = allowed_tools(self.commands, getattr(self, "features", None))

@@ -14,6 +14,7 @@ engine's native accessibility carries the screen-reader experience. The page is
 ``scroll-margin``, focus moves into the view on open, and Escape is bridged out
 of the native control (which swallows it) to close the modal.
 """
+
 from __future__ import annotations
 
 import html
@@ -95,12 +96,14 @@ class MarkdownPreviewDialog:
         title: str,
         body_html: str,
         start_anchor: str | None = None,
+        open_links_externally: bool = False,
     ) -> None:
         import wx
 
         self._wx = wx
         self._fallback = None
         self.view = None
+        self._loaded = False
 
         self.dialog = wx.Dialog(
             parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
@@ -115,11 +118,16 @@ class MarkdownPreviewDialog:
             self.view.SetName(title)
             try:
                 self.view.AddScriptMessageHandler("quill")
-                self.view.Bind(
-                    webview.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self._on_script_message
-                )
+                self.view.Bind(webview.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self._on_script_message)
             except Exception:  # noqa: BLE001
                 pass
+            if open_links_externally:
+                # Guarded so it can't interfere with the initial SetPage render:
+                # only act on user link clicks after the page has loaded.
+                self.view.Bind(
+                    webview.EVT_WEBVIEW_LOADED, lambda _e: setattr(self, "_loaded", True)
+                )
+                self.view.Bind(webview.EVT_WEBVIEW_NAVIGATING, self._on_navigating)
             self.view.SetPage(
                 _preview_page(title, body_html, start_anchor=start_anchor, escape_bridge=True), ""
             )
@@ -139,6 +147,15 @@ class MarkdownPreviewDialog:
         outer.Add(footer, 0, wx.EXPAND | wx.ALL, 10)
         self.dialog.SetSizer(outer)
         self.dialog.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
+    def _on_navigating(self, event: object) -> None:
+        url = event.GetURL() or ""
+        # Only divert real link clicks after load; never the initial page load.
+        if self._loaded and url.startswith(("http://", "https://")):
+            event.Veto()
+            import webbrowser
+
+            webbrowser.open(url)
 
     def _on_char_hook(self, event: object) -> None:
         if event.GetKeyCode() == self._wx.WXK_ESCAPE:
@@ -197,9 +214,7 @@ class SidePreview:
             self.view.SetName(title)
             try:
                 self.view.AddScriptMessageHandler("quill")
-                self.view.Bind(
-                    webview.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self._on_script_message
-                )
+                self.view.Bind(webview.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self._on_script_message)
             except Exception:  # noqa: BLE001
                 pass
             self.view.Bind(webview.EVT_WEBVIEW_LOADED, self._on_loaded)
@@ -247,3 +262,91 @@ class SidePreview:
             self.view.RunScript(script)
         except Exception:  # noqa: BLE001
             pass
+
+
+class HtmlMessageDialog:
+    """A modal message dialog whose body renders as HTML in a WebView (same
+    surface as the preview/chat), with a configurable row of buttons.
+
+    ``buttons`` is a list of ``(label, return_id)``. ``show_modal()`` returns the
+    chosen id (or wx.ID_CANCEL on Escape / close). Links open in the browser.
+    """
+
+    def __init__(self, parent: object, title: str, body_html: str, buttons) -> None:
+        import wx
+
+        self._wx = wx
+        self._result = wx.ID_CANCEL
+        self._loaded = False
+        self._fallback = None
+        self.view = None
+
+        self.dialog = wx.Dialog(
+            parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+        )
+        self.dialog.SetName(title)
+        self.dialog.SetSize((640, 560))
+        outer = wx.BoxSizer(wx.VERTICAL)
+
+        try:
+            import wx.html2 as webview
+
+            self.view = webview.WebView.New(self.dialog)
+            self.view.SetName(title)
+            self.view.Bind(webview.EVT_WEBVIEW_LOADED, lambda _e: setattr(self, "_loaded", True))
+            self.view.Bind(webview.EVT_WEBVIEW_NAVIGATING, self._on_navigating)
+            # Escape inside the native WebView is swallowed; bridge it out to close.
+            try:
+                self.view.AddScriptMessageHandler("quill")
+                self.view.Bind(
+                    webview.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED,
+                    lambda _e: self._end(self._wx.ID_CANCEL),
+                )
+            except Exception:  # noqa: BLE001
+                pass
+            self.view.SetPage(_preview_page(title, body_html, escape_bridge=True), "")
+            outer.Add(self.view, 1, wx.EXPAND)
+        except Exception:  # noqa: BLE001
+            self.view = None
+            self._fallback = wx.TextCtrl(
+                self.dialog, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2
+            )
+            self._fallback.SetName(title)
+            self._fallback.SetValue(_strip_tags(body_html))
+            outer.Add(self._fallback, 1, wx.EXPAND | wx.ALL, 8)
+
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.AddStretchSpacer()
+        for index, (label, return_id) in enumerate(buttons):
+            button = wx.Button(self.dialog, return_id, label=label)
+            if index == len(buttons) - 1:
+                button.SetDefault()
+            button.Bind(wx.EVT_BUTTON, lambda _e, r=return_id: self._end(r))
+            row.Add(button, 0, wx.LEFT, 8)
+        outer.Add(row, 0, wx.EXPAND | wx.ALL, 12)
+
+        self.dialog.SetSizer(outer)
+        self.dialog.Bind(
+            wx.EVT_CHAR_HOOK,
+            lambda e: self._end(wx.ID_CANCEL) if e.GetKeyCode() == wx.WXK_ESCAPE else e.Skip(),
+        )
+
+    def _on_navigating(self, event: object) -> None:
+        url = event.GetURL() or ""
+        if self._loaded and url.startswith(("http://", "https://")):
+            event.Veto()
+            import webbrowser
+
+            webbrowser.open(url)
+
+    def _end(self, return_id: int) -> None:
+        self._result = return_id
+        self.dialog.EndModal(return_id)
+
+    def show_modal(self) -> int:
+        self.dialog.CentreOnParent()
+        try:
+            self.dialog.ShowModal()
+        finally:
+            self.dialog.Destroy()
+        return self._result

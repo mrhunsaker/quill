@@ -90,6 +90,7 @@ class Settings:
     indent_with_tabs: bool = False
     indent_size: int = 4
     auto_check_updates: bool = False
+    beta_updates: bool = False
     recent_files_limit: int = 10
     tray_enabled: bool = False
     persistent_undo: bool = False
@@ -148,6 +149,7 @@ class Settings:
         indent_with_tabs = bool(data.get("indent_with_tabs", False))
         indent_size = int(data.get("indent_size", 4))
         auto_check_updates = bool(data.get("auto_check_updates", False))
+        beta_updates = bool(data.get("beta_updates", False))
         recent_files_limit = int(data.get("recent_files_limit", 10))
         tray_enabled = bool(data.get("tray_enabled", False))
         persistent_undo = bool(data.get("persistent_undo", False))
@@ -193,12 +195,8 @@ class Settings:
             read_aloud_dectalk_rate = 75
         if read_aloud_dectalk_rate > 650:
             read_aloud_dectalk_rate = 650
-        read_aloud_dectalk_dictionary = str(
-            data.get("read_aloud_dectalk_dictionary", "")
-        ).strip()
-        read_aloud_piper_executable = str(
-            data.get("read_aloud_piper_executable", "")
-        ).strip()
+        read_aloud_dectalk_dictionary = str(data.get("read_aloud_dectalk_dictionary", "")).strip()
+        read_aloud_piper_executable = str(data.get("read_aloud_piper_executable", "")).strip()
         read_aloud_piper_model = str(data.get("read_aloud_piper_model", "")).strip()
         announcement_backend = str(data.get("announcement_backend", "auto")).strip().lower()
         read_aloud_piper_model_dir = str(data.get("read_aloud_piper_model_dir", "")).strip()
@@ -256,6 +254,7 @@ class Settings:
             indent_with_tabs=indent_with_tabs,
             indent_size=indent_size,
             auto_check_updates=auto_check_updates,
+            beta_updates=beta_updates,
             recent_files_limit=recent_files_limit,
             tray_enabled=tray_enabled,
             persistent_undo=persistent_undo,
