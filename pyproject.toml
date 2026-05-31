@@ -31,7 +31,7 @@ ui = [
     "certifi>=2024.2.2",
     # Prism screen-reader speech bridge (Windows) — routes announcements to
     # NVDA/JAWS/Narrator instead of speaking over them.
-    "prismatoid>=0.16; sys_platform == 'win32'",
+    "prismatoid>=0.16.5; sys_platform == 'win32'",
 ]
 spellcheck = ["pyenchant>=3.2"]
 # Offline VibeVoice speech-FILE generator (AI > Speech > Download VibeVoice Model).
