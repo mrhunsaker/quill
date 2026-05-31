@@ -1,0 +1,8 @@
+blank_discussions_enabled: false
+contact_links:
+  - name: Security vulnerability report
+    url: mailto:support@communityaccess.org
+    about: Please report security vulnerabilities privately.
+  - name: End-user support path
+    url: https://github.com/Community-Access/quill/blob/main/.github/SUPPORT.md
+    about: Start with the in-app Help -> Report a Bug flow for user support.

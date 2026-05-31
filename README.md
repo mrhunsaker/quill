@@ -157,6 +157,16 @@ Community contributions are welcome.
 - Read **[MAINTAINERS.md](MAINTAINERS.md)** for maintainer responsibilities.
 - Contributor graph: **[contrib.rocks / QUILL](https://contrib.rocks/image?repo=Community-Access/quill)**
 
+## Community discussions
+
+- Use GitHub Discussions for Q&A and feature ideation.
+- Use GitHub Issues for confirmed bugs and scoped feature requests.
+
+## Release governance
+
+- Release process and branch policy: **[RELEASE.md](RELEASE.md)**
+- Security advisory runbook: **[docs/engineering/security-advisory-workflow.md](docs/engineering/security-advisory-workflow.md)**
+
 ## License
 
 MIT. See `LICENSE`.

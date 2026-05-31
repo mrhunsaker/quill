@@ -14,6 +14,20 @@ This file describes maintainer responsibilities and operational expectations.
 4. Enforce `CODE_OF_CONDUCT.md` and `SECURITY.md`.
 5. Protect user trust: no silent network behavior, no unsafe defaults.
 
+## Triage and labeling standards
+
+Maintainers should apply both a **type** and an **area** label:
+
+- Type: `bug`, `feature`, `documentation`, `security`
+- Area: `accessibility`, `ai`, `intake`, `snippets`, `dictation`, `performance`, `stability`
+
+Priority labels:
+
+- `p0`: release blocker (launch crash, data loss, severe accessibility break)
+- `p1`: major workflow break
+
+Triage target: new issues receive an initial maintainer response within 5 business days.
+
 ## Review expectations
 
 Maintainers should request changes when a PR:
@@ -36,3 +50,4 @@ If a maintainer is unavailable, another maintainer should take ownership of:
 - `CONTRIBUTING.md`
 - `GOVERNANCE.md`
 - `SECURITY.md`
+- `RELEASE.md`

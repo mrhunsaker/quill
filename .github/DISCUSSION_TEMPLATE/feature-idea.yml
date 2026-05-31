@@ -1,0 +1,42 @@
+title: "[Idea] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share a feature concept tied to real QUILL workflows.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - Editor and writing workflow
+        - Accessibility and announcements
+        - AI and assistant
+        - Snippets and prediction
+        - Dictation and watch-folder automation
+        - Document intake and conversion
+        - Performance and reliability
+        - Documentation and contributor workflow
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What user problem does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed idea
+      description: Describe the behavior and expected user outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: a11y
+    attributes:
+      label: Accessibility impact
+      description: Keyboard/screen-reader/focus implications.

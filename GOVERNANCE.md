@@ -42,6 +42,7 @@ Large cross-cutting changes should be discussed before implementation.
 - Every PR requires maintainer review.
 - Changes touching accessibility-critical areas should include explicit accessibility notes.
 - Security-sensitive changes should reference `SECURITY.md`.
+- `main` is branch-protected with required checks and review gates; admin bypass is retained for emergency operations.
 
 ## Conflict resolution
 

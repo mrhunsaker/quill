@@ -69,6 +69,7 @@ Please avoid mixing unrelated refactors with feature or bug-fix work.
   - environment details
 - Use the most specific issue template available (accessibility, AI, intake,
   snippets, dictation, performance, or general bug/feature).
+- Use GitHub Discussions for Q&A and early design exploration.
 
 ## Security issues
 
