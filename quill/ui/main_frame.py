@@ -3182,15 +3182,8 @@ class MainFrame:
             self._menu_label("Reset to &Essential Profile", "help.reset_feature_profile"),
         )
         help_menu.AppendSubMenu(profiles_menu, "Feature &Profiles")
-        help_menu.AppendSeparator()
-        help_menu.AppendCheckItem(
-            self._id_toggle_auto_check_updates,
-            "Check for &Updates on Startup",
-        )
-        help_menu.Check(
-            self._id_toggle_auto_check_updates,
-            getattr(self.settings, "auto_check_updates", False),
-        )
+        # "Check for Updates on Startup" lives in Settings now (removed the
+        # duplicate Help-menu toggle).
         help_menu.Append(self._id_check_updates, "Check for &Updates...")
         help_menu.Append(self._id_about_quill, "&About Quill")
         menu_bar.Append(window_menu, "&Window")
@@ -8256,7 +8249,7 @@ class MainFrame:
         ("Community Access on GitHub", "https://github.com/Community-Access"),
         ("Taylor Arndt on GitHub", "https://github.com/taylorarndt"),
         ("Michael Doise on GitHub", "https://github.com/mikedoise"),
-        ("Becky Knobb on GitHub", "https://github.com/BeckyK102125"),
+        ("Becky K on GitHub", "https://github.com/BeckyK102125"),
     )
 
     # Open-source projects Quill is built with (credited in About).
@@ -8296,7 +8289,7 @@ class MainFrame:
             "and Community Access.\n\n"
             "With sincere thanks to our contributors and beta testers: "
             "Techopolis, Taylor Arndt, Michael Doise, Kayla Bentas, "
-            "Shane Popplestone, and Becky Knobb.\n\n"
+            "Shane Popplestone, and Becky K.\n\n"
             "## Links\n\n" + md_links(self._ABOUT_LINKS) + "\n\n"
             "## Contributors on GitHub\n\n" + md_links(self._ABOUT_GITHUB_LINKS) + "\n\n"
             "## Open-source acknowledgments\n\n" + acks + "\n\n"
@@ -8369,7 +8362,10 @@ class MainFrame:
         )
 
         principles_rows = [
-            ("Accessibility first", "Screen-reader-first design with clear headings and keyboard flow."),
+            (
+                "Accessibility first",
+                "Screen-reader-first design with clear headings and keyboard flow.",
+            ),
             ("Offline-friendly", "Strong local capabilities before cloud dependencies."),
             ("Safe rollout", "Feature flags and staged onboarding for predictable adoption."),
             ("Transparent status", "Status pages and notifications for every async operation."),
@@ -10838,14 +10834,12 @@ class MainFrame:
 
     def _english_only_voices(self, engine: str, voices: list[VoiceOption]) -> list[VoiceOption]:
         return [voice for voice in voices if self._voice_is_english(engine, voice)]
+
     # ------------------------------------------------------------------
     # Voice preview and settings – all 6 engines
     # ------------------------------------------------------------------
 
-    _PREVIEW_TEXT = (
-        "Hello, this is a voice preview. "
-        "The quick brown fox jumps over the lazy dog."
-    )
+    _PREVIEW_TEXT = "Hello, this is a voice preview. The quick brown fox jumps over the lazy dog."
 
     def _preview_voice(self, engine: str, voice_id: str) -> None:
         """Play a short preview of *voice_id* through *engine* on a background thread."""
@@ -10861,7 +10855,8 @@ class MainFrame:
             try:
                 if engine == "pyttsx3":
                     synthesize_to_file_with_pyttsx3(
-                        sample, wav,
+                        sample,
+                        wav,
                         voice=voice_id,
                         rate=s.read_aloud_rate,
                         volume=s.read_aloud_volume / 100.0,
@@ -10871,7 +10866,8 @@ class MainFrame:
                     if exe is None:
                         raise ReadAloudUnavailableError("DECtalk executable not configured")
                     synthesize_to_file_with_dectalk(
-                        sample, wav,
+                        sample,
+                        wav,
                         executable_path=exe,
                         voice=voice_id,
                         rate=s.read_aloud_dectalk_rate,
@@ -10881,13 +10877,15 @@ class MainFrame:
                     if exe is None:
                         raise ReadAloudUnavailableError("Piper executable not configured")
                     synthesize_with_piper(
-                        sample, wav,
+                        sample,
+                        wav,
                         executable_path=exe,
                         model_path=_Path(voice_id),
                     )
                 elif engine == "kokoro":
                     synthesize_with_kokoro(
-                        sample, wav,
+                        sample,
+                        wav,
                         voice=voice_id,
                         speed=s.read_aloud_kokoro_speed,
                     )
@@ -10901,7 +10899,8 @@ class MainFrame:
                     if exe is None:
                         raise ReadAloudUnavailableError("eSpeak-NG not found")
                     synthesize_with_espeak(
-                        sample, wav,
+                        sample,
+                        wav,
                         executable_path=exe,
                         voice=voice_id,
                         rate=s.read_aloud_espeak_rate,
@@ -10910,6 +10909,7 @@ class MainFrame:
                     raise ReadAloudUnavailableError(f"Unknown engine: {engine}")
                 # Play via the existing read-aloud controller so pause/stop work
                 import threading as _threading
+
                 done = _threading.Event()
 
                 def _on_state(st: str) -> None:
@@ -10930,7 +10930,9 @@ class MainFrame:
                     kokoro_voice=voice_id if engine == "kokoro" else s.read_aloud_kokoro_voice,
                     kokoro_speed=s.read_aloud_kokoro_speed,
                     vibevoice_executable=s.read_aloud_vibevoice_executable,
-                    vibevoice_voice=voice_id if engine == "vibevoice" else s.read_aloud_vibevoice_voice,
+                    vibevoice_voice=voice_id
+                    if engine == "vibevoice"
+                    else s.read_aloud_vibevoice_voice,
                     espeak_executable=s.read_aloud_espeak_executable,
                     espeak_voice=voice_id if engine == "espeak" else s.read_aloud_espeak_voice,
                     espeak_rate=s.read_aloud_espeak_rate,
@@ -11120,7 +11122,9 @@ class MainFrame:
             self.settings.read_aloud_pitch = v3
 
         elif selected_engine == "dectalk":
-            exe = _ask_text("Path to DECtalk speak.exe:", self.settings.read_aloud_dectalk_executable)
+            exe = _ask_text(
+                "Path to DECtalk speak.exe:", self.settings.read_aloud_dectalk_executable
+            )
             if exe is None:
                 self._set_status("Read aloud settings cancelled")
                 return
@@ -11155,7 +11159,9 @@ class MainFrame:
             self.settings.read_aloud_piper_model_dir = model_dir
 
         elif selected_engine == "kokoro":
-            v = _ask_float("Speaking speed multiplier", self.settings.read_aloud_kokoro_speed, 0.5, 2.0)
+            v = _ask_float(
+                "Speaking speed multiplier", self.settings.read_aloud_kokoro_speed, 0.5, 2.0
+            )
             if v is None:
                 self._set_status("Read aloud settings cancelled")
                 return
@@ -11177,7 +11183,9 @@ class MainFrame:
                 self._set_status("Read aloud settings cancelled")
                 return
             self.settings.read_aloud_espeak_executable = exe
-            v = _ask_int("Speaking rate (words per minute)", self.settings.read_aloud_espeak_rate, 80, 450)
+            v = _ask_int(
+                "Speaking rate (words per minute)", self.settings.read_aloud_espeak_rate, 80, 450
+            )
             if v is None:
                 self._set_status("Read aloud settings cancelled")
                 return
@@ -11204,6 +11212,7 @@ class MainFrame:
                 self._preview_voice(selected_engine, current_voice)
         engine_label = engine_choices[engine_values.index(selected_engine)]
         self._set_status(f"Read aloud engine set to {engine_label}")
+
     def generate_speech_audio(self) -> None:  # noqa: PLR0912,PLR0915
         wx = self._wx
         _TITLE = "Generate Speech Audio"
@@ -11239,21 +11248,27 @@ class MainFrame:
                     self.frame, "Path to piper.exe:", _TITLE, value=s.read_aloud_piper_executable
                 ) as d:
                     if self._show_modal_dialog(d, _TITLE) != wx.ID_OK:
-                        self._set_status("Speech generation cancelled"); return
+                        self._set_status("Speech generation cancelled")
+                        return
                     exe = discover_piper_executable(d.GetValue().strip())
                 if exe is None:
-                    self._show_message_box("Piper executable not found.", _TITLE, wx.ICON_ERROR | wx.OK)
-                    self._set_status("Speech generation cancelled"); return
+                    self._show_message_box(
+                        "Piper executable not found.", _TITLE, wx.ICON_ERROR | wx.OK
+                    )
+                    self._set_status("Speech generation cancelled")
+                    return
                 s.read_aloud_piper_executable = str(exe)
             model = Path(s.read_aloud_piper_model).expanduser()
             if not s.read_aloud_piper_model or not model.exists():
                 with wx.FileDialog(
-                    self.frame, "Select Piper model (.onnx)",
+                    self.frame,
+                    "Select Piper model (.onnx)",
                     wildcard="Piper model (*.onnx)|*.onnx|All files (*.*)|*.*",
                     style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
                 ) as d:
                     if self._show_modal_dialog(d, _TITLE) != wx.ID_OK:
-                        self._set_status("Speech generation cancelled"); return
+                        self._set_status("Speech generation cancelled")
+                        return
                     model = Path(d.GetPath())
                 s.read_aloud_piper_model = str(model)
             piper_exe_snap = exe
@@ -11264,9 +11279,11 @@ class MainFrame:
             if exe is None:
                 self._show_message_box(
                     "DECtalk executable not found. Configure it in Read Aloud Settings.",
-                    _TITLE, wx.ICON_ERROR | wx.OK,
+                    _TITLE,
+                    wx.ICON_ERROR | wx.OK,
                 )
-                self._set_status("Speech generation cancelled"); return
+                self._set_status("Speech generation cancelled")
+                return
             dectalk_exe_snap = exe
 
         elif engine == "vibevoice":
@@ -11274,9 +11291,11 @@ class MainFrame:
             if exe is None:
                 self._show_message_box(
                     "VibeVoice executable not found. Configure it in Read Aloud Settings.",
-                    _TITLE, wx.ICON_ERROR | wx.OK,
+                    _TITLE,
+                    wx.ICON_ERROR | wx.OK,
                 )
-                self._set_status("Speech generation cancelled"); return
+                self._set_status("Speech generation cancelled")
+                return
             vibevoice_exe_snap = exe
 
         elif engine == "espeak":
@@ -11284,9 +11303,11 @@ class MainFrame:
             if exe is None:
                 self._show_message_box(
                     "eSpeak-NG not found. Install it or configure the path in Read Aloud Settings.",
-                    _TITLE, wx.ICON_ERROR | wx.OK,
+                    _TITLE,
+                    wx.ICON_ERROR | wx.OK,
                 )
-                self._set_status("Speech generation cancelled"); return
+                self._set_status("Speech generation cancelled")
+                return
             espeak_exe_snap = exe
 
         save_settings(s)
@@ -11309,17 +11330,21 @@ class MainFrame:
         def work(progress: Callable[[str, int, int], None]) -> object:
             progress(f"Starting {_engine}", 0, 1)
             if _engine == "pyttsx3":
-                synthesize_to_file_with_pyttsx3(_out_text, _out, voice=_voice, rate=_rate, volume=_vol)
+                synthesize_to_file_with_pyttsx3(
+                    _out_text, _out, voice=_voice, rate=_rate, volume=_vol
+                )
             elif _engine == "dectalk":
                 synthesize_to_file_with_dectalk(
-                    _out_text, _out,
+                    _out_text,
+                    _out,
                     executable_path=dectalk_exe_snap,
                     voice=_dectalk_voice,
                     rate=_dectalk_rate,
                 )
             elif _engine == "piper":
                 synthesize_with_piper(
-                    _out_text, _out,
+                    _out_text,
+                    _out,
                     executable_path=piper_exe_snap,
                     model_path=piper_model_snap,
                 )
@@ -11327,13 +11352,15 @@ class MainFrame:
                 synthesize_with_kokoro(_out_text, _out, voice=_kokoro_voice, speed=_kokoro_speed)
             elif _engine == "vibevoice":
                 synthesize_with_vibevoice(
-                    _out_text, _out,
+                    _out_text,
+                    _out,
                     executable_path=vibevoice_exe_snap,
                     voice=_vibevoice_voice,
                 )
             elif _engine == "espeak":
                 synthesize_with_espeak(
-                    _out_text, _out,
+                    _out_text,
+                    _out,
                     executable_path=espeak_exe_snap,
                     voice=_espeak_voice,
                     rate=_espeak_rate,
@@ -11347,8 +11374,11 @@ class MainFrame:
             self._set_status(f"Speech generation complete: {Path(str(result)).name}")
 
         self._run_background_task(
-            task_label, work, on_success,
-            notify_on_success=True, notify_on_error=True,
+            task_label,
+            work,
+            on_success,
+            notify_on_success=True,
+            notify_on_error=True,
             notification_category="speech",
         )
 
@@ -11789,7 +11819,9 @@ class MainFrame:
                 "</tr>"
             )
         if not task_rows:
-            task_rows.append("<tr><td colspan='5'>No background tasks have run in this session.</td></tr>")
+            task_rows.append(
+                "<tr><td colspan='5'>No background tasks have run in this session.</td></tr>"
+            )
 
         notification_count = len(getattr(self, "_notifications", []))
         active_tasks = int(getattr(self, "_background_task_count", 0))
