@@ -1,0 +1,158 @@
+name: Bug report
+description: Report a reproducible problem in QUILL.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      description: Which feature area is affected?
+      options:
+        - Editor (typing, selection, undo/redo)
+        - Search and replace
+        - Navigation and outline
+        - Formatting and markup (Markdown/HTML)
+        - Snippets and word prediction
+        - Compare and review
+        - GLOW audit/fix
+        - AI connection / assistant
+        - Read Aloud
+        - Dictation / Watch Folder
+        - Document intake and conversion
+        - Accessibility and announcements
+        - Profiles / keymap / settings
+        - Startup, updates, installer
+        - Performance or stability
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 - blocker / data loss / crash on launch
+        - P1 - major workflow broken
+        - P2 - degraded but usable
+        - P3 - minor issue
+    validations:
+      required: true
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Regression?
+      description: Did this work in an earlier QUILL version?
+      options:
+        - "Yes"
+        - "No"
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: A clear and short description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps so maintainers can reproduce the issue.
+      placeholder: |
+        1. Go to ...
+        2. Press ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Reproducibility
+      options:
+        - Always (100%)
+        - Often (>50%)
+        - Sometimes (<50%)
+        - Rarely
+        - Could not reproduce again
+    validations:
+      required: true
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility impact
+      description: Note screen reader, keyboard, focus, or announcement impact.
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Known workaround
+      description: If you found a temporary workaround, include it.
+  - type: input
+    id: version
+    attributes:
+      label: QUILL version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Windows 11"
+    validations:
+      required: true
+  - type: dropdown
+    id: install_type
+    attributes:
+      label: Installation type
+      options:
+        - Windows installer build
+        - Portable build
+        - Run from source
+    validations:
+      required: true
+  - type: dropdown
+    id: screen_reader
+    attributes:
+      label: Screen reader (if applicable)
+      options:
+        - NVDA
+        - JAWS
+        - Narrator
+        - Other
+        - Not using a screen reader
+    validations:
+      required: true
+  - type: input
+    id: profile
+    attributes:
+      label: Active profile / keyboard pack
+      placeholder: "Example: Essential + Quill Default"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostics or logs
+      description: Paste relevant details with sensitive data removed.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Report checklist
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed sensitive data from attachments/logs.
+          required: true

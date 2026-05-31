@@ -1,0 +1,35 @@
+name: Stale Issue and PR Management
+
+on:
+  schedule:
+    - cron: "30 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          stale-issue-message: >
+            This issue has been inactive for a while. If this is still relevant,
+            please add an update and this will remain open.
+          stale-pr-message: >
+            This pull request has been inactive for a while. Please update when ready.
+          close-issue-message: >
+            Closing due to inactivity. If this still reproduces on current builds,
+            please open a new issue with fresh diagnostics and context.
+          close-pr-message: >
+            Closing due to inactivity. Please reopen or open a new PR when ready.
+          days-before-issue-stale: 60
+          days-before-issue-close: 21
+          days-before-pr-stale: 45
+          days-before-pr-close: 14
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-issue-labels: "security,accessibility,p0,p1,do-not-close"
+          exempt-pr-labels: "security,accessibility,do-not-close"

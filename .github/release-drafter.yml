@@ -1,0 +1,67 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ## Accessibility Highlights
+
+  - Include screen-reader, keyboard, and announcement behavior updates here.
+
+  ## Translation and Community
+
+  - Include localization and contributor-community updates here.
+
+  ## Security Notes
+
+  - Include security/privacy-sensitive changes here.
+
+  ## Contributors
+
+  $CONTRIBUTORS
+
+version-resolver:
+  major:
+    labels:
+      - "breaking-change"
+  minor:
+    labels:
+      - "feature"
+      - "enhancement"
+  patch:
+    labels:
+      - "bug"
+      - "fix"
+      - "documentation"
+  default: patch
+
+categories:
+  - title: "Accessibility"
+    labels:
+      - "accessibility"
+  - title: "AI and Assistant"
+    labels:
+      - "ai"
+  - title: "Document Intake and Conversion"
+    labels:
+      - "intake"
+      - "conversion"
+  - title: "Snippets and Prediction"
+    labels:
+      - "snippets"
+  - title: "Dictation and Watch Folder"
+    labels:
+      - "dictation"
+  - title: "Performance and Reliability"
+    labels:
+      - "performance"
+      - "stability"
+  - title: "Documentation and Community"
+    labels:
+      - "documentation"
+      - "community"
+  - title: "Other Changes"
+    labels:
+      - "*"

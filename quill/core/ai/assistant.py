@@ -5,6 +5,7 @@ grammar, change tone) plus access to the Quill command tools. Defaults to the
 Apple Foundation Models backend on macOS; pass a different backend elsewhere.
 Calls are blocking — the UI should run them off the main thread.
 """
+
 from __future__ import annotations
 
 from quill.core.ai.backend import AIBackend, ContextWindowExceeded
@@ -12,14 +13,40 @@ from quill.core.ai.tools import AITool, build_tools_from_registry, run_tool
 
 # Max characters of input we send in one call; larger inputs are chunked.
 _CHUNK_CHARS = 4000
+# Hard cap on a single chat MESSAGE/instruction sent to the model. Without this,
+# pasting a huge document into the chat blows past the context window and the
+# on-device model hangs (UI appears to lock up). The document context is trimmed
+# separately via _CONTEXT_BUDGETS.
+_MAX_MESSAGE_CHARS = 4000
 # Document-context budgets to try (chars), shrinking until it fits the window.
 _CONTEXT_BUDGETS = (6000, 3000, 1200, 0)
+
+# Terms that signal the user actually wants to change the document. The
+# on-device model sometimes routes a greeting or a question to insert/replace
+# (offering to paste a chat reply into the document). Without one of these terms
+# we refuse to insert/replace and answer in chat instead. See _has_document_intent.
+# Action verbs only — NOT document nouns. A question like "how do I center a
+# heading?" mentions a noun ("heading") but is conversational; keying on verbs
+# keeps it in chat while still catching real requests ("write…", "add…").
+_DOC_INTENT_TERMS = (
+    "write", "add ", "insert", "draft", "compose", "continue", "append",
+    "generate", "create", "outline", "expand", "elaborate",
+    "rewrite", "rephrase", "reword", "revise", "edit ", "fix ", "correct",
+    "shorten", "lengthen", "simplify", "improve", "polish", "translate",
+    "summarize", "make it", "make this", "make the", "turn this", "turn it",
+    "replace", "reformat", "proofread", "tighten",
+)
+
+
+def _has_document_intent(message: str) -> bool:
+    """True if the message explicitly asks to write to or edit the document."""
+    low = (message or "").lower()
+    return any(term in low for term in _DOC_INTENT_TERMS)
 
 _OPERATION_PROMPTS: dict[str, str] = {
     "rewrite": "Rewrite the following text to be clear and well written. "
     "Return only the rewritten text, with no preamble:\n\n{text}",
-    "summarize": "Summarize the following text concisely. "
-    "Return only the summary:\n\n{text}",
+    "summarize": "Summarize the following text concisely. Return only the summary:\n\n{text}",
     "continue": "Continue writing naturally from the following text. "
     "Return only the new continuation:\n\n{text}",
     "fix_grammar": "Correct the spelling and grammar of the following text. "
@@ -113,6 +140,17 @@ class Assistant:
             raise last_error
         return self.backend.respond(self._wrap(build_prompt(0)))
 
+    def _clamp_message(self, message: str) -> str:
+        """Bound a single user message so a huge paste can't exceed the model's
+        context window and hang inference."""
+        message = (message or "").strip()
+        if len(message) <= _MAX_MESSAGE_CHARS:
+            return message
+        return (
+            message[:_MAX_MESSAGE_CHARS]
+            + "\n\n[Message truncated to fit the on-device model's limit.]"
+        )
+
     def _document_context(self, document_text: str, budget: int) -> str:
         document_text = (document_text or "").strip()
         if not document_text or budget <= 0:
@@ -121,12 +159,14 @@ class Assistant:
 
     def answer(self, user_message: str, document_text: str = "") -> str:
         """A full chat answer (uses the document as context, trimmed to fit)."""
+        user_message = self._clamp_message(user_message)
         return self._respond_fitting(
             lambda budget: f"{user_message}{self._document_context(document_text, budget)}"
         )
 
     def write_for_document(self, user_message: str, document_text: str = "") -> str:
         """Generate substantial content to insert; returns only the text."""
+        user_message = self._clamp_message(user_message)
         return self._respond_fitting(
             lambda budget: (
                 "Write a complete, well-structured piece for the user's document — use "
@@ -144,7 +184,7 @@ class Assistant:
         """
         instruction = (
             "Apply this instruction to the text and return ONLY the resulting text, "
-            f"with no preamble.\n\nInstruction: {user_message}\n\nText:\n"
+            f"with no preamble.\n\nInstruction: {self._clamp_message(user_message)}\n\nText:\n"
         )
         if len(selection_text) <= _CHUNK_CHARS:
             return self.backend.respond(self._wrap(instruction + selection_text))
@@ -165,10 +205,17 @@ class Assistant:
         """
         from quill.core.ai.agent import AgentDecision
 
+        user_message = self._clamp_message(user_message)
         decide = getattr(self.backend, "decide", None)
         if decide is None:
             return AgentDecision(action="answer", text=self.ask(user_message))
-        return decide(user_message, document_text, tuple(tool_ids), self._style_preamble)
+        decision = decide(user_message, document_text, tuple(tool_ids), self._style_preamble)
+        # Guard against the model turning a plain chat message (a greeting, a
+        # question) into a document edit. If the user didn't actually ask to
+        # write or edit anything, answer in chat instead of offering an insert.
+        if decision.action in ("insert", "replace") and not _has_document_intent(user_message):
+            return AgentDecision(action="answer", text=decision.text)
+        return decision
 
 
 def _split_into_chunks(text: str, max_chars: int) -> list[str]:

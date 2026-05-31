@@ -6,6 +6,19 @@
 
 **QUILL: A quality, usable, inclusive, lightweight, and literate editor built for everyone who writes, codes, learns, and creates.**
 
+## Quill 0.1.5 Beta
+
+Quill 0.1.5 Beta focuses on safe rollout surfaces for BITS Whisperer, clearer preference parity, and more accessible status monitoring without changing core editor behavior.
+
+### Added and improved in 0.1.5
+
+- Added BITS Whisperer provider onboarding, readiness checks, capability matrix, and guarded download queue controls.
+- Added live Help status-page updates with quieter refresh announcements that only speak when tracked values change.
+- Added Preferences controls for AI enable state, BITS Whisperer safe mode lock, auto-open status behavior, and refresh cadence.
+- Added rollout-safe diagnostics snapshots and startup onboarding for BW setup defaults.
+- Enabled Ruff markdown preview formatting so release docs can stay formatted consistently.
+- Added robust command-line options, including `--help`, `--version`, startup cursor targeting (`--line`, `--column`), `--new-window`, and `--wait`.
+
 ## Quill 0.1.2 Beta
 
 Quill 0.1.2 Beta expands Quill's writing flow with prediction, snippets, in-app preview, local assistant workflows, and packaging/onboarding polish.
@@ -38,6 +51,9 @@ Quill 0.1.2 Beta expands Quill's writing flow with prediction, snippets, in-app 
 - Added **Heading Organizer** (`Ctrl+Alt+Shift+H`) for keyboard-first heading promotion/demotion, section reordering, heading renaming, and accessibility validation before apply.
 - Added release-safety fallback for beta testing: Word (`.doc`, `.docx`) and CSV/TSV now open in the standard plain-text editing surface by default.
 - Kept structured Word and CSV grid implementations in-repo behind an internal gate for continued verification.
+- Added **Watch Folder automation** under **Tools -> Dictation** to monitor a folder and auto-open newly detected supported files.
+- Added **Watch Folder Settings** and **Watch Folder Status** commands for path, subfolder, startup, and polling control.
+- Added **Watch Folder onboarding** to Startup Wizard and first-run setup flow.
 - Removed duplicate path reporting by hiding the status-bar file path item when full path is already shown in the title bar.
 - Fixed intermittent unit-test file-locking in UI navigation tests by isolating `QUILL_DATA_DIR` per test.
 - Expanded docs and release notes for the complete 0.1.2 feature set.

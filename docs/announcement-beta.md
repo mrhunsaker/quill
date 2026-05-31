@@ -1,10 +1,10 @@
-# Announcing Quill 0.1.2 Beta
+# Announcing Quill 0.1.5 Beta
 
-Quill 0.1.2 Beta is a major expansion of the QUILL experience.
+Quill 0.1.5 Beta is a major expansion of the QUILL experience.
 
 QUILL stands for Quality, Usable, Inclusive, Lightweight, Literate. This release doubles down on that promise with a broad set of user-facing capabilities for writing, reviewing, reading, conversion, accessibility, and local-first AI workflows on Windows.
 
-This announcement is a complete map of what you can do in Quill 0.1.2 Beta today.
+This announcement is a complete map of what you can do in Quill 0.1.5 Beta today.
 
 ## What Quill is
 
@@ -19,7 +19,7 @@ It is designed to feel calm and predictable for everyday editing, while still su
 - format conversion and extraction quality review
 - local-first AI and automation helpers
 
-## Complete capability map for 0.1.2 Beta
+## Complete capability map for 0.1.5 Beta
 
 The sections below list user-facing features by workflow so you can quickly understand the full product surface.
 
@@ -101,7 +101,7 @@ Quill is strong in plain text and markup authoring:
 
 ### Word prediction and snippets
 
-0.1.2 expands composition speed features:
+0.1.5 expands composition speed features:
 
 - word prediction and tag IntelliSense via Ctrl+Space
 - insert snippet via Ctrl+Alt+Space
@@ -153,29 +153,36 @@ Quill positions GLOW as an integral writing workflow, not a separate compliance 
 
 ### AI and automation
 
-Quill 0.1.2 includes an expanded local-first AI surface:
+Quill 0.1.5 includes an expanded local-first AI surface:
 
+- AI Hub as the central AI launch point
 - Writing Assistant panel and quick prompt flows
+- Prompt Studio for reusable custom prompts
+- Agent Center for guided task planning prompts
 - Ask Quill Chat workflows
 - AI model settings and AI connection settings
 - rewrite selection, summarize selection, continue writing, and grammar-fix entry points
 - explicit approval model for operations that change document text
 - clear status and detail feedback in menu and UI
 - plain-language verification results with screen-reader announcements
+- startup trust/privacy/responsible-AI consent acknowledgement
 
 Connection workflows include:
 
 - verify connection
-- list models
-- provider selection (local and endpoint-driven)
+- list models with a search filter for fast narrowing
+- guided model recommendations based on local hardware and task framing
+- provider selection across local, cloud, and OpenAI-compatible endpoints
 - optional secret handling with platform protection where available
+- no persisted AI chat transcript storage by default
 
-Ollama Cloud onboarding is available directly in AI Connection settings. For users with API keys, Ollama Cloud currently offers free personal-use access with lower usage limits.
+AI Connection now includes first-class setup for OpenAI, Claude, OpenRouter, Google Gemini, and Microsoft Azure OpenAI alongside Ollama local/cloud. Most providers ship with smart default hosts so users can focus on key + model selection. Advanced OpenAI-compatible services remain available through custom endpoint mode.
 
 Automation support includes:
 
 - run-python action for controlled text transformations
 - command execution integration from assistant flows
+- review-first prompt and agent flows wired back into Writing Assistant
 
 ### Accessibility and low-vision capability
 
@@ -196,6 +203,32 @@ Voice support includes:
 - Windows dictation integration
 - dictation command toggles and control states
 - voice-command interpretation support in supported paths
+- watch-folder monitoring to auto-open newly dropped supported files
+- watch-folder settings for folder path, subfolders, startup, and polling
+- startup-wizard watch-folder onboarding for first-run automation setup
+
+BITS Whisperer phased rollout note:
+
+- Dictation and watch-folder controls are now surfaced under the top-level **BITS Whisperer** menu
+	to align migration work from BITS Whisperer into Quill.
+- Quill now includes a **Speech Models** manager under **BITS Whisperer** with machine-aware
+	recommendations and phased model visibility.
+- Speech model setup now supports a guided **Recommended** mode plus a **Manual** model-selection mode,
+	while keeping runtime behavior stable during this phase.
+- Provider onboarding now includes a guided **Provider Center** under **BITS Whisperer** with local-first
+	and cloud-first planning flows, readiness checks, and staged provider selection.
+- **Help -> Status Page (HTML Preview)** now refreshes live while open, including BITS Whisperer model
+	download state and broader asynchronous speech/task status.
+- Users can keep auto-open status behavior off by default and opt in from Preferences, plus tune
+	screen-reader refresh cadence with Quiet/Normal/Verbose announcement modes.
+- BITS Whisperer now includes rollout-safe insight tools: **Readiness Check**, **Capability Matrix**,
+	and **Download Queue** controls for retry/cleanup/status workflows.
+- General Preferences now includes a **Use Artificial Intelligence** toggle (mirrors the AI menu)
+	and a **BITS Whisperer safe mode lock** option for guarded rollout operation.
+- QUILL now ships robust command-line startup options, including `--help`, `--version`,
+	`--line`, `--column`, `--new-window`, and `--wait`.
+- The first phase focuses on safe model management and guidance, including faster-whisper engine
+	checks, while deeper transcription runtime behavior will roll out gradually.
 
 ### External tools and conversion workflows
 
@@ -264,7 +297,7 @@ Current build and installer work includes:
 
 ## Why this matters
 
-Quill 0.1.2 Beta is not a narrow patch. It is a broad capability release that makes Quill viable for:
+Quill 0.1.5 Beta is not a narrow patch. It is a broad capability release that makes Quill viable for:
 
 - daily writing and editing
 - markup-heavy technical authoring
@@ -272,6 +305,16 @@ Quill 0.1.2 Beta is not a narrow patch. It is a broad capability release that ma
 - complex import and conversion workflows
 - revision and comparison-heavy editing
 - local-first AI-assisted drafting and refinement
+
+## Translation process and community effort
+
+QUILL's localization direction is community-first and modeled on a gettext catalog workflow (`POT -> PO -> MO`). The project is building translation as a release discipline, not as an afterthought.
+
+For contributors, translation work starts with GitHub pull requests against locale catalogs and clear translator comments. As the contributor base grows, QUILL will add a dedicated translation portal flow while keeping gettext catalogs as the source of truth.
+
+The contributor plan, release cadence, quality gates, and translator expectations live in the new planning doc:
+
+- [QUILL Translation Contributor Plan](localization/translation-contributor-plan.md)
 
 ## What is still in beta
 
@@ -283,11 +326,11 @@ Quill is still a beta release, which means:
 
 But the feature surface is already substantial and practical for real work.
 
-## How to get the most from 0.1.2
+## How to get the most from 0.1.5
 
 1. Start with the user guide to pick workflows that match your daily work.
 2. Use the command palette to discover features quickly.
 3. Try one advanced workflow at a time: compare, preview, GLOW, or assistant.
 4. Report rough edges with diagnostics so the next release can harden where it matters most.
 
-Quill 0.1.2 Beta is ready for serious use, and this release is intentionally built to make the full capability surface visible instead of hidden.
+Quill 0.1.5 Beta is ready for serious use, and this release is intentionally built to make the full capability surface visible instead of hidden.

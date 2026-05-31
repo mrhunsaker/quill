@@ -61,6 +61,14 @@ version = "2.4.6"
     assert manifest["bundledPython"] is False
     assert manifest["bundledTools"] == []
     assert manifest["docs"] == [r"docs\userguide.md"]
+    assert manifest["speechAssets"]["dectalk"]["downloadable"] is True
+    assert manifest["speechAssets"]["kokoro"]["downloadable"] is True
+    assert manifest["speechAssets"]["piper"]["downloadable"] is True
+    assert manifest["speechAssets"]["vibevoice"]["downloadable"] is True
+    assert manifest["speechAssets"]["rhvoice"]["downloadable"] is True
+    assert manifest["speechAssets"]["melotts"]["downloadable"] is True
+    assert manifest["speechAssets"]["chatterbox"]["downloadable"] is True
+    assert manifest["speechAssets"]["openvoice"]["downloadable"] is True
 
     assert installer_script.exists()
     assert bundle["installer_script"] == str(installer_script)
@@ -81,9 +89,60 @@ def test_build_inno_setup_script_mentions_portable_bundle() -> None:
     assert "InfoAfterFile=..\\portable\\README.txt" in script
     assert "aiassistant" in script
     assert 'Name: "pandoc"; Description: "Install bundled Pandoc for document conversion";' in script
-    assert 'Excludes: "docs\\announcement-beta.md,docs\\QUILL-PRD.md,tools\\pandoc\\*"' in script
+    assert 'Name: "speechdectalk"; Description: "Install bundled DECtalk runtime";' in script
+    assert 'Name: "speechdectalk\\voices"; Description: "DECtalk voice selection";' in script
+    assert 'Name: "speechdectalk\\voices\\all_voices"; Description: "All DECtalk voices";' in script
+    assert 'Name: "speechdectalk\\voices\\paul"; Description: "Paul voice";' in script
+    assert 'Name: "speechdectalk\\voices\\harry"; Description: "Harry voice";' in script
+    assert 'Name: "speechdectalk\\voices\\dennis"; Description: "Dennis voice";' in script
+    assert 'Name: "speechdectalk\\voices\\frank"; Description: "Frank voice";' in script
+    assert 'Name: "speechdectalk\\voices\\betty"; Description: "Betty voice";' in script
+    assert 'Name: "speechdectalk\\voices\\ursula"; Description: "Ursula voice";' in script
+    assert 'Name: "speechdectalk\\voices\\rita"; Description: "Rita voice";' in script
+    assert 'Name: "speechdectalk\\voices\\wendy"; Description: "Wendy voice";' in script
+    assert 'Name: "speechdectalk\\voices\\kit"; Description: "Kit voice";' in script
+    assert 'Name: "speechkokoro"; Description: "Install bundled Kokoro voices/models";' in script
+    assert 'Name: "speechpiper"; Description: "Install bundled Piper voices/models";' in script
+    assert 'Name: "speechvibevoice"; Description: "Install bundled VibeVoice voices/models";' in script
+    assert 'Name: "speechrhvoice"; Description: "Install bundled RHVoice voices/models";' in script
+    assert 'Name: "speechmelotts"; Description: "Install bundled MeloTTS voices/models";' in script
+    assert 'Name: "speechchatterbox"; Description: "Install bundled Chatterbox voices/models";' in script
+    assert 'Name: "speechopenvoice"; Description: "Install bundled OpenVoice voices/models";' in script
+    assert (
+        'Excludes: "docs\\announcement-beta.md,docs\\QUILL-PRD.md,tools\\pandoc\\*,tools\\speech\\dectalk\\*,tools\\speech\\kokoro\\*,tools\\speech\\piper\\*,tools\\speech\\vibevoice\\*,tools\\speech\\rhvoice\\*,tools\\speech\\melotts\\*,tools\\speech\\chatterbox\\*,tools\\speech\\openvoice\\*"'
+        in script
+    )
     assert 'Source: "..\\portable\\tools\\pandoc\\*"; DestDir: "{app}\\tools\\pandoc";' in script
     assert 'Components: pandoc' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\*"; DestDir: "{app}\\tools\\speech\\dectalk";' in script
+    assert 'Excludes: "voices\\*"; Components: speechdectalk' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices";' in script
+    assert 'Components: speechdectalk\\voices\\all_voices' in script
+    assert "Check: not WizardIsComponentSelected('speechdectalk\\voices\\all_voices')" in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\paul\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\paul";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\harry\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\harry";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\dennis\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\dennis";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\frank\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\frank";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\betty\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\betty";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\ursula\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\ursula";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\rita\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\rita";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\wendy\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\wendy";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\dectalk\\voices\\kit\\*"; DestDir: "{app}\\tools\\speech\\dectalk\\voices\\kit";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\kokoro\\*"; DestDir: "{app}\\tools\\speech\\kokoro";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\piper\\*"; DestDir: "{app}\\tools\\speech\\piper";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\vibevoice\\*"; DestDir: "{app}\\tools\\speech\\vibevoice";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\rhvoice\\*"; DestDir: "{app}\\tools\\speech\\rhvoice";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\melotts\\*"; DestDir: "{app}\\tools\\speech\\melotts";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\chatterbox\\*"; DestDir: "{app}\\tools\\speech\\chatterbox";' in script
+    assert 'Source: "..\\portable\\tools\\speech\\openvoice\\*"; DestDir: "{app}\\tools\\speech\\openvoice";' in script
+    assert 'Components: speechdectalk' in script
+    assert 'Components: speechkokoro' in script
+    assert 'Components: speechpiper' in script
+    assert 'Components: speechvibevoice' in script
+    assert 'Components: speechrhvoice' in script
+    assert 'Components: speechmelotts' in script
+    assert 'Components: speechchatterbox' in script
+    assert 'Components: speechopenvoice' in script
     assert "Writing Assistant Setup" in script
     assert "User Guide" in script
     assert "python\\pythonw.exe" in script
@@ -92,7 +151,6 @@ def test_build_inno_setup_script_mentions_portable_bundle() -> None:
     assert "Check: not FileExists(ExpandConstant('{app}\\python\\pythonw.exe'))" in script
     assert "Beta Announcement" not in script
     assert "Product Requirements" not in script
-    assert 'Excludes: "docs\\announcement-beta.md,docs\\QUILL-PRD.md,tools\\pandoc\\*"' in script
     # File-association registry entries use HKCU only (never overwrite defaults).
     assert "HKCU" in script
     assert "HKLM" not in script
@@ -124,6 +182,7 @@ version = "3.0.0"
         (tmp_path / "dist" / "portable" / "manifest.json").read_text(encoding="utf-8")
     )
     assert manifest["bundledTools"] == ["pandoc"]
+    assert manifest["speechAssets"]["dectalk"]["bundled"] is False
     assert (tmp_path / "dist" / "portable" / "tools" / "pandoc" / "pandoc.exe").exists()
     assert bundle["portable_dir"] == str(tmp_path / "dist" / "portable")
 

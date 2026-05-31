@@ -105,3 +105,31 @@ def test_build_support_issue_url_targets_support_hub() -> None:
 
     assert url.startswith("https://github.com/Community-Access/support/issues/new?")
     assert "source-app=Quill" in url
+
+
+def test_diagnostics_bundle_redacts_log_secrets(monkeypatch, tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    logs_dir = data_dir / "logs"
+    logs_dir.mkdir(parents=True)
+    (logs_dir / "latest.log").write_text(
+        "Authorization: Bearer super-secret-token\napi_key=abc123\nvalue=sk-test-secret\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("QUILL_DATA_DIR", str(data_dir))
+
+    target = tmp_path / "quill-diagnostics.zip"
+    write_diagnostics_bundle(
+        target,
+        settings=Settings(),
+        keymap={},
+        notifications=[],
+        current_document=None,
+        include_file_paths=False,
+    )
+
+    with zipfile.ZipFile(target) as archive:
+        payload = archive.read("logs/latest.log").decode("utf-8")
+        assert "super-secret-token" not in payload
+        assert "abc123" not in payload
+        assert "sk-test-secret" not in payload
+        assert "[REDACTED]" in payload

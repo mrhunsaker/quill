@@ -95,6 +95,7 @@ This maps implemented work to PRD release slices.
 - Multi-document session model
 - Complete file-menu/session/print set
 - Read-aloud controls with voice selection
+- Speech Experience Platform planning to implementation: AI menu Speech submenu, Kokoro/Piper voice library, download/preview/remove lifecycle, preferred voice selection, and per-voice/per-engine defaults without bundling voice payloads.
 - Windows shell integration and high-contrast sync
 - SBOM + signed build/release provenance pipeline
 - Deferred to v1.1: AI provider abstraction, consent-gated network actions, reading-order repair, task progress/cancellation

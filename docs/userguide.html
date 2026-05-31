@@ -185,7 +185,7 @@ Quill is not only a place to write plain text. It is a place to open
 difficult documents, inspect structure, navigate long material, compare
 revisions, prepare content for Markdown or HTML, and work with
 accessibility and extraction issues without leaving the editor.</p>
-<p>This guide is aligned to Quill 0.1.2 Beta, built by Blind Information
+<p>This guide is aligned to Quill 0.1.5 Beta, built by Blind Information
 Technology Solutions (BITS) together with Community Access.</p>
 <p>This guide is written as a companion, not a reference wall. Read it
 from the beginning if you are new to Quill. Dip into the sections that
@@ -200,6 +200,7 @@ work.</p>
 <li><a href="#start-here">Start Here</a></li>
 <li><a href="#what-quill-feels-like">What Quill Feels Like</a></li>
 <li><a href="#your-first-session">Your First Session</a></li>
+<li><a href="#command-line-launching">Command-Line Launching</a></li>
 <li><a href="#the-main-window">The Main Window</a></li>
 <li><a href="#the-menu-bar-reference">The Menu Bar Reference</a></li>
 <li><a href="#writing-and-editing">Writing and Editing</a></li>
@@ -221,6 +222,8 @@ Sessions, and Safety</a></li>
 Different Document Types</a></li>
 <li><a href="#help-learning-and-daily-confidence">Help, Learning, and
 Daily Confidence</a></li>
+<li><a href="#translation-and-community-localization">Translation and
+Community Localization</a></li>
 <li><a href="#beta-feedback-and-bug-reporting">Beta Feedback and Bug
 Reporting</a></li>
 <li><a href="#a-fast-shortcut-tour">A Fast Shortcut Tour</a></li>
@@ -286,6 +289,34 @@ keyboard pack and any custom bindings.</li>
 <p>That first session matters because it teaches the most important
 Quill habit: you do not need to hunt. If an action exists, Quill wants
 you to be able to reach it from where you already are.</p>
+<h2 id="command-line-launching">Command-Line Launching</h2>
+<p>Quill supports command-line startup options for scripted workflows
+and direct navigation.</p>
+<p>Supported options:</p>
+<ul>
+<li><code>--help</code>: show command help and exit.</li>
+<li><code>--version</code>: print QUILL version and exit without
+launching the UI.</li>
+<li><code>--safe-mode</code>: launch with optional state disabled.</li>
+<li><code>--reset-profile</code>: reset feature profile store before
+launch.</li>
+<li><code>--diagnostics</code>: start with diagnostics tracing
+enabled.</li>
+<li><code>--dump-stacks</code>: write a thread-stack dump and exit.</li>
+<li><code>--line N</code>: 1-based line for the first startup file.</li>
+<li><code>--column M</code>: 1-based column for the first startup
+file.</li>
+<li><code>--new-window</code>: force a new process instead of forwarding
+to an existing instance.</li>
+<li><code>--wait</code>: when forwarding to an existing instance, wait
+for that instance to close.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li><code>python -m quill --version</code></li>
+<li><code>python -m quill notes.md --line 40 --column 5</code></li>
+<li><code>python -m quill --new-window notes.md</code></li>
+</ul>
 <h2 id="the-main-window">The Main Window</h2>
 <p>Quill keeps its main window intentionally simple.</p>
 <h3 id="menu-bar">Menu bar</h3>
@@ -541,7 +572,7 @@ heading-level edits, section reorder, and heading validation</li>
 special-purpose export formats. This menu is where that philosophy
 becomes practical.</p>
 <h3 id="word-prediction-and-snippets">Word prediction and snippets</h3>
-<p>Quill 0.1.2 separates live prediction from snippet insertion so the
+<p>Quill 0.1.5 separates live prediction from snippet insertion so the
 hotkeys feel more like a modern editor:</p>
 <ol type="1">
 <li>Press <code>Ctrl+Space</code> to open <strong>Word
@@ -592,7 +623,10 @@ naturally.</p>
 <li><strong>Next Misspelling</strong></li>
 <li><strong>Thesaurus...</strong></li>
 <li><strong>Dictionary Status...</strong></li>
+<li><strong>AI Hub...</strong></li>
 <li><strong>Writing Assistant...</strong></li>
+<li><strong>Prompt Studio...</strong></li>
+<li><strong>Agent Center...</strong></li>
 <li><strong>Rewrite Selection</strong></li>
 <li><strong>Summarize Selection</strong></li>
 <li><strong>Continue Writing</strong></li>
@@ -602,29 +636,48 @@ naturally.</p>
 <p>The Writing Assistant shell ranks Quill commands from your prompt,
 offers preset prompts for rewrite/summarize/continue/grammar flows, and
 Run Python executes a sandboxed transform against the current document
-text and selection.</p>
-<p>Use <strong>AI -&gt; AI Connection...</strong> or <strong>Preferences
--&gt; AI Connection</strong> to set provider, host, model, and optional
-key.</p>
+text and selection. Prompt Studio lets you build reusable custom prompts
+with template variables, and Agent Center generates guided task plans
+that you can review before sending to the Writing Assistant.</p>
+<p>Use <strong>AI -&gt; AI Hub...</strong> for a single control surface
+that links provider verification, model discovery, Prompt Studio, Agent
+Center, and Writing Assistant.</p>
+<p>Trust and privacy baseline:</p>
+<ul>
+<li>On first run, Quill shows a trust and privacy consent
+acknowledgement.</li>
+<li>Quill does not persist AI chat session transcripts by default.</li>
+<li>Cloud requests happen only when you explicitly invoke an AI
+action.</li>
+<li>API keys are stored in Windows Credential Manager when available,
+with DPAPI-encrypted fallback storage.</li>
+</ul>
 <p>AI connection flow:</p>
 <ol type="1">
-<li>Choose provider (<code>Ollama (local)</code>,
-<code>Ollama Cloud (API key)</code>, or <code>Custom HTTP</code>).</li>
+<li>Open <strong>AI Hub</strong> and choose provider
+(<code>Ollama (local)</code>, <code>OpenAI</code>, <code>Claude</code>,
+<code>OpenRouter</code>, <code>Google Gemini</code>,
+<code>Microsoft Azure OpenAI</code>, <code>Ollama Cloud</code>, or
+<code>Custom OpenAI-compatible</code>).</li>
 <li>Confirm host URL and model.</li>
 <li>Enter key only when your endpoint requires authentication.</li>
 <li>Use <strong>Verify Connection</strong> to test endpoint and
 credentials.</li>
-<li>Use <strong>List Models</strong> to fetch available models and
-select one.</li>
+<li>Use <strong>List Models</strong> to fetch endpoint models, then use
+the search box to filter quickly.</li>
+<li>Use <strong>Recommend Model</strong> to pick a model profile aligned
+to your hardware/task framing.</li>
 <li>Save settings. Quill auto-runs verification and updates the AI
 status line in the AI menu.</li>
 </ol>
-<p>Ollama Cloud onboarding is available in this same flow. If you use an
-Ollama Cloud API key, free personal-use access is available with lower
-usage limits.</p>
+<p>Most cloud providers are pre-configured with default host URLs so
+setup is key-first, not URL-first. For advanced OpenAI-compatible
+endpoints, use Custom and override host/model explicitly.</p>
 <p>Quill stores optional keys with Windows DPAPI and announces the
 verification result in plain language for immediate screen-reader
 feedback.</p>
+<p>For policy details, see the repository's <code>PRIVACY.md</code> and
+<code>RESPONSIBLE_AI_USE.md</code>.</p>
 <p>These help you stay inside the editor instead of breaking flow for
 small writing chores.</p>
 <h3 id="ask-quill-chat-setup-on-device-ai">Ask Quill Chat setup
@@ -654,27 +707,35 @@ run Quill commands with approval before changes are applied.</p>
 <li>If model/runtime is unavailable, Quill reports this clearly and does
 not apply destructive changes.</li>
 </ul>
-<h3 id="writing-assistant-connection-setup">Writing Assistant connection
+<h3 id="writing-assistant-and-ai-hub-setup">Writing Assistant and AI Hub
 setup</h3>
 <p>For release-safe beta validation, Word and CSV open in the normal
 plain-text editor surface. AI connection and chat flows remain
 available.</p>
 <p>Provider setup:</p>
 <ol type="1">
-<li>Open <code>AI -&gt; AI Connection...</code> (or
-<code>Preferences -&gt; AI Connection</code>).</li>
-<li>Choose provider: <code>Ollama (local)</code>,
-<code>Ollama Cloud (API key)</code>, or <code>Custom HTTP</code>.</li>
-<li>Enter host and model.</li>
+<li>Open <code>AI -&gt; AI Hub...</code> (or
+<code>AI -&gt; AI Model &amp; Connection...</code>).</li>
+<li>Choose provider: <code>Ollama (local)</code>, <code>OpenAI</code>,
+<code>Claude</code>, <code>OpenRouter</code>,
+<code>Google Gemini</code>, <code>Microsoft Azure OpenAI</code>,
+<code>Ollama Cloud</code>, or
+<code>Custom OpenAI-compatible</code>.</li>
+<li>Enter host and model (cloud defaults are prefilled; Azure requires
+your resource hostname).</li>
 <li>Enter API key only if required.</li>
 <li>Use <code>Verify Connection</code>.</li>
-<li>Use <code>List Models</code> to select from endpoint-reported
-models.</li>
+<li>Use <code>List Models</code> to select from endpoint-reported models
+with search filtering.</li>
+<li>Use <code>Recommend Model</code> for guided picks tuned for local
+hardware or cloud framing.</li>
 <li>Save settings. Quill auto-verifies and updates AI status/detail
 lines.</li>
+<li>Use <code>Prompt Studio</code> to save reusable templates and
+<code>Agent Center</code> to generate guided task prompts.</li>
 </ol>
-<p>Ollama Cloud onboarding is available here as well. Users with API
-keys can use the free personal-use tier, which has lower usage
+<p>Ollama Cloud onboarding remains available here as well. Users with
+API keys can use the free personal-use tier, which has lower usage
 limits.</p>
 <p>After save, Quill announces plain-language verification feedback (for
 example, ready, auth failure, timeout, or endpoint unreachable).</p>
@@ -682,17 +743,90 @@ example, ready, auth failure, timeout, or endpoint unreachable).</p>
 <ul>
 <li><strong>Read Aloud</strong> submenu for start or pause, stop, and
 voice selection</li>
-<li><strong>Dictation</strong> submenu for Windows dictation, plus an
-opt-in <strong>Hey QUILL Commands</strong> toggle that lets dictation
-phrases trigger Quill commands instead of inserting text.</li>
+<li><strong>BITS Whisperer -&gt; Dictation and Watch Folder</strong>
+submenu for Windows dictation, plus an opt-in <strong>Hey QUILL
+Commands</strong> toggle that lets dictation phrases trigger Quill
+commands instead of inserting text.</li>
+<li><strong>BITS Whisperer -&gt; Dictation and Watch Folder -&gt; Watch
+Folder Monitoring</strong> to automatically open new supported files
+dropped into a configured folder.</li>
+<li><strong>BITS Whisperer -&gt; Dictation and Watch Folder -&gt; Watch
+Folder Settings...</strong> for folder path, subfolders, startup
+behavior, and polling behavior.</li>
+<li><strong>BITS Whisperer -&gt; Dictation and Watch Folder -&gt; Watch
+Folder Status...</strong> for current runtime state and active
+configuration.</li>
+<li><strong>BITS Whisperer -&gt; Speech Models</strong> for model
+manager, model status, recommended model selection, and faster-whisper
+engine checks.</li>
+<li><strong>BITS Whisperer -&gt; Providers</strong> for provider center,
+provider status, recommended provider selection, and manual provider
+staging.</li>
+<li><strong>BITS Whisperer -&gt; Rollout</strong> for readiness checks
+and capability matrix preview.</li>
+<li><strong>BITS Whisperer -&gt; Speech Models -&gt; Download
+Queue...</strong> for retry/cleanup/status actions on staged model
+downloads.</li>
 <li><strong>Integrations</strong> submenu with <strong>OCR
 Image...</strong> and shell integration commands.</li>
 </ul>
+<p>Speech model selection intentionally follows a two-mode flow:</p>
+<ul>
+<li><strong>Recommended mode</strong>: Quill selects a whisper model
+using machine-aware guidance (RAM/GPU profile).</li>
+<li><strong>Manual mode</strong>: You pick a specific whisper model
+yourself.</li>
+</ul>
+<p>In this phase, model infrastructure and download workflows are
+enabled while deeper runtime wiring remains staged.</p>
+<p>Provider setup follows the same phased safety model:</p>
+<ul>
+<li>Use <strong>Provider Center</strong> for guided local-first or
+cloud-first setup choices.</li>
+<li>Use <strong>Provider Status</strong> to understand readiness and
+next steps.</li>
+<li>Providers are staged for rollout planning first; live provider
+routing remains gated in this phase.</li>
+</ul>
+<p>Status Page behavior:</p>
+<ul>
+<li><strong>Help -&gt; Status Page (HTML Preview)</strong> now updates
+live while open.</li>
+<li>It surfaces asynchronous speech generation and BITS Whisperer
+download/provider status so users can monitor progress without blocking
+dialogs.</li>
+<li>In <strong>Preferences -&gt; General</strong>, you can enable
+<strong>Auto-open Status Page when BITS Whisperer model downloads
+start</strong> (default off).</li>
+<li>In <strong>Preferences -&gt; General</strong>, set <strong>Status
+page refresh announcements</strong> to <strong>Quiet</strong>,
+<strong>Normal</strong>, or <strong>Verbose</strong> to control
+screen-reader announcement cadence.</li>
+<li>In <strong>Preferences -&gt; General</strong>, use <strong>Use
+Artificial Intelligence</strong> to mirror the AI menu toggle from one
+place.</li>
+<li>In <strong>Preferences -&gt; General</strong>, enable <strong>BITS
+Whisperer safe mode lock</strong> to block download/retry actions while
+keeping status and onboarding surfaces available.</li>
+</ul>
+<p>Startup Wizard now includes a BITS Whisperer rollout setup step that
+applies safe defaults without enabling runtime routing changes.</p>
 <p>Read Aloud is particularly useful for proofreading by ear. OCR Image
 handles image-to-text work with an explicit consent and progress flow.
 Dictation uses Windows' own speech input. When Hey QUILL Commands is
 enabled, Quill stays silent and only listens while dictation is active,
-then runs the matching action after the wake phrase.</p>
+then runs the matching action after the wake phrase. Watch Folder
+automation is best for "drop and open" workflows: copy supported files
+into one folder and let Quill open them in the background.</p>
+<p>BITS Whisperer phased rollout note:</p>
+<ul>
+<li>Quill is adopting BITS Whisperer speech capabilities in phases.</li>
+<li>Phase 1 focuses on machine-aware speech model management and safer
+setup guidance.</li>
+<li>Additional BITS Whisperer transcription runtime features, including
+expanded model execution paths, will be delivered incrementally in
+future phases.</li>
+</ul>
 <h4 id="document-intake-and-extraction-review">Document intake and
 extraction review</h4>
 <ul>
@@ -831,6 +965,8 @@ feature visibility.</li>
 <li><strong>Feature Profiles</strong> commands let you switch profile,
 run health checks, undo the last profile change, reset to Essential, and
 run onboarding.</li>
+<li><strong>Startup Wizard...</strong> can be rerun at any time and now
+includes watch-folder setup.</li>
 <li><strong>Check for Updates...</strong> verifies the signed update
 manifest, opens the installer download page, and can close Quill so
 setup can run immediately.</li>
@@ -1232,9 +1368,25 @@ have disappeared.</li>
 </ul>
 <p>That last command matters more than it first appears. It turns
 feature visibility from a mystery into an explanation.</p>
+<h2 id="translation-and-community-localization">Translation and
+Community Localization</h2>
+<p>QUILL is building localization as a community effort with a gettext
+catalog workflow (<code>POT -&gt; PO -&gt; MO</code>) and
+contributor-first onboarding. Translation contributions are welcomed
+during beta and reviewed with the same quality mindset as code and
+accessibility changes.</p>
+<p>If you want to help translate QUILL or review language quality, use
+the contributor plan:</p>
+<ul>
+<li><a href="localization/translation-contributor-plan.md">QUILL
+Translation Contributor Plan</a></li>
+</ul>
+<p>The plan documents how to contribute translations, what is and is not
+translated, how string freeze works, and how translator contributions
+are credited in releases.</p>
 <h2 id="beta-feedback-and-bug-reporting">Beta Feedback and Bug
 Reporting</h2>
-<p>Quill is ready for serious beta use, and Quill 0.1.2 Beta now ships a
+<p>Quill is ready for serious beta use, and Quill 0.1.5 Beta now ships a
 real in-app support starting point.</p>
 <h3 id="what-exists-today">What exists today</h3>
 <p>Today, Quill already has the foundations for careful support
@@ -1271,7 +1423,7 @@ reproduction steps</li>
 as the guided in-app bridge until the fuller route is live</li>
 </ol>
 <p>Until that exists, use the current Help-menu path as the practical
-bridge. The important improvement in Quill 0.1.2 Beta is that Quill now
+bridge. The important improvement in Quill 0.1.5 Beta is that Quill now
 helps users gather diagnostics locally, review what is being shared, and
 start a structured support report without forcing them to begin outside
 the tool.</p>

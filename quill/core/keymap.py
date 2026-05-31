@@ -60,10 +60,10 @@ DEFAULT_KEYMAP: dict[str, str] = {
     "edit.insert_link": "Ctrl+K",
     "edit.follow_link": "Ctrl+Enter",
     "edit.word_prediction": "Ctrl+Space",
-    "view.browser_preview": "Ctrl+Shift+V",
-    "view.preview": "Ctrl+Shift+P",
+    "view.preview": "Ctrl+Shift+V",
+    "view.browser_preview": "Ctrl+Alt+Shift+V",
     "view.split_preview": "Ctrl+Shift+Backslash",
-    "view.focus_preview": "F6",
+    "view.focus_preview": "Ctrl+F6",
     "edit.set_mark": "Ctrl+Shift+M",
     "edit.pop_mark": "Ctrl+M",
     "edit.exchange_point_mark": "Ctrl+Shift+X",
@@ -356,9 +356,23 @@ def merge_keymaps(raw: object) -> dict[str, str]:
     if not isinstance(raw, dict):
         return DEFAULT_KEYMAP.copy()
     merged = DEFAULT_KEYMAP.copy()
+    legacy_preview_conflict = (
+        str(raw.get("view.preview", "")).strip().upper() == "CTRL+SHIFT+P"
+        and str(raw.get("view.browser_preview", "")).strip().upper() == "CTRL+SHIFT+V"
+    )
     for command_id, binding in raw.items():
         if isinstance(command_id, str) and isinstance(binding, str):
-            merged[command_id] = binding
+            normalized = binding
+            if legacy_preview_conflict and command_id == "view.preview":
+                normalized = "Ctrl+Shift+V"
+            elif legacy_preview_conflict and command_id == "view.browser_preview":
+                normalized = "Ctrl+Alt+Shift+V"
+            if not normalized.strip():
+                merged[command_id] = ""
+                continue
+            conflict = find_keymap_conflict(merged, command_id, normalized)
+            if conflict is None:
+                merged[command_id] = normalized
     return merged
 
 

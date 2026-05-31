@@ -4,6 +4,7 @@ import hashlib
 import json
 import locale
 import platform
+import re
 import sys
 import zipfile
 from collections.abc import Mapping
@@ -17,6 +18,13 @@ from quill.core.notifications import Notification
 from quill.core.paths import app_data_dir
 from quill.core.settings import Settings
 from quill.core.storage import read_json, write_json_atomic
+
+_SECRET_PREFIX_PATTERNS = (
+    re.compile(r"(?i)(authorization\s*:\s*bearer\s+)[^\s\"']+"),
+    re.compile(r"(?i)(x-api-key\s*[:=]\s*)[^\s\"',]+"),
+    re.compile(r"(?i)(api[-_ ]?key\s*[:=]\s*)[^\s\"',]+"),
+)
+_SECRET_INLINE_PATTERN = re.compile(r"(?i)sk-[a-z0-9_-]{8,}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,7 +281,19 @@ def _write_recent_logs(archive: zipfile.ZipFile) -> None:
             continue
         if modified < cutoff:
             continue
-        archive.write(log_file, arcname=f"logs/{log_file.name}")
+        try:
+            text = log_file.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        archive.writestr(f"logs/{log_file.name}", _sanitize_log_text(text))
+
+
+def _sanitize_log_text(text: str) -> str:
+    sanitized = text
+    for pattern in _SECRET_PREFIX_PATTERNS:
+        sanitized = pattern.sub(r"\1[REDACTED]", sanitized)
+    sanitized = _SECRET_INLINE_PATTERN.sub("[REDACTED]", sanitized)
+    return sanitized
 
 
 def _safe_import_version() -> str:

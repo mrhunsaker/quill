@@ -21,10 +21,21 @@ from quill.core.keymap import (
 )
 
 
+def _duplicates(mapping: dict[str, str]) -> dict[str, list[str]]:
+    grouped: dict[str, list[str]] = {}
+    for command_id, binding in mapping.items():
+        normalized = binding.strip().upper()
+        if not normalized:
+            continue
+        grouped.setdefault(normalized, []).append(command_id)
+    return {binding: commands for binding, commands in grouped.items() if len(commands) > 1}
+
+
 def test_load_keymap_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
     keymap = load_keymap()
     assert keymap == DEFAULT_KEYMAP
+    assert _duplicates(keymap) == {}
 
 
 def test_load_keymap_merges_overrides(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -33,6 +44,18 @@ def test_load_keymap_merges_overrides(monkeypatch: pytest.MonkeyPatch, tmp_path:
     keymap = load_keymap()
     assert keymap["file.save"] == "Ctrl+Shift+Alt+S"
     assert keymap["file.open"] == DEFAULT_KEYMAP["file.open"]
+
+
+def test_merge_keymaps_ignores_conflicting_bindings() -> None:
+    merged = keymap_module.merge_keymaps(
+        {
+            "app.command_palette": "Ctrl+Shift+P",
+            "view.preview": "Ctrl+Shift+P",
+        }
+    )
+    assert merged["app.command_palette"] == "Ctrl+Shift+P"
+    assert merged["view.preview"] == DEFAULT_KEYMAP["view.preview"]
+    assert _duplicates(merged) == {}
 
 
 def test_import_keymap_saves_merged_defaults(
@@ -107,7 +130,19 @@ def test_indent_shortcuts_are_available() -> None:
 
 
 def test_browser_preview_shortcut_is_available() -> None:
-    assert DEFAULT_KEYMAP["view.browser_preview"] == "Ctrl+Shift+V"
+    assert DEFAULT_KEYMAP["view.preview"] == "Ctrl+Shift+V"
+    assert DEFAULT_KEYMAP["view.browser_preview"] == "Ctrl+Alt+Shift+V"
+
+
+def test_legacy_preview_conflict_migrates_to_in_app_preview() -> None:
+    merged = keymap_module.merge_keymaps(
+        {
+            "view.preview": "Ctrl+Shift+P",
+            "view.browser_preview": "Ctrl+Shift+V",
+        }
+    )
+    assert merged["view.preview"] == "Ctrl+Shift+V"
+    assert merged["view.browser_preview"] == "Ctrl+Alt+Shift+V"
 
 
 def test_profile_picker_shortcut_is_available() -> None:

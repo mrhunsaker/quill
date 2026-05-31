@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quill"
-version = "0.1.2"
+version = "0.1.5"
 description = "Screen-reader-first writing and document environment for Windows"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -18,17 +18,28 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Operating System :: Microsoft :: Windows",
 ]
-dependencies = []
+dependencies = ["regex>=2024.0.0"]
 
 [project.optional-dependencies]
 ui = [
     "wxPython>=4.2.2",
+    # Accessible wx.html2.WebView surfaces (chat, preview, dialogs) — extracted
+    # from Quill and published so any wxPython app can reuse it.
+    "wx-accessible-webview>=0.2.0",
     "pyttsx3>=2.99",
+    # CA bundle for verified HTTPS update checks (macOS Python lacks trusted roots).
+    "certifi>=2024.2.2",
     # Prism screen-reader speech bridge (Windows) — routes announcements to
     # NVDA/JAWS/Narrator instead of speaking over them.
     "prismatoid>=0.16; sys_platform == 'win32'",
 ]
 spellcheck = ["pyenchant>=3.2"]
+# Offline VibeVoice speech-FILE generator (AI > Speech > Download VibeVoice Model).
+# Heavy + optional, so it's its own extra; the GUI degrades gracefully without it.
+# Installed from a zip archive so no `git` is required on the target machine.
+vibevoice = [
+    "vibevoice-cpu[model] @ https://github.com/Community-Access/vibevoice-cpu/archive/refs/heads/main.zip",
+]
 # On-device AI for the Ask Quill chat. Windows/Linux use llama.cpp (CPU, GGUF);
 # a GGUF model (e.g. Phi-4-mini Q4) goes in <app data>/models or QUILL_LLAMA_MODEL.
 ai = ["llama-cpp-python>=0.3"]
@@ -37,6 +48,7 @@ pages = ["keynote-parser>=1.0", "markitdown[all]>=0.1.0"]
 dev = [
   "pytest>=8.2",
   "pytest-xdist>=3.6",
+  "pytest-timeout>=2.3",
   "ruff>=0.6",
   "mypy>=1.11",
 ]
@@ -57,10 +69,16 @@ packages = ["quill"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+timeout = 30
+log_cli = true
+log_level = "INFO"
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.format]
+preview = true
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

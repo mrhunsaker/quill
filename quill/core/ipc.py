@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
@@ -71,21 +72,42 @@ def _lock_belongs_to_live_instance(info: dict) -> bool:
     return True  # no identity info (e.g. non-Windows): alive is enough
 
 
-def enqueue_open_request(path: Path | None) -> None:
+@dataclass(frozen=True, slots=True)
+class OpenRequest:
+    path: Path
+    line: int | None = None
+    column: int | None = None
+
+
+def enqueue_open_request(
+    path: Path | None,
+    *,
+    line: int | None = None,
+    column: int | None = None,
+) -> None:
     queue_path = _queue_file_path()
     queue_path.parent.mkdir(parents=True, exist_ok=True)
     with queue_path.open("a", encoding="utf-8", newline="\n") as handle:
-        payload = {"action": "show"} if path is None else {"action": "open", "path": str(path)}
+        payload = (
+            {"action": "show"}
+            if path is None
+            else {
+                "action": "open",
+                "path": str(path),
+                "line": line,
+                "column": column,
+            }
+        )
         handle.write(json.dumps(payload, ensure_ascii=True) + "\n")
 
 
-def drain_open_requests() -> list[Path | None]:
+def drain_open_requests() -> list[OpenRequest | None]:
     queue_path = _queue_file_path()
     if not queue_path.exists():
         return []
     lines = queue_path.read_text(encoding="utf-8").splitlines()
     queue_path.unlink(missing_ok=True)
-    requests: list[Path | None] = []
+    requests: list[OpenRequest | None] = []
     for line in lines:
         if not line.strip():
             continue
@@ -100,7 +122,15 @@ def drain_open_requests() -> list[Path | None]:
             requests.append(None)
             continue
         if isinstance(raw.get("path"), str):
-            requests.append(Path(raw["path"]))
+            line_number = raw.get("line")
+            column_number = raw.get("column")
+            requests.append(
+                OpenRequest(
+                    path=Path(raw["path"]),
+                    line=int(line_number) if isinstance(line_number, int) else None,
+                    column=int(column_number) if isinstance(column_number, int) else None,
+                )
+            )
     return requests
 
 

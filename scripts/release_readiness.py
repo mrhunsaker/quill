@@ -35,10 +35,19 @@ def _build_docs(repo_root: Path) -> None:
         )
 
 
+def _require_tool(tool_name: str, *, install_hint: str) -> None:
+    if shutil.which(tool_name) is None:
+        raise RuntimeError(
+            f"{tool_name} is required for release readiness. Install with: {install_hint}"
+        )
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
+    _require_tool("pip-audit", install_hint="python -m pip install pip-audit")
 
     _run_step("Running lint", ["ruff", "check", "."], cwd=repo_root)
+    _run_step("Running dependency audit", ["pip-audit", "--strict"], cwd=repo_root)
     _run_step("Running tests", ["pytest", "-q"], cwd=repo_root)
     _build_docs(repo_root)
     _run_step(

@@ -1,0 +1,82 @@
+name: Document intake / conversion issue
+description: Report extraction, structure loss, or conversion quality issues for imported files.
+title: "[Intake]: "
+labels: ["bug", "intake"]
+body:
+  - type: dropdown
+    id: file_type
+    attributes:
+      label: Source file type
+      options:
+        - TXT / MD / HTML / RTF
+        - DOCX / DOC
+        - CSV / TSV
+        - EPUB
+        - PDF
+        - PPTX / PPT
+        - XLSX / XLS
+        - Pages
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Issue category
+      options:
+        - Failed to open
+        - Extraction quality too low
+        - Structure/heading loss
+        - Table handling issue
+        - Encoding/content corruption
+        - OCR/intake fallback issue
+        - Reported confidence is misleading
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Choose mode ...
+        3. Observe extracted output ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: sample_notes
+    attributes:
+      label: Sample file notes
+      description: Describe sample file shape/sizes and sensitive constraints.
+  - type: checkboxes
+    id: attachments
+    attributes:
+      label: Attachments
+      options:
+        - label: I can share a sanitized sample file or reproduction equivalent.
+        - label: I can share intake/extraction report text from QUILL.
+  - type: input
+    id: version
+    attributes:
+      label: QUILL version
+      placeholder: "0.1.2"
+    validations:
+      required: true

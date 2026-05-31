@@ -11,3 +11,4 @@ This folder is the implementation-facing engineering baseline extracted from `do
 - `quality-gates.md` — lint/type/test/build gates and release quality bars
 - `roadmap-mapping.md` — PRD commitments mapped to current implementation status
 - `diagnostics-runbook.md` — diagnostics bundle spec, redaction rules, and support triage flow
+- `security-advisory-workflow.md` — private advisory intake, triage, patch, and coordinated disclosure workflow

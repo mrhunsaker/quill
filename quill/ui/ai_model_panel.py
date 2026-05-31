@@ -4,6 +4,7 @@ Defaults to "Recommended" (picked from the machine's RAM). The chosen model is
 downloaded automatically (no manual file handling). Accessible; download runs
 off the UI thread.
 """
+
 from __future__ import annotations
 
 import threading
@@ -20,67 +21,136 @@ from quill.core.ai.model_manager import (
 )
 
 
+def _uses_foundation_models() -> bool:
+    """True on a Mac where Quill uses Apple Foundation Models (Apple Intelligence)
+    — there's no GGUF model to choose/download there."""
+    import sys
+
+    if sys.platform != "darwin":
+        return False
+    try:
+        from quill.core.ai.foundation_models import FoundationModelsBackend
+
+        return bool(FoundationModelsBackend().is_available()[0])
+    except Exception:  # noqa: BLE001
+        return False
+
+
 class AIModelDialog:
-    def __init__(self, parent: object, announce=None) -> None:
+    def __init__(self, parent: object, announce=None, open_connection=None) -> None:
         import wx
 
         self._wx = wx
         self._announce = announce or (lambda _m: None)
+        self._open_connection = open_connection
 
-        self.dialog = wx.Dialog(parent, title="AI Model", style=wx.DEFAULT_DIALOG_STYLE)
-        self.dialog.SetSize((540, 380))
+        self.dialog = wx.Dialog(
+            parent, title="AI Model & Connection", style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+        )
+        self.dialog.SetSize((560, 520))
         root = wx.BoxSizer(wx.VERTICAL)
 
-        rec = recommended_id()
-        root.Add(
-            wx.StaticText(
+        wrap = 520
+
+        def add_help(text: str) -> None:
+            label = wx.StaticText(self.dialog, label=text)
+            label.Wrap(wrap)
+            root.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 12)
+
+        self._fm = _uses_foundation_models()
+        self.choice = None
+        self.download_button = None
+        self.status = None
+
+        if self._fm:
+            # macOS: Quill uses Apple Foundation Models — no GGUF model to pick.
+            add_help(
+                "On this Mac, Quill uses Apple Intelligence — Apple's on-device "
+                "Foundation Models. It runs locally, stays private, and is built into "
+                "macOS, so there's no model to choose or download."
+            )
+        else:
+            add_help(
+                "Quill includes an on-device AI model that runs entirely on your computer — "
+                "private, offline, and free, with no account or setup. Choose one below; it "
+                "downloads automatically the first time you use it."
+            )
+            rec = recommended_id()
+            root.Add(
+                wx.StaticText(
+                    self.dialog,
+                    label=f"This computer has about {total_ram_gb():.0f} GB of RAM.\n"
+                    f"Recommended model: {MODELS[rec].name}.",
+                ),
+                0,
+                wx.ALL,
+                12,
+            )
+            root.Add(wx.StaticText(self.dialog, label="On-device model"), 0, wx.LEFT | wx.RIGHT, 12)
+            self._ids = ["auto", *MODELS.keys()]
+            labels = [f"Recommended ({MODELS[rec].name})"]
+            for model_id, spec in MODELS.items():
+                tags = []
+                if model_id == rec:
+                    tags.append("recommended")
+                if is_downloaded(spec):
+                    tags.append("downloaded")
+                suffix = f" ({', '.join(tags)})" if tags else ""
+                labels.append(f"{spec.name} (~{spec.approx_gb:g} GB){suffix}")
+            self.choice = wx.Choice(self.dialog, choices=labels)
+            self.choice.SetName("AI model")
+            current = load_model_choice()
+            self.choice.SetSelection(self._ids.index(current) if current in self._ids else 0)
+            root.Add(self.choice, 0, wx.EXPAND | wx.ALL, 12)
+
+            self.status = wx.StaticText(self.dialog, label="")
+            root.Add(self.status, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 12)
+
+        # Optional: connect Ollama (local or cloud) for more models.
+        if self._open_connection is not None:
+            add_help(
+                "More options (optional): if you have Ollama installed — or an Ollama "
+                "Cloud key — you can connect it for more models. The on-device model above "
+                "works on its own; this is only if you want more."
+            )
+            self.connection_button = wx.Button(
                 self.dialog,
-                label=f"This computer has about {total_ram_gb():.0f} GB of RAM.\n"
-                f"Recommended model: {MODELS[rec].name}.",
-            ),
-            0, wx.ALL, 12,
-        )
+                label="Connect Ollama or set up a cloud key (Connection Settings)...",
+            )
+            self.connection_button.Bind(wx.EVT_BUTTON, self._on_connection)
+            root.Add(self.connection_button, 0, wx.LEFT | wx.RIGHT | wx.TOP, 12)
 
-        root.Add(wx.StaticText(self.dialog, label="Model"), 0, wx.LEFT | wx.RIGHT, 12)
-        self._ids = ["auto", *MODELS.keys()]
-        labels = [f"Recommended ({MODELS[rec].name})"]
-        for model_id, spec in MODELS.items():
-            tags = []
-            if model_id == rec:
-                tags.append("recommended")
-            if is_downloaded(spec):
-                tags.append("downloaded")
-            suffix = f" ({', '.join(tags)})" if tags else ""
-            labels.append(f"{spec.name} (~{spec.approx_gb:g} GB){suffix}")
-        self.choice = wx.Choice(self.dialog, choices=labels)
-        self.choice.SetName("AI model")
-        current = load_model_choice()
-        self.choice.SetSelection(self._ids.index(current) if current in self._ids else 0)
-        root.Add(self.choice, 0, wx.EXPAND | wx.ALL, 12)
-
-        self.status = wx.StaticText(self.dialog, label="")
-        root.Add(self.status, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
-
+        root.AddStretchSpacer()
         buttons = wx.BoxSizer(wx.HORIZONTAL)
-        self.download_button = wx.Button(self.dialog, label="Download Now")
-        buttons.Add(self.download_button, 0, wx.RIGHT, 8)
+        if not self._fm:
+            self.download_button = wx.Button(self.dialog, label="Download Now")
+            buttons.Add(self.download_button, 0, wx.RIGHT, 8)
         buttons.AddStretchSpacer()
         buttons.Add(wx.Button(self.dialog, wx.ID_OK, label="Save"), 0, wx.RIGHT, 8)
-        buttons.Add(wx.Button(self.dialog, wx.ID_CANCEL, label="Cancel"), 0)
+        buttons.Add(wx.Button(self.dialog, wx.ID_CANCEL, label="Close"), 0)
         root.Add(buttons, 0, wx.EXPAND | wx.ALL, 12)
         self.dialog.SetSizer(root)
 
-        self.choice.Bind(wx.EVT_CHOICE, lambda _e: self._refresh_status())
-        self.download_button.Bind(wx.EVT_BUTTON, self._on_download)
-        self._refresh_status()
+        if self.choice is not None:
+            self.choice.Bind(wx.EVT_CHOICE, lambda _e: self._refresh_status())
+            self.download_button.Bind(wx.EVT_BUTTON, self._on_download)
+            self._refresh_status()
+
+    def _on_connection(self, _event: object) -> None:
+        if self._open_connection is not None:
+            self._open_connection()
 
     def _selected_id(self) -> str:
         return self._ids[self.choice.GetSelection()]
 
     def _refresh_status(self) -> None:
         spec = resolve_spec(self._selected_id())
-        state = "already downloaded" if is_downloaded(spec) else "downloads automatically on first use"
-        self.status.SetLabel(f"{spec.note}\n{spec.name} (~{spec.approx_gb:g} GB). {state.capitalize()}.")
+        state = (
+            "already downloaded" if is_downloaded(spec) else "downloads automatically on first use"
+        )
+        self.status.SetLabel(
+            f"{spec.note}\n{spec.name} (~{spec.approx_gb:g} GB). {state.capitalize()}."
+        )
 
     def _on_download(self, _event: object) -> None:
         save_model_choice(self._selected_id())
@@ -107,7 +177,7 @@ class AIModelDialog:
         wx = self._wx
         self.dialog.CentreOnParent()
         try:
-            if self.dialog.ShowModal() == wx.ID_OK:
+            if self.dialog.ShowModal() == wx.ID_OK and self.choice is not None:
                 save_model_choice(self._selected_id())
                 self._announce("Saved AI model choice")
         finally:

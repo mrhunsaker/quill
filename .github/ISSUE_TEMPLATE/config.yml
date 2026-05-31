@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: User support (in-app flow)
+    url: https://github.com/Community-Access/quill/blob/main/docs/userguide.md#how-to-report-a-problem-from-inside-quill
+    about: For end-user support, use Help -> Report a Bug in QUILL first.
+  - name: Translation contributor plan
+    url: https://github.com/Community-Access/quill/blob/main/docs/localization/translation-contributor-plan.md
+    about: Localization workflow, quality gates, and community translation process.
+  - name: Security vulnerability report
+    url: mailto:support@communityaccess.org
+    about: Please report security issues privately, not in public issues.

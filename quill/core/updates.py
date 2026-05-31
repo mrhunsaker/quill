@@ -3,14 +3,38 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
+import ssl
+import sys
 from dataclasses import dataclass
 from urllib.error import URLError
-from urllib.request import urlopen
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 DEFAULT_UPDATE_MANIFEST_URL = (
     "https://community-access.github.io/quill/updates/.quill-update-feed-v1.json"
 )
+# GitHub Releases: stable releases reach everyone; anything marked "prerelease"
+# reaches beta users only (see fetch_latest_release / the Get beta updates setting).
+GITHUB_RELEASES_API = "https://api.github.com/repos/Community-Access/quill/releases"
 _SIGNATURE_SALT = "quill-manifest-signature-v1"
+_MANIFEST_KEY_ENV = "QUILL_UPDATE_MANIFEST_KEY"
+_TRUSTED_HOSTS_ENV = "QUILL_UPDATE_TRUSTED_HOSTS"
+
+
+def _ssl_context() -> ssl.SSLContext:
+    """An SSL context with a real CA bundle.
+
+    Python on macOS ships without trusted roots wired into urllib, which causes
+    'CERTIFICATE_VERIFY_FAILED'. Prefer certifi's bundle; fall back to the
+    system default so this never hard-fails at import.
+    """
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:  # noqa: BLE001
+        return ssl.create_default_context()
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,9 +50,148 @@ def fetch_update_manifest(
     url: str = DEFAULT_UPDATE_MANIFEST_URL,
     timeout: int = 10,
 ) -> UpdateManifest:
-    with urlopen(url, timeout=timeout) as response:
+    _validate_remote_url(url)
+    with urlopen(url, timeout=timeout, context=_ssl_context()) as response:
         payload = response.read().decode("utf-8", errors="strict")
     return parse_update_manifest(payload)
+
+
+@dataclass(frozen=True, slots=True)
+class GitHubRelease:
+    version: str
+    download_url: str
+    published_at: str
+    notes: str
+    prerelease: bool
+
+
+def fetch_latest_release(
+    include_prereleases: bool = False,
+    api_url: str = GITHUB_RELEASES_API,
+    timeout: int = 10,
+) -> GitHubRelease | None:
+    """Return the newest GitHub release the user is eligible for.
+
+    Stable channel (default): newest non-prerelease, non-draft release.
+    Beta channel (include_prereleases=True): newest release including prereleases.
+    Returns None when no eligible release exists.
+    """
+    request = Request(
+        api_url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "Quill-Updater",
+        },
+    )
+    with urlopen(request, timeout=timeout, context=_ssl_context()) as response:
+        payload = response.read().decode("utf-8", errors="strict")
+    releases = json.loads(payload)
+    if not isinstance(releases, list):
+        raise ValueError("GitHub releases payload must be a JSON array")
+
+    candidates = [r for r in releases if isinstance(r, dict) and not r.get("draft")]
+    if not include_prereleases:
+        candidates = [r for r in candidates if not r.get("prerelease")]
+    if not candidates:
+        return None
+    # The API returns releases newest-first; pick the newest by version to be safe.
+    best = max(candidates, key=lambda r: _version_tuple(str(r.get("tag_name") or "")))
+    return _release_from_json(best)
+
+
+# Assets that are NOT the installer (CI artifacts, signatures, checksums).
+_SKIP_ASSET_SUFFIXES = (
+    ".json",
+    ".sig",
+    ".asc",
+    ".pem",
+    ".sha256",
+    ".sha512",
+    ".txt",
+    ".sbom",
+    ".sbom.json",
+)
+_SKIP_ASSET_KEYWORDS = ("provenance", "checksum", "sbom", "signature")
+
+
+def _platform_asset_suffixes() -> tuple[str, ...]:
+    if sys.platform == "darwin":
+        return (".dmg", ".pkg", ".zip")
+    if sys.platform.startswith("win"):
+        return (".exe", ".msi", ".zip")
+    return (".appimage", ".tar.gz", ".zip")
+
+
+def _pick_asset(assets: list) -> str:
+    """Choose the real installer for this platform; skip provenance/checksums/etc."""
+    usable: list[tuple[str, str]] = []
+    for asset in assets:
+        if not isinstance(asset, dict):
+            continue
+        url = asset.get("browser_download_url")
+        name = str(asset.get("name") or "").lower()
+        if not url:
+            continue
+        if name.endswith(_SKIP_ASSET_SUFFIXES):
+            continue
+        if any(keyword in name for keyword in _SKIP_ASSET_KEYWORDS):
+            continue
+        usable.append((name, str(url)))
+    # Prefer the current platform's installer extension.
+    for suffix in _platform_asset_suffixes():
+        for name, url in usable:
+            if name.endswith(suffix):
+                return url
+    # Otherwise the first non-artifact asset (if any).
+    return usable[0][1] if usable else ""
+
+
+def _release_from_json(data: dict) -> GitHubRelease:
+    # Pick the platform installer asset; fall back to the release page when the
+    # release has no real installer (e.g. only provenance/checksum artifacts).
+    download_url = _pick_asset(data.get("assets") or [])
+    if not download_url:
+        download_url = str(data.get("html_url") or "")
+    return GitHubRelease(
+        version=str(data.get("tag_name") or data.get("name") or "").strip(),
+        download_url=download_url,
+        published_at=str(data.get("published_at") or "").strip(),
+        notes=str(data.get("body") or "").strip(),
+        prerelease=bool(data.get("prerelease")),
+    )
+
+
+def fetch_releases(api_url: str = GITHUB_RELEASES_API, timeout: int = 10) -> list[GitHubRelease]:
+    """All non-draft GitHub releases (newest-first as GitHub returns them)."""
+    request = Request(
+        api_url,
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "Quill-Updater"},
+    )
+    with urlopen(request, timeout=timeout, context=_ssl_context()) as response:
+        payload = response.read().decode("utf-8", errors="strict")
+    raw = json.loads(payload)
+    if not isinstance(raw, list):
+        raise ValueError("GitHub releases payload must be a JSON array")
+    return [_release_from_json(r) for r in raw if isinstance(r, dict) and not r.get("draft")]
+
+
+def select_latest(
+    releases: list[GitHubRelease], include_prereleases: bool = False
+) -> GitHubRelease | None:
+    candidates = [r for r in releases if include_prereleases or not r.prerelease]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda r: _version_tuple(r.version))
+
+
+def find_release(releases: list[GitHubRelease], version: str) -> GitHubRelease | None:
+    """The release whose tag matches ``version`` (so we can tell if the running
+    build is itself a prerelease)."""
+    target = _version_tuple(version)
+    for release in releases:
+        if _version_tuple(release.version) == target:
+            return release
+    return None
 
 
 def parse_update_manifest(payload: str) -> UpdateManifest:
@@ -44,6 +207,7 @@ def parse_update_manifest(payload: str) -> UpdateManifest:
     )
     if not manifest.version or not manifest.download_url or not manifest.signature:
         raise ValueError("Manifest is missing required fields")
+    _validate_remote_url(manifest.download_url)
     if not verify_manifest_signature(manifest):
         raise ValueError("Manifest signature verification failed")
     return manifest
@@ -60,7 +224,8 @@ def verify_manifest_signature(manifest: UpdateManifest) -> bool:
         separators=(",", ":"),
         sort_keys=True,
     )
-    expected = hashlib.sha256(f"{canonical}|{_SIGNATURE_SALT}".encode()).hexdigest()
+    key = os.getenv(_MANIFEST_KEY_ENV, _SIGNATURE_SALT).encode("utf-8")
+    expected = hmac.new(key, canonical.encode("utf-8"), hashlib.sha256).hexdigest()
     return hmac.compare_digest(manifest.signature, expected)
 
 
@@ -81,10 +246,53 @@ def _version_tuple(value: str) -> tuple[int, int, int]:
     return integers[0], integers[1], integers[2]
 
 
+def download_release_asset(url: str, destination, timeout: int = 60) -> None:
+    """Download an update asset to ``destination`` (verified TLS)."""
+    _validate_remote_url(url)
+    request = Request(url, headers={"User-Agent": "Quill-Updater"})
+    with urlopen(request, timeout=timeout, context=_ssl_context()) as response:
+        data = response.read()
+    with open(destination, "wb") as handle:
+        handle.write(data)
+
+
+def _validate_remote_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme.lower() != "https":
+        raise ValueError("Update URLs must use HTTPS.")
+    host = (parsed.hostname or "").lower()
+    if not host:
+        raise ValueError("Update URL must include a host.")
+    trusted_hosts = _trusted_update_hosts()
+    if trusted_hosts and host not in trusted_hosts:
+        raise ValueError(f"Update URL host is not trusted: {host}")
+
+
+def _trusted_update_hosts() -> set[str]:
+    raw_hosts = os.getenv(_TRUSTED_HOSTS_ENV, "")
+    trusted = {item.strip().lower() for item in raw_hosts.split(",") if item.strip()}
+    trusted.update(
+        {
+            "community-access.github.io",
+            "github.com",
+            "objects.githubusercontent.com",
+            "github-releases.githubusercontent.com",
+        }
+    )
+    return trusted
+
+
 __all__ = [
     "DEFAULT_UPDATE_MANIFEST_URL",
+    "GITHUB_RELEASES_API",
+    "GitHubRelease",
     "UpdateManifest",
     "URLError",
+    "download_release_asset",
+    "fetch_latest_release",
+    "fetch_releases",
+    "find_release",
+    "select_latest",
     "fetch_update_manifest",
     "is_newer_version",
     "parse_update_manifest",

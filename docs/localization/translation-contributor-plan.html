@@ -1,0 +1,117 @@
+<h1 id="quill-translation-contributor-plan">QUILL Translation
+Contributor Plan</h1>
+<p><strong>QUILL</strong> follows a community-first localization model
+inspired by NVDA’s gettext workflow.</p>
+<p>This document is the working plan for contributors who want to help
+translate QUILL and help maintain translation quality across
+releases.</p>
+<h2 id="goals">Goals</h2>
+<ol type="1">
+<li>Keep translation contribution easy for first-time contributors.</li>
+<li>Keep translation quality high enough for daily screen-reader
+use.</li>
+<li>Keep release timing predictable with clear string-freeze
+expectations.</li>
+<li>Keep translator effort visible and credited in the product and
+docs.</li>
+</ol>
+<h2 id="translation-model-potpomo">Translation model (POT/PO/MO)</h2>
+<p>QUILL uses GNU gettext catalogs:</p>
+<ul>
+<li><code>locale/quill.pot</code> as the extracted template</li>
+<li><code>locale/&lt;lang&gt;/LC_MESSAGES/quill.po</code> as editable
+translator source</li>
+<li><code>locale/&lt;lang&gt;/LC_MESSAGES/quill.mo</code> as compiled
+runtime catalog</li>
+</ul>
+<p>Developers write user-facing strings in source code. The extraction
+step updates <code>quill.pot</code>. Translators edit
+<code>quill.po</code>. Build/release compiles <code>.po</code> to
+<code>.mo</code>.</p>
+<h2 id="community-contribution-workflow">Community contribution
+workflow</h2>
+<h3 id="phase-1-current-github-pull-requests">Phase 1 (current): GitHub
+pull requests</h3>
+<ol type="1">
+<li>Fork the repository.</li>
+<li>Create or update
+<code>locale/&lt;lang&gt;/LC_MESSAGES/quill.po</code>.</li>
+<li>Validate placeholders and syntax locally.</li>
+<li>Open a pull request with a short summary of updated sections.</li>
+</ol>
+<p>This phase is intentionally lightweight so contributors can join
+immediately.</p>
+<h3 id="phase-2-planned-translation-portal">Phase 2 (planned):
+Translation portal</h3>
+<p>When volume grows, QUILL will add Weblate or Crowdin while keeping
+gettext catalogs as the source format. The goal is easier review,
+glossary enforcement, and translator-team coordination without changing
+runtime architecture.</p>
+<h2 id="required-translator-conventions">Required translator
+conventions</h2>
+<ol type="1">
+<li>Preserve placeholders exactly (for example <code>{filename}</code>,
+<code>{count}</code>).</li>
+<li>Respect translator comments prefixed with
+<code>Translators:</code>.</li>
+<li>Translate UI and accessibility announcements, not user-authored
+document content.</li>
+<li>Use context-aware strings where supplied
+(<code>pgettext</code>/<code>npgettext</code> contexts).</li>
+</ol>
+<h2 id="release-cycle-expectations">Release cycle expectations</h2>
+<ol type="1">
+<li><strong>Development window</strong>: source strings may change.</li>
+<li><strong>Beta translation push</strong>: translators update active
+languages.</li>
+<li><strong>String freeze</strong> (before release): only critical
+wording fixes allowed.</li>
+<li><strong>Release candidate checks</strong>: catalog validation,
+compile checks, pseudo-locale smoke pass.</li>
+<li><strong>Credits refresh</strong>: contributor names and language
+coverage updated.</li>
+</ol>
+<h2 id="quality-gates-for-maintainers">Quality gates for
+maintainers</h2>
+<p>Maintainers should block release if translation checks fail:</p>
+<ol type="1">
+<li>POT extraction succeeds and is committed when strings changed.</li>
+<li>PO syntax validates.</li>
+<li>MO compilation succeeds.</li>
+<li>Named placeholders match source strings.</li>
+<li>Required release languages are not left in fuzzy-only or broken
+state.</li>
+</ol>
+<h2 id="what-gets-translated-vs-not-translated">What gets translated vs
+not translated</h2>
+<p>Translate:</p>
+<ul>
+<li>Menus, dialogs, labels, settings, status text</li>
+<li>Accessible names/descriptions and spoken announcements</li>
+<li>Built-in snippet pack names, descriptions, prompts, and
+categories</li>
+</ul>
+<p>Do not auto-translate:</p>
+<ul>
+<li>User-created document text</li>
+<li>User-created snippets</li>
+<li>User-specific content and imports</li>
+</ul>
+<h2 id="community-recognition">Community recognition</h2>
+<p>QUILL treats translators as product contributors, not post-release
+afterthoughts.</p>
+<ul>
+<li>Release notes should include localization updates.</li>
+<li>The About and documentation surfaces should credit translation
+contributors.</li>
+<li>Community review is encouraged for terminology, consistency, and
+accessibility clarity.</li>
+</ul>
+<h2 id="related-documentation">Related documentation</h2>
+<ul>
+<li><a href="../announcement-beta.md">Announcement: Quill 0.1.2
+Beta</a></li>
+<li><a href="../userguide.md">Quill User Guide</a></li>
+<li><a href="../QUILL-PRD.md">QUILL Product Requirements
+Document</a></li>
+</ul>

@@ -243,7 +243,7 @@ Document</h1>
 id="a-magical-screen-reader-first-writing-and-document-environment-built-in-wxpython">A
 magical, screen-reader-first writing and document environment, built in
 wxPython.</h2>
-<p>Status: Quill 1.0 PRD aligned with Quill 0.1.2 Beta Owner: Blind
+<p>Status: Quill 1.0 PRD aligned with Quill 0.1.5 Beta Owner: Blind
 Information Technology Solutions (BITS) and Community Access Target
 platform: Windows 10 and Windows 11 Target screen readers: NVDA
 (primary), JAWS, Narrator UI framework: wxPython (wxWidgets 3.2 or
@@ -425,6 +425,7 @@ helpers.</li>
 <ul>
 <li>Writing and Language</li>
 <li>Read Aloud</li>
+<li>Dictation and Watch Folder Automation</li>
 <li>Integrations</li>
 <li>Document Intake</li>
 <li>Authoring and Automation</li>
@@ -644,8 +645,9 @@ explicitly opts in.</li>
 <li><strong>What Can I Do Here?</strong>: context-sensitive help for the
 current surface, available from the Help menu and command palette.</li>
 <li><strong>Safe mode</strong>: a startup-safe mode disables plugins,
-custom keymaps, AI, recent docs, themes, and other optional state for
-troubleshooting.</li>
+experimental features, AI integrations, startup restore, background
+indexing, file watchers, custom themes, custom snippets, and network
+services for troubleshooting.</li>
 <li><strong>Portable mode clarity</strong>: portable builds can store
 settings locally next to Quill.exe or in AppData, with a first-run
 choice and an independence command.</li>
@@ -1389,34 +1391,36 @@ formatting will be lost."</li>
 <p>Add Word-specific conversion routes:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>READER_MAP: <span class="bu">dict</span>[<span class="bu">str</span>, <span class="bu">str</span>] <span class="op">=</span> {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;docx&quot;</span>: <span class="st">&quot;docx&quot;</span>,    <span class="co"># NEW: from .docx</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;doc&quot;</span>: <span class="st">&quot;doc&quot;</span>,      <span class="co"># NEW: from .doc (legacy)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;docx&quot;</span>: <span class="st">&quot;docx&quot;</span>,  <span class="co"># NEW: from .docx</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;doc&quot;</span>: <span class="st">&quot;doc&quot;</span>,  <span class="co"># NEW: from .doc (legacy)</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>WRITER_MAP: <span class="bu">dict</span>[<span class="bu">str</span>, <span class="bu">str</span>] <span class="op">=</span> {</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;word&quot;</span>: <span class="st">&quot;docx&quot;</span>,    <span class="co"># NEW: export to .docx</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;word-old&quot;</span>: <span class="st">&quot;doc&quot;</span>, <span class="co"># NEW: export to .doc (legacy)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;word&quot;</span>: <span class="st">&quot;docx&quot;</span>,  <span class="co"># NEW: export to .docx</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;word-old&quot;</span>: <span class="st">&quot;doc&quot;</span>,  <span class="co"># NEW: export to .doc (legacy)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span>(frozen<span class="op">=</span><span class="va">True</span>, slots<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WordMetadata:</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    title: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    author: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    subject: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    created: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    modified: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    word_count: <span class="bu">int</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    page_count: <span class="bu">int</span></span></code></pre></div>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span>(frozen<span class="op">=</span><span class="va">True</span>, slots<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WordMetadata:</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    title: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    author: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    subject: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    created: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    modified: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    word_count: <span class="bu">int</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    page_count: <span class="bu">int</span></span></code></pre></div>
 <p><strong>Updated module: <code>quill/io/detect.py</code></strong></p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TEXT_EXTENSIONS <span class="op">=</span> {</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ... existing ...</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;.docx&quot;</span>,   <span class="co"># NEW</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;.doc&quot;</span>,    <span class="co"># NEW</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;.docx&quot;</span>,  <span class="co"># NEW</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;.doc&quot;</span>,  <span class="co"># NEW</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> looks_like_word_document(path: Path) <span class="op">-&gt;</span> <span class="bu">bool</span>:</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> path.suffix.lower() <span class="kw">in</span> {<span class="st">&quot;.docx&quot;</span>, <span class="st">&quot;.doc&quot;</span>}</span></code></pre></div>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> looks_like_word_document(path: Path) <span class="op">-&gt;</span> <span class="bu">bool</span>:</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> path.suffix.lower() <span class="kw">in</span> {<span class="st">&quot;.docx&quot;</span>, <span class="st">&quot;.doc&quot;</span>}</span></code></pre></div>
 <h4 id="53b5-error-handling-graceful-cascade">5.3b.5 Error Handling:
 Graceful Cascade</h4>
 <p>Word extraction implements a three-tier fallback strategy to ensure
@@ -1675,63 +1679,60 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;engine&quot;</span>: <span class="st">&quot;pandoc&quot;</span>,</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;engine_version&quot;</span>: <span class="st">&quot;3.1.0&quot;</span>,</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;quality_score&quot;</span>: <span class="dv">78</span>,  <span class="co"># Reduced from 85 due to diagnostics</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># GLOW-inspired diagnostics</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;extraction_diagnostics&quot;</span>: {</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;fake_lists_detected&quot;</span>: <span class="dv">2</span>,  <span class="co"># Manually typed bullets</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;all_caps_paragraphs&quot;</span>: <span class="dv">1</span>,  <span class="co"># Heading-like caps text</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;long_sections_without_headings&quot;</span>: [<span class="st">&quot;Pages 5-6 (23 paragraphs)&quot;</span>],</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;repeated_space_paragraphs&quot;</span>: <span class="dv">3</span>,  <span class="co"># Layout abuse detected</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;non_arial_fonts&quot;</span>: {<span class="st">&quot;Times New Roman&quot;</span>: <span class="dv">5</span>, <span class="st">&quot;Courier&quot;</span>: <span class="dv">2</span>},</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;hyphenation_enabled&quot;</span>: <span class="va">True</span>,</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;heading_hierarchy_issues&quot;</span>: [<span class="st">&quot;H1 at page 1, then H3 at page 2&quot;</span>],</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;extraction_engine_switches&quot;</span>: [<span class="st">&quot;Pandoc pages 1-8, python-docx pages 9-10&quot;</span>],</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;extraction_warnings&quot;</span>: [</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        {</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;id&quot;</span>: <span class="st">&quot;FAKE_LISTS_DETECTED&quot;</span>,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;severity&quot;</span>: <span class="st">&quot;warning&quot;</span>,</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;message&quot;</span>: <span class="st">&quot;2 paragraphs detected with manually typed bullet characters instead of built-in list styles&quot;</span>,</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;location&quot;</span>: <span class="st">&quot;Paragraph 5, Paragraph 12&quot;</span>,</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_action&quot;</span>: <span class="st">&quot;review&quot;</span>,</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;suggestion&quot;</span>: <span class="st">&quot;Consider reformatting as proper lists in Word&quot;</span>,</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        },</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>        {</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;id&quot;</span>: <span class="st">&quot;LONG_SECTION_NO_HEADING&quot;</span>,</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;severity&quot;</span>: <span class="st">&quot;info&quot;</span>,</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;message&quot;</span>: <span class="st">&quot;23 paragraphs without a heading (pages 5-6)&quot;</span>,</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;location&quot;</span>: <span class="st">&quot;Paragraphs 45-68&quot;</span>,</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_action&quot;</span>: <span class="st">&quot;review&quot;</span>,</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;suggestion&quot;</span>: <span class="st">&quot;Add section heading for readability&quot;</span>,</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        },</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        {</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;id&quot;</span>: <span class="st">&quot;HYPHENATION_ENABLED&quot;</span>,</span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;severity&quot;</span>: <span class="st">&quot;warning&quot;</span>,</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;message&quot;</span>: <span class="st">&quot;Automatic hyphenation is enabled; hyphenated words may reflow unexpectedly in Quill&quot;</span>,</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;location&quot;</span>: <span class="st">&quot;Document Settings&quot;</span>,</span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_action&quot;</span>: <span class="st">&quot;accept&quot;</span>,</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;suggestion&quot;</span>: <span class="st">&quot;Consider disabling hyphenation in Word for cleaner reflow&quot;</span>,</span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        },</span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    ],</span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;word_metadata&quot;</span>: {</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;title&quot;</span>: <span class="st">&quot;Q2 Report&quot;</span>,</span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;author&quot;</span>: <span class="st">&quot;Jane Doe&quot;</span>,</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;subject&quot;</span>: <span class="st">&quot;Financial Review&quot;</span>,</span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;created&quot;</span>: <span class="st">&quot;2026-03-15T10:30:00Z&quot;</span>,</span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;modified&quot;</span>: <span class="st">&quot;2026-05-28T14:22:00Z&quot;</span>,</span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;word_count&quot;</span>: <span class="dv">2451</span>,</span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;page_count&quot;</span>: <span class="dv">8</span>,</span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;language&quot;</span>: <span class="st">&quot;en-US&quot;</span>,</span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;margins&quot;</span>: {</span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;top_in&quot;</span>: <span class="fl">1.0</span>,</span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;bottom_in&quot;</span>: <span class="fl">1.0</span>,</span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;left_in&quot;</span>: <span class="fl">1.0</span>,</span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;right_in&quot;</span>: <span class="fl">1.0</span>,</span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>        },</span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># GLOW-inspired diagnostics</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;extraction_diagnostics&quot;</span>: {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;fake_lists_detected&quot;</span>: <span class="dv">2</span>,  <span class="co"># Manually typed bullets</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;all_caps_paragraphs&quot;</span>: <span class="dv">1</span>,  <span class="co"># Heading-like caps text</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;long_sections_without_headings&quot;</span>: [<span class="st">&quot;Pages 5-6 (23 paragraphs)&quot;</span>],</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;repeated_space_paragraphs&quot;</span>: <span class="dv">3</span>,  <span class="co"># Layout abuse detected</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;non_arial_fonts&quot;</span>: {<span class="st">&quot;Times New Roman&quot;</span>: <span class="dv">5</span>, <span class="st">&quot;Courier&quot;</span>: <span class="dv">2</span>},</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;hyphenation_enabled&quot;</span>: <span class="va">True</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;heading_hierarchy_issues&quot;</span>: [<span class="st">&quot;H1 at page 1, then H3 at page 2&quot;</span>],</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;extraction_engine_switches&quot;</span>: [<span class="st">&quot;Pandoc pages 1-8, python-docx pages 9-10&quot;</span>],</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;extraction_warnings&quot;</span>: [</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;id&quot;</span>: <span class="st">&quot;FAKE_LISTS_DETECTED&quot;</span>,</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;severity&quot;</span>: <span class="st">&quot;warning&quot;</span>,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;message&quot;</span>: <span class="st">&quot;2 paragraphs detected with manually typed bullet characters instead of built-in list styles&quot;</span>,</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;location&quot;</span>: <span class="st">&quot;Paragraph 5, Paragraph 12&quot;</span>,</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_action&quot;</span>: <span class="st">&quot;review&quot;</span>,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;suggestion&quot;</span>: <span class="st">&quot;Consider reformatting as proper lists in Word&quot;</span>,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;id&quot;</span>: <span class="st">&quot;LONG_SECTION_NO_HEADING&quot;</span>,</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;severity&quot;</span>: <span class="st">&quot;info&quot;</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;message&quot;</span>: <span class="st">&quot;23 paragraphs without a heading (pages 5-6)&quot;</span>,</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;location&quot;</span>: <span class="st">&quot;Paragraphs 45-68&quot;</span>,</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_action&quot;</span>: <span class="st">&quot;review&quot;</span>,</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;suggestion&quot;</span>: <span class="st">&quot;Add section heading for readability&quot;</span>,</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;id&quot;</span>: <span class="st">&quot;HYPHENATION_ENABLED&quot;</span>,</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;severity&quot;</span>: <span class="st">&quot;warning&quot;</span>,</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;message&quot;</span>: <span class="st">&quot;Automatic hyphenation is enabled; hyphenated words may reflow unexpectedly in Quill&quot;</span>,</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;location&quot;</span>: <span class="st">&quot;Document Settings&quot;</span>,</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;user_action&quot;</span>: <span class="st">&quot;accept&quot;</span>,</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;suggestion&quot;</span>: <span class="st">&quot;Consider disabling hyphenation in Word for cleaner reflow&quot;</span>,</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;word_metadata&quot;</span>: {</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;title&quot;</span>: <span class="st">&quot;Q2 Report&quot;</span>,</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;author&quot;</span>: <span class="st">&quot;Jane Doe&quot;</span>,</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;subject&quot;</span>: <span class="st">&quot;Financial Review&quot;</span>,</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;created&quot;</span>: <span class="st">&quot;2026-03-15T10:30:00Z&quot;</span>,</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;modified&quot;</span>: <span class="st">&quot;2026-05-28T14:22:00Z&quot;</span>,</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;word_count&quot;</span>: <span class="dv">2451</span>,</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;page_count&quot;</span>: <span class="dv">8</span>,</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;language&quot;</span>: <span class="st">&quot;en-US&quot;</span>,</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;margins&quot;</span>: {</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;top_in&quot;</span>: <span class="fl">1.0</span>,</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;bottom_in&quot;</span>: <span class="fl">1.0</span>,</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;left_in&quot;</span>: <span class="fl">1.0</span>,</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;right_in&quot;</span>: <span class="fl">1.0</span>,</span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p><strong>User experience enhancement:</strong></p>
 <p>Instead of a flat banner, Quill displays diagnostics with
 context:</p>
@@ -1814,26 +1815,30 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a hr
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="st">&quot;Heading&quot;</span> <span class="kw">in</span> doc.text</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.source_metadata[<span class="st">&quot;quality_score&quot;</span>] <span class="op">&gt;</span> <span class="dv">80</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_read_doc_legacy_format():</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_word_document(Path(<span class="st">&quot;tests/fixtures/word/legacy_format.doc&quot;</span>))</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.text.strip()  <span class="co"># Non-empty</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="st">&quot;engine&quot;</span> <span class="kw">in</span> doc.source_metadata</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_read_corrupted_falls_back():</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_word_document(Path(<span class="st">&quot;tests/fixtures/word/corrupted.docx&quot;</span>))</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.source_metadata.get(<span class="st">&quot;quality_score&quot;</span>, <span class="dv">0</span>) <span class="op">&lt;</span> <span class="dv">50</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="bu">len</span>(doc.text) <span class="op">&gt;</span> <span class="dv">0</span>  <span class="co"># No crash; degraded gracefully</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_read_timeout_protection():</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> pytest.raises(ExtractionTimeoutError):</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        read_word_document(</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>            Path(<span class="st">&quot;tests/fixtures/word/large_50mb.docx&quot;</span>),</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>            timeout_sec<span class="op">=</span><span class="fl">0.1</span>,</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_macros_not_executed():</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_word_document(Path(<span class="st">&quot;tests/fixtures/word/malicious_macros.docx&quot;</span>))</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="st">&quot;VBA&quot;</span> <span class="kw">not</span> <span class="kw">in</span> doc.text <span class="kw">and</span> <span class="st">&quot;Sub &quot;</span> <span class="kw">not</span> <span class="kw">in</span> doc.text</span></code></pre></div>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_read_doc_legacy_format():</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_word_document(Path(<span class="st">&quot;tests/fixtures/word/legacy_format.doc&quot;</span>))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.text.strip()  <span class="co"># Non-empty</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="st">&quot;engine&quot;</span> <span class="kw">in</span> doc.source_metadata</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_read_corrupted_falls_back():</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_word_document(Path(<span class="st">&quot;tests/fixtures/word/corrupted.docx&quot;</span>))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.source_metadata.get(<span class="st">&quot;quality_score&quot;</span>, <span class="dv">0</span>) <span class="op">&lt;</span> <span class="dv">50</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="bu">len</span>(doc.text) <span class="op">&gt;</span> <span class="dv">0</span>  <span class="co"># No crash; degraded gracefully</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_read_timeout_protection():</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> pytest.raises(ExtractionTimeoutError):</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        read_word_document(</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>            Path(<span class="st">&quot;tests/fixtures/word/large_50mb.docx&quot;</span>),</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            timeout_sec<span class="op">=</span><span class="fl">0.1</span>,</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_macros_not_executed():</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_word_document(Path(<span class="st">&quot;tests/fixtures/word/malicious_macros.docx&quot;</span>))</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="st">&quot;VBA&quot;</span> <span class="kw">not</span> <span class="kw">in</span> doc.text <span class="kw">and</span> <span class="st">&quot;Sub &quot;</span> <span class="kw">not</span> <span class="kw">in</span> doc.text</span></code></pre></div>
 <p><strong>Integration tests
 (<code>tests/integration/test_word_open.py</code>):</strong></p>
 <ul>
@@ -2341,13 +2346,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="st">&quot;Slide 1&quot;</span> <span class="kw">in</span> doc.text</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.source_metadata[<span class="st">&quot;quality_score&quot;</span>] <span class="op">&gt;</span> <span class="dv">80</span></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_speaker_notes_extracted():</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_powerpoint_presentation(Path(<span class="st">&quot;tests/fixtures/powerpoint/with_speaker_notes.pptx&quot;</span>))</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="bu">len</span>(doc.source_metadata[<span class="st">&quot;speaker_notes&quot;</span>]) <span class="op">&gt;</span> <span class="dv">0</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_animations_detected():</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_powerpoint_presentation(Path(<span class="st">&quot;tests/fixtures/powerpoint/with_animations.pptx&quot;</span>))</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.source_metadata[<span class="st">&quot;extraction_diagnostics&quot;</span>][<span class="st">&quot;animations_detected&quot;</span>] <span class="op">&gt;</span> <span class="dv">0</span></span></code></pre></div>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_speaker_notes_extracted():</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_powerpoint_presentation(Path(<span class="st">&quot;tests/fixtures/powerpoint/with_speaker_notes.pptx&quot;</span>))</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> <span class="bu">len</span>(doc.source_metadata[<span class="st">&quot;speaker_notes&quot;</span>]) <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_animations_detected():</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">=</span> read_powerpoint_presentation(Path(<span class="st">&quot;tests/fixtures/powerpoint/with_animations.pptx&quot;</span>))</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> doc.source_metadata[<span class="st">&quot;extraction_diagnostics&quot;</span>][<span class="st">&quot;animations_detected&quot;</span>] <span class="op">&gt;</span> <span class="dv">0</span></span></code></pre></div>
 <h4 id="53c15-safety-and-security">5.3c.15 Safety and Security</h4>
 <ul>
 <li>✅ <strong>Sandbox execution</strong>: Pandoc runs in
@@ -3265,6 +3272,306 @@ only the selection and stops at the end.</li>
 announcements; if a screen reader speaks something while read-aloud is
 active, read-aloud continues but is briefly ducked.</li>
 </ul>
+<h3 id="525b-watch-folder-automation">5.25b Watch Folder automation</h3>
+<p>Quill provides an optional watch-folder workflow under
+<code>BITS Whisperer -&gt; Dictation and Watch Folder</code> for
+low-friction document intake. Users can point Quill at a folder, drop
+supported files into it, and have Quill open those files automatically
+without leaving the editor.</p>
+<ul>
+<li>Supported drop formats follow Quill's core supported file-extension
+set.</li>
+<li>Polling and subfolder behavior are configurable from Watch Folder
+Settings.</li>
+<li>Startup Wizard includes watch-folder onboarding so first-run users
+can configure automation immediately.</li>
+<li>Status and failures surface through Quill's existing
+status/notification channel; no silent failures.</li>
+</ul>
+<h3 id="525c-bits-whisperer-phased-transcription-rollout">5.25c BITS
+Whisperer phased transcription rollout</h3>
+<p>Quill integrates BITS Whisperer speech capabilities in phased
+increments to minimize regression risk and preserve accessibility
+reliability.</p>
+<p>Phase 1 scope:</p>
+<ul>
+<li>Keep current dictation behavior stable while introducing BITS
+Whisperer speech model management.</li>
+<li>Surface model controls under
+<code>BITS Whisperer -&gt; Speech Models</code>.</li>
+<li>Add <code>BITS Whisperer -&gt; Providers</code> with guided
+provider-center flows for staged onboarding.</li>
+<li>Provide machine-aware default recommendations based on local
+configuration.</li>
+<li>Include faster-whisper engine readiness checks and explicit user
+guidance.</li>
+<li>Ensure <code>Help -&gt; Status Page</code> can remain open and
+refresh dynamically with speech/BITS rollout task updates.</li>
+<li>Add rollout-safe insight surfaces under
+<code>BITS Whisperer -&gt; Rollout</code> (readiness check and
+capability matrix).</li>
+<li>Add guarded download queue controls for staged model acquisition
+(retry failed downloads and clear history).</li>
+<li>Keep advanced runtime paths staged for subsequent phases.</li>
+</ul>
+<p>Phase 2+ scope:</p>
+<ul>
+<li>Expand runtime model execution paths and deeper transcription
+behavior.</li>
+<li>Broaden model-family support as quality and hardware validation
+mature.</li>
+</ul>
+<h3
+id="525a-speech-experience-platform-planned-before-implementation">5.25a
+Speech Experience Platform (planned before implementation)</h3>
+<p>This section defines the next speech milestone as a complete
+user-facing platform, not a single settings dialog.</p>
+<p>Goals:</p>
+<ul>
+<li>Add a first-class <strong>Speech</strong> submenu under the
+top-level <strong>AI</strong> menu.</li>
+<li>Add two downloadable local speech engines: <strong>Kokoro</strong>
+and <strong>Piper</strong>.</li>
+<li>Provide voice lifecycle UX end to end: discover, download, preview,
+set preferred, configure, remove.</li>
+<li>Keep installer size lean by bundling <strong>no voices</strong> in
+core builds.</li>
+<li>Preserve screen-reader-first behavior with predictable
+announcements, keyboard-first flows, and no surprise network
+actions.</li>
+</ul>
+<h4 id="525a1-ai-menu-information-architecture">5.25a.1 AI menu
+information architecture</h4>
+<p>The top-level <strong>AI</strong> menu gains a
+<strong>Speech</strong> submenu with discoverable, keyboard-rebindable
+commands:</p>
+<ul>
+<li><code>AI -&gt; Speech -&gt; Open Speech Center...</code></li>
+<li><code>AI -&gt; Speech -&gt; Browse Voice Library...</code></li>
+<li><code>AI -&gt; Speech -&gt; Download Voices...</code></li>
+<li><code>AI -&gt; Speech -&gt; Preview Current Voice</code></li>
+<li><code>AI -&gt; Speech -&gt; Set Preferred Voice...</code></li>
+<li><code>AI -&gt; Speech -&gt; Manage Installed Voices...</code></li>
+<li><code>AI -&gt; Speech -&gt; Speech Settings...</code></li>
+</ul>
+<p>The Speech submenu mirrors the command palette and status surfaces,
+with live keybinding labels exactly like other menu items.</p>
+<h4 id="525a2-engine-model-and-no-bundle-policy">5.25a.2 Engine model
+and no-bundle policy</h4>
+<p>Supported engines for this milestone:</p>
+<ul>
+<li><code>windows-native</code> (existing SAPI/OneCore path)</li>
+<li><code>kokoro-local</code></li>
+<li><code>piper-local</code></li>
+</ul>
+<p>Policy:</p>
+<ul>
+<li>No Kokoro or Piper voices are bundled in installer or portable
+artifacts.</li>
+<li>Voice models are downloaded on demand into
+<code>%APPDATA%\Quill\speech\voices\...</code>.</li>
+<li>Downloads require explicit user action and clear size disclosure
+before start.</li>
+</ul>
+<h4 id="525a3-voice-library-and-download-ux">5.25a.3 Voice library and
+download UX</h4>
+<p>Speech Center includes a searchable voice catalog with filters:</p>
+<ul>
+<li>engine (Windows Native, Kokoro, Piper)</li>
+<li>language and region</li>
+<li>gender/style tags where available</li>
+<li>size band (small/medium/large)</li>
+<li>installed vs not installed</li>
+</ul>
+<p>Each voice row exposes:</p>
+<ul>
+<li>voice name and engine</li>
+<li>language and locale</li>
+<li>on-disk size</li>
+<li>install state</li>
+<li>preferred marker</li>
+</ul>
+<p>Download behavior:</p>
+<ul>
+<li>resumable downloads with progress and remaining size</li>
+<li>hash verification before activation</li>
+<li>cancellation without corrupt partial state</li>
+<li>failed-download recovery with retry guidance</li>
+</ul>
+<h4 id="525a4-voice-preview-and-ab-comparison">5.25a.4 Voice preview and
+A/B comparison</h4>
+<p>Users can preview voices before and after install.</p>
+<ul>
+<li>Preview text field with stock sample text button</li>
+<li>A/B preview mode for rapid compare between two selected voices</li>
+<li>playback controls: play, stop, replay</li>
+<li>optional "Preview with current speaking settings" toggle</li>
+</ul>
+<p>When pre-install preview audio is available from metadata, Quill may
+fetch a small sample clip on demand. If no preview clip exists, preview
+requires install and Quill states this clearly.</p>
+<h4 id="525a5-preferred-voice-and-defaults-model">5.25a.5 Preferred
+voice and defaults model</h4>
+<p>Users can star one voice as <strong>Preferred</strong> with one
+command.</p>
+<p>Resolution order for active voice:</p>
+<ol type="1">
+<li>explicit per-document override (future-compatible field)</li>
+<li>explicit per-language preferred voice</li>
+<li>global preferred voice</li>
+<li>engine fallback voice</li>
+</ol>
+<p>Setting a voice as preferred is immediate and announced in plain
+language.</p>
+<h4 id="525a6-per-voice-configuration-and-platform-defaults">5.25a.6
+Per-voice configuration and platform defaults</h4>
+<p>Every installed voice has editable settings saved as a profile, and
+users can mark any profile as default.</p>
+<p>Per-voice settings (minimum set):</p>
+<ul>
+<li>rate</li>
+<li>pitch</li>
+<li>volume</li>
+<li>pause style and punctuation pause behavior</li>
+<li>sentence/paragraph chunk size</li>
+<li>output device selection</li>
+</ul>
+<p>Platform-aware defaults:</p>
+<ul>
+<li>Windows native voices keep their own defaults</li>
+<li>Kokoro and Piper voices each keep separate defaults</li>
+<li>users can apply "Use as default for this engine" or "Use as global
+default"</li>
+</ul>
+<p>This gives users both broad defaults and precise per-voice
+control.</p>
+<h4 id="525a7-voice-removal-and-storage-hygiene">5.25a.7 Voice removal
+and storage hygiene</h4>
+<p>Manage Installed Voices supports safe removal:</p>
+<ul>
+<li>remove one voice</li>
+<li>remove all voices for selected engine</li>
+<li>show reclaimed disk size before confirmation</li>
+<li>preserve user settings history without dangling references</li>
+</ul>
+<p>If the removed voice was preferred, Quill prompts for a replacement
+or applies deterministic fallback and announces it.</p>
+<h4 id="525a8-speech-onboarding-flow">5.25a.8 Speech onboarding
+flow</h4>
+<p>First-time speech onboarding starts when the user opens Speech Center
+with no installed downloadable voices.</p>
+<p>Flow:</p>
+<ol type="1">
+<li>Explain available engines and that voices are optional
+downloads.</li>
+<li>Ask preferred language/locale.</li>
+<li>Recommend starter voices for Kokoro and Piper.</li>
+<li>Offer quick preview where possible.</li>
+<li>Download selected voices.</li>
+<li>Ask user to mark preferred voice.</li>
+<li>Offer one-click "Make these settings my default".</li>
+</ol>
+<p>The onboarding flow can be re-run via
+<code>Help -&gt; Run Onboarding Again</code> and
+<code>AI -&gt; Speech -&gt; Open Speech Center...</code>.</p>
+<h4 id="525a9-accessibility-and-safety-requirements">5.25a.9
+Accessibility and safety requirements</h4>
+<ul>
+<li>Every Speech Center control is a stock wx control with correct
+label, role, and state.</li>
+<li>Progress updates are announced without flooding speech output.</li>
+<li>No auto-downloads or silent background network actions.</li>
+<li>All destructive actions (remove voice, reset defaults) require
+confirmation.</li>
+<li>All errors are plain-language and actionable.</li>
+</ul>
+<h4 id="525a10-delivery-phases-bold-realistic">5.25a.10 Delivery phases
+(bold, realistic)</h4>
+<p>Phase 1: Foundation</p>
+<ul>
+<li>AI menu Speech submenu</li>
+<li>Speech Center shell</li>
+<li>installed-voice management for existing Windows native voices</li>
+</ul>
+<p>Phase 2: Downloadable voices</p>
+<ul>
+<li>Kokoro and Piper catalog</li>
+<li>download, verify, install, remove</li>
+<li>preferred voice and per-engine defaults</li>
+</ul>
+<p>Phase 3: Advanced polish</p>
+<ul>
+<li>A/B preview panel</li>
+<li>storage budget manager and cleanup recommendations</li>
+<li>per-language preferred voice routing</li>
+<li>richer voice profile presets (Narration, Proofread, Fast skim)</li>
+</ul>
+<h4 id="525a11-acceptance-criteria">5.25a.11 Acceptance criteria</h4>
+<ul>
+<li>A new user can install at least one Kokoro or Piper voice in under 3
+minutes from Speech Center.</li>
+<li>A user can preview at least two voices and set one preferred without
+opening Settings.</li>
+<li>A user can remove a voice and recover disk space with clear
+confirmation and fallback behavior.</li>
+<li>All commands are available through menu, command palette, and
+keybindings.</li>
+<li>Installer size does not increase due to bundled voice payloads.</li>
+</ul>
+<h4 id="525a12-dectalk-compatibility-evaluation-track">5.25a.12 DECtalk
+compatibility evaluation track</h4>
+<p>Quill should explicitly evaluate adding DECtalk as an optional speech
+engine path.</p>
+<p>Why consider it:</p>
+<ul>
+<li>DECtalk remains important to many long-time screen-reader and speech
+users.</li>
+<li>It offers a distinctive speech character some users actively prefer
+for proofreading and navigation tasks.</li>
+<li>Community-maintained projects (including modern build efforts)
+suggest practical integration paths worth exploration.</li>
+</ul>
+<p>Plan scope (evaluation first, not automatic ship):</p>
+<ul>
+<li>Add <code>dectalk-local</code> as a candidate engine in Speech
+Center behind an experimental flag.</li>
+<li>Prototype voice discovery, preview, and preferred-voice selection
+through the same Speech lifecycle model used for Kokoro and Piper.</li>
+<li>Keep no-bundle policy: no DECtalk voice payloads included in
+installer or portable builds.</li>
+</ul>
+<p>Hard gates before general availability:</p>
+<ul>
+<li><strong>Licensing and redistribution clarity</strong>: legal review
+confirms what can be downloaded, redistributed, or user-supplied.</li>
+<li><strong>Accessibility parity</strong>: DECtalk path must pass the
+same screen-reader announcement, keyboard-only, and status reporting
+requirements as other engines.</li>
+<li><strong>Stability and performance</strong>: startup, preview, and
+long-form read-aloud must meet baseline responsiveness and
+failure-recovery standards.</li>
+<li><strong>Configuration parity</strong>: preferred voice, per-voice
+settings, per-engine defaults, and removal behavior must match other
+engines.</li>
+</ul>
+<p>User experience requirements if approved:</p>
+<ul>
+<li>DECtalk appears in <code>AI -&gt; Speech</code> as another engine
+option, not a separate workflow.</li>
+<li>Voice install/onboarding language is plain and explicit about
+source, size, and any licensing constraints.</li>
+<li>Users can preview and set a DECtalk voice as preferred in one
+flow.</li>
+<li>Users can remove DECtalk voices and recover storage with
+deterministic fallback behavior.</li>
+</ul>
+<p>Positioning:</p>
+<ul>
+<li>DECtalk is treated as a high-value compatibility and user-preference
+path.</li>
+<li>It does not replace Windows native, Kokoro, or Piper; it complements
+them when available and compliant.</li>
+</ul>
 <h3 id="526-number-lines-and-strip-line-numbers">5.26 Number lines and
 strip line numbers</h3>
 <p>A small tool that addresses a real recurring user request.</p>
@@ -3883,16 +4190,22 @@ path as any later change.</p>
 <li><strong>Spell-check languages</strong>: multi-select from the
 bundled launch set; the active document language is added automatically
 when later opened.</li>
-<li><strong>AI provider</strong>: Off (default), OpenAI, Azure OpenAI,
-Anthropic, Ollama. If a provider is picked, the API-key dialog opens;
-the key is stored via DPAPI (10.11). Network is never used without
-explicit per-action consent.</li>
+<li><strong>AI provider</strong>: Off (default), Ollama local, Ollama
+Cloud, OpenAI, Azure OpenAI, Anthropic/Claude, OpenRouter, Gemini, or a
+custom OpenAI-compatible endpoint. Providers include sensible default
+hosts where possible; advanced custom mode allows manual endpoint
+override. If a provider is picked, the API-key dialog opens when
+required; the key is stored via DPAPI (10.11). Network is never used
+without explicit per-action consent.</li>
 <li><strong>Telemetry</strong>: confirms it stays off (default). A short
 plain-language sentence explains what telemetry would collect if turned
 on later.</li>
 </ol>
 <p>The onboarding completion writes
-<code>%APPDATA%\Quill\onboarding-complete.json</code>. Re-running
+<code>%APPDATA%\Quill\onboarding-complete.json</code>. Trust and privacy
+consent acknowledgement is stored separately in
+<code>%APPDATA%\Quill\trust-consent.json</code> and is versioned so
+policy text updates can require re-acknowledgement. Re-running
 <code>Help → Run Onboarding Again</code> reopens the flow without
 resetting anything else.</p>
 <h3 id="557-privacy-summary">5.57 Privacy summary</h3>
@@ -6452,9 +6765,11 @@ they target; the loader rejects mismatched majors.</li>
 </ul>
 <h3 id="1011-security-architecture">10.11 Security architecture</h3>
 <ul>
-<li><strong>Secrets</strong>: AI provider keys stored via DPAPI
-(<code>platform.windows.dpapi</code>); never in plain text on disk;
-never logged; never in diagnostics bundles.</li>
+<li><strong>Secrets</strong>: AI provider keys stored via Windows
+Credential Manager where available, with DPAPI-encrypted fallback
+(<code>platform.windows.dpapi</code>) when vault APIs are unavailable;
+never in plain text on disk; never logged; never in diagnostics
+bundles.</li>
 <li><strong>Document data</strong>: never leaves the machine without
 per-action consent.</li>
 <li><strong>Network calls</strong>: an internal
@@ -6508,7 +6823,17 @@ Internationalisation infrastructure</h3>
 <li>Bidirectional text in user documents is rendered by the OS edit
 control; full RTL UI is v1.2.</li>
 <li>A translation portal (Weblate or Crowdin) is set up at v1.0 beta;
-community translators are credited in About.</li>
+community translators are credited in About and release notes.</li>
+<li>Translation operations follow a documented contributor plan with:
+<ul>
+<li>gettext <code>POT -&gt; PO -&gt; MO</code> workflow,</li>
+<li>translator comments and placeholder-preservation rules,</li>
+<li>beta translation push and pre-release string freeze,</li>
+<li>CI quality gates for extraction, syntax, compile, and placeholder
+validation.</li>
+</ul></li>
+<li>Contributor process and policy reference:
+<code>docs/localization/translation-contributor-plan.md</code>.</li>
 </ul>
 <h3 id="1014-performance-budgets-and-instrumentation">10.14 Performance
 budgets and instrumentation</h3>
@@ -6601,7 +6926,8 @@ seconds.</li>
 <ul>
 <li>Local first. Nothing leaves the machine without an explicit
 per-action confirmation.</li>
-<li>AI provider keys stored via Windows DPAPI; never plain text.</li>
+<li>AI provider keys stored via Windows Credential Manager when
+available, with DPAPI-encrypted fallback; never plain text.</li>
 <li>Logs never include document content. Logs include action names and
 outcomes only.</li>
 <li>Spell-check learning data stays on disk under the user profile and
@@ -6611,6 +6937,8 @@ can be wiped from a single button.</li>
 disclosure.</li>
 <li>Network calls show host, payload size, and estimated cost (where the
 provider supplies it) before sending.</li>
+<li>Startup includes a trust/privacy/responsible-AI consent
+acknowledgement before guided onboarding continues.</li>
 </ul>
 <hr />
 <h2 id="13-internationalisation-and-localisation">13.
@@ -6949,8 +7277,10 @@ main editor at the cursor. Useful for slow-speech users; needs user
 testing to confirm it is worth the surface area. Backlog for v1.1.</li>
 <li><strong>Advanced model lifecycle in core app flow.</strong> Quill
 now ships a local Writing Assistant shell, prompt presets, generated
-tool catalog, assistant onboarding, AI connection preferences,
-connection verification/model discovery actions, AI menu status-detail
+tool catalog, assistant onboarding, AI Hub entry point, Prompt Studio
+custom templates, Agent Center guided plans, AI connection preferences,
+connection verification/model discovery actions, searchable model
+selection, provider-aware guided recommendations, AI menu status-detail
 feedback, and sandboxed Python runner. Broader built-in model catalog
 lifecycle and background prefetch policy remain future work.</li>
 </ul>
@@ -6979,8 +7309,11 @@ Quill does not reinvent the mic/STT stack. An opt-in Hey QUILL command
 layer may sit on top of dictation and dispatch existing Quill commands,
 but it stays silent and only listens while dictation is active.</li>
 <li><strong>AI authoring assistant.</strong> The current build exposes a
-local Writing Assistant shell, prompt presets, AI connection
-preferences, provider verification/model discovery, status-detail
+local Writing Assistant shell, prompt presets, Prompt Studio reusable
+prompt templates, Agent Center guided profiles, AI Hub launch surface,
+AI connection preferences (Ollama local/cloud, OpenAI, Claude,
+OpenRouter, Gemini, Azure OpenAI, custom OpenAI-compatible), provider
+verification/model discovery, searchable model filtering, status-detail
 accessibility announcements, and a sandboxed Python tool. Longer-horizon
 autocomplete policy tuning and richer model-catalog management remain
 future work.</li>
@@ -7545,6 +7878,36 @@ migration.</label></li>
 details with implemented macro and compare scope.</label></li>
 <li><label><input type="checkbox" checked="" />Run macro/compare
 regression suite and resolve resulting failures.</label></li>
+</ul>
+<h3 id="2116-wx-stability-and-hang-resistance">21.16 wx stability and
+hang resistance</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Add a
+<code>quill.stability</code> package for logging, diagnostics, dispatch,
+heartbeat, task management, safe subprocesses, guarded regex, memory
+tracing, safe mode, and feature contracts.</label></li>
+<li><label><input type="checkbox" checked="" />Configure startup logging
+through a queue-backed listener so the wx main thread never blocks on
+file I/O.</label></li>
+<li><label><input type="checkbox" checked="" />Enable faulthandler at
+startup and keep a manual thread-stack dump path available from the
+CLI.</label></li>
+<li><label><input type="checkbox" checked="" />Add a
+<code>wx.Timer</code> heartbeat and watchdog that detect stalled UI
+loops.</label></li>
+<li><label><input type="checkbox" checked="" />Centralize worker-to-UI
+handoff through <code>wx.CallAfter</code>, custom wx events, and a
+coalesced progress reporter.</label></li>
+<li><label><input type="checkbox" checked="" />Route user-supplied regex
+through timeout-aware matching helpers.</label></li>
+<li><label><input type="checkbox" checked="" />Add a safe subprocess
+helper with explicit timeouts.</label></li>
+<li><label><input type="checkbox" checked="" />Add optional tracemalloc
+support and diagnostic bundle support for freeze reports.</label></li>
+<li><label><input type="checkbox" checked="" />Add a Safe Mode
+configuration path and startup flag handling.</label></li>
+<li><label><input type="checkbox" checked="" />Add feature contract
+validation for risky features.</label></li>
 </ul>
 </body>
 </html>

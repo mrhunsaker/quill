@@ -2,7 +2,7 @@
 
 ## A magical, screen-reader-first writing and document environment, built in wxPython.
 
-Status: Quill 1.0 PRD aligned with Quill 0.1.2 Beta
+Status: Quill 1.0 PRD aligned with Quill 0.1.5 Beta
 Owner: Blind Information Technology Solutions (BITS) and Community Access
 Target platform: Windows 10 and Windows 11
 Target screen readers: NVDA (primary), JAWS, Narrator
@@ -111,6 +111,7 @@ Menu structure:
 - **Tools**: regrouped into discoverable submenus:
   - Writing and Language
   - Read Aloud
+  - Dictation and Watch Folder Automation
   - Integrations
   - Document Intake
   - Authoring and Automation
@@ -174,7 +175,7 @@ Quill explains what it did, how confident it is, and how to recover if extractio
 - **Cleanup recipes**: deterministic review-and-apply transforms for OCR/PDF cleanup (dehyphenate, remove headers/footers, normalize ligatures, line reflow).
 - **Report Bad Extraction**: creates a support package with version, metadata, and no document content unless the user explicitly opts in.
 - **What Can I Do Here?**: context-sensitive help for the current surface, available from the Help menu and command palette.
-- **Safe mode**: a startup-safe mode disables plugins, custom keymaps, AI, recent docs, themes, and other optional state for troubleshooting.
+- **Safe mode**: a startup-safe mode disables plugins, experimental features, AI integrations, startup restore, background indexing, file watchers, custom themes, custom snippets, and network services for troubleshooting.
 - **Portable mode clarity**: portable builds can store settings locally next to Quill.exe or in AppData, with a first-run choice and an independence command.
 - **Golden document corpus**: release testing includes a canonical corpus of PDFs, DOCX, XLSX, PPTX, EPUB, Markdown, HTML, and OCR samples with expected extraction and announcement snapshots.
 
@@ -439,14 +440,15 @@ Add Word-specific conversion routes:
 
 ```python
 READER_MAP: dict[str, str] = {
-    "docx": "docx",    # NEW: from .docx
-    "doc": "doc",      # NEW: from .doc (legacy)
+    "docx": "docx",  # NEW: from .docx
+    "doc": "doc",  # NEW: from .doc (legacy)
 }
 
 WRITER_MAP: dict[str, str] = {
-    "word": "docx",    # NEW: export to .docx
-    "word-old": "doc", # NEW: export to .doc (legacy)
+    "word": "docx",  # NEW: export to .docx
+    "word-old": "doc",  # NEW: export to .doc (legacy)
 }
+
 
 @dataclass(frozen=True, slots=True)
 class WordMetadata:
@@ -464,9 +466,10 @@ class WordMetadata:
 ```python
 TEXT_EXTENSIONS = {
     # ... existing ...
-    ".docx",   # NEW
-    ".doc",    # NEW
+    ".docx",  # NEW
+    ".doc",  # NEW
 }
+
 
 def looks_like_word_document(path: Path) -> bool:
     return path.suffix.lower() in {".docx", ".doc"}
@@ -638,7 +641,6 @@ source_metadata = {
     "engine": "pandoc",
     "engine_version": "3.1.0",
     "quality_score": 78,  # Reduced from 85 due to diagnostics
-    
     # GLOW-inspired diagnostics
     "extraction_diagnostics": {
         "fake_lists_detected": 2,  # Manually typed bullets
@@ -650,7 +652,6 @@ source_metadata = {
         "heading_hierarchy_issues": ["H1 at page 1, then H3 at page 2"],
         "extraction_engine_switches": ["Pandoc pages 1-8, python-docx pages 9-10"],
     },
-    
     "extraction_warnings": [
         {
             "id": "FAKE_LISTS_DETECTED",
@@ -677,7 +678,6 @@ source_metadata = {
             "suggestion": "Consider disabling hyphenation in Word for cleaner reflow",
         },
     ],
-    
     "word_metadata": {
         "title": "Q2 Report",
         "author": "Jane Doe",
@@ -744,15 +744,18 @@ def test_read_docx_simple():
     assert "Heading" in doc.text
     assert doc.source_metadata["quality_score"] > 80
 
+
 def test_read_doc_legacy_format():
     doc = read_word_document(Path("tests/fixtures/word/legacy_format.doc"))
     assert doc.text.strip()  # Non-empty
     assert "engine" in doc.source_metadata
 
+
 def test_read_corrupted_falls_back():
     doc = read_word_document(Path("tests/fixtures/word/corrupted.docx"))
     assert doc.source_metadata.get("quality_score", 0) < 50
     assert len(doc.text) > 0  # No crash; degraded gracefully
+
 
 def test_read_timeout_protection():
     with pytest.raises(ExtractionTimeoutError):
@@ -760,6 +763,7 @@ def test_read_timeout_protection():
             Path("tests/fixtures/word/large_50mb.docx"),
             timeout_sec=0.1,
         )
+
 
 def test_macros_not_executed():
     doc = read_word_document(Path("tests/fixtures/word/malicious_macros.docx"))
@@ -1155,9 +1159,11 @@ def test_read_pptx_simple():
     assert "Slide 1" in doc.text
     assert doc.source_metadata["quality_score"] > 80
 
+
 def test_speaker_notes_extracted():
     doc = read_powerpoint_presentation(Path("tests/fixtures/powerpoint/with_speaker_notes.pptx"))
     assert len(doc.source_metadata["speaker_notes"]) > 0
+
 
 def test_animations_detected():
     doc = read_powerpoint_presentation(Path("tests/fixtures/powerpoint/with_animations.pptx"))
@@ -1663,6 +1669,250 @@ Quill ships a read-aloud feature that uses a **secondary** voice the user picks 
 - Voice, speed, pitch, volume all configurable. Three named profiles (Reading, Proofreading, Skim) save preferred values.
 - The read-aloud voice never overrides the screen reader's announcements; if a screen reader speaks something while read-aloud is active, read-aloud continues but is briefly ducked.
 
+### 5.25b Watch Folder automation
+
+Quill provides an optional watch-folder workflow under `BITS Whisperer -> Dictation and Watch Folder` for low-friction
+document intake. Users can point Quill at a folder, drop supported files into it, and have Quill
+open those files automatically without leaving the editor.
+
+- Supported drop formats follow Quill's core supported file-extension set.
+- Polling and subfolder behavior are configurable from Watch Folder Settings.
+- Startup Wizard includes watch-folder onboarding so first-run users can configure automation
+  immediately.
+- Status and failures surface through Quill's existing status/notification channel; no silent
+  failures.
+
+### 5.25c BITS Whisperer phased transcription rollout
+
+Quill integrates BITS Whisperer speech capabilities in phased increments to minimize regression risk
+and preserve accessibility reliability.
+
+Phase 1 scope:
+
+- Keep current dictation behavior stable while introducing BITS Whisperer speech model management.
+- Surface model controls under `BITS Whisperer -> Speech Models`.
+- Add `BITS Whisperer -> Providers` with guided provider-center flows for staged onboarding.
+- Provide machine-aware default recommendations based on local configuration.
+- Include faster-whisper engine readiness checks and explicit user guidance.
+- Ensure `Help -> Status Page` can remain open and refresh dynamically with speech/BITS rollout task updates.
+- Add rollout-safe insight surfaces under `BITS Whisperer -> Rollout` (readiness check and capability matrix).
+- Add guarded download queue controls for staged model acquisition (retry failed downloads and clear history).
+- Keep advanced runtime paths staged for subsequent phases.
+
+Phase 2+ scope:
+
+- Expand runtime model execution paths and deeper transcription behavior.
+- Broaden model-family support as quality and hardware validation mature.
+
+### 5.25a Speech Experience Platform (planned before implementation)
+
+This section defines the next speech milestone as a complete user-facing platform, not a single settings dialog.
+
+Goals:
+
+- Add a first-class **Speech** submenu under the top-level **AI** menu.
+- Add two downloadable local speech engines: **Kokoro** and **Piper**.
+- Provide voice lifecycle UX end to end: discover, download, preview, set preferred, configure, remove.
+- Keep installer size lean by bundling **no voices** in core builds.
+- Preserve screen-reader-first behavior with predictable announcements, keyboard-first flows, and no surprise network actions.
+
+#### 5.25a.1 AI menu information architecture
+
+The top-level **AI** menu gains a **Speech** submenu with discoverable, keyboard-rebindable commands:
+
+- `AI -> Speech -> Open Speech Center...`
+- `AI -> Speech -> Browse Voice Library...`
+- `AI -> Speech -> Download Voices...`
+- `AI -> Speech -> Preview Current Voice`
+- `AI -> Speech -> Set Preferred Voice...`
+- `AI -> Speech -> Manage Installed Voices...`
+- `AI -> Speech -> Speech Settings...`
+
+The Speech submenu mirrors the command palette and status surfaces, with live keybinding labels exactly like other menu items.
+
+#### 5.25a.2 Engine model and no-bundle policy
+
+Supported engines for this milestone:
+
+- `windows-native` (existing SAPI/OneCore path)
+- `kokoro-local`
+- `piper-local`
+
+Policy:
+
+- No Kokoro or Piper voices are bundled in installer or portable artifacts.
+- Voice models are downloaded on demand into `%APPDATA%\Quill\speech\voices\...`.
+- Downloads require explicit user action and clear size disclosure before start.
+
+#### 5.25a.3 Voice library and download UX
+
+Speech Center includes a searchable voice catalog with filters:
+
+- engine (Windows Native, Kokoro, Piper)
+- language and region
+- gender/style tags where available
+- size band (small/medium/large)
+- installed vs not installed
+
+Each voice row exposes:
+
+- voice name and engine
+- language and locale
+- on-disk size
+- install state
+- preferred marker
+
+Download behavior:
+
+- resumable downloads with progress and remaining size
+- hash verification before activation
+- cancellation without corrupt partial state
+- failed-download recovery with retry guidance
+
+#### 5.25a.4 Voice preview and A/B comparison
+
+Users can preview voices before and after install.
+
+- Preview text field with stock sample text button
+- A/B preview mode for rapid compare between two selected voices
+- playback controls: play, stop, replay
+- optional "Preview with current speaking settings" toggle
+
+When pre-install preview audio is available from metadata, Quill may fetch a small sample clip on demand. If no preview clip exists, preview requires install and Quill states this clearly.
+
+#### 5.25a.5 Preferred voice and defaults model
+
+Users can star one voice as **Preferred** with one command.
+
+Resolution order for active voice:
+
+1. explicit per-document override (future-compatible field)
+2. explicit per-language preferred voice
+3. global preferred voice
+4. engine fallback voice
+
+Setting a voice as preferred is immediate and announced in plain language.
+
+#### 5.25a.6 Per-voice configuration and platform defaults
+
+Every installed voice has editable settings saved as a profile, and users can mark any profile as default.
+
+Per-voice settings (minimum set):
+
+- rate
+- pitch
+- volume
+- pause style and punctuation pause behavior
+- sentence/paragraph chunk size
+- output device selection
+
+Platform-aware defaults:
+
+- Windows native voices keep their own defaults
+- Kokoro and Piper voices each keep separate defaults
+- users can apply "Use as default for this engine" or "Use as global default"
+
+This gives users both broad defaults and precise per-voice control.
+
+#### 5.25a.7 Voice removal and storage hygiene
+
+Manage Installed Voices supports safe removal:
+
+- remove one voice
+- remove all voices for selected engine
+- show reclaimed disk size before confirmation
+- preserve user settings history without dangling references
+
+If the removed voice was preferred, Quill prompts for a replacement or applies deterministic fallback and announces it.
+
+#### 5.25a.8 Speech onboarding flow
+
+First-time speech onboarding starts when the user opens Speech Center with no installed downloadable voices.
+
+Flow:
+
+1. Explain available engines and that voices are optional downloads.
+2. Ask preferred language/locale.
+3. Recommend starter voices for Kokoro and Piper.
+4. Offer quick preview where possible.
+5. Download selected voices.
+6. Ask user to mark preferred voice.
+7. Offer one-click "Make these settings my default".
+
+The onboarding flow can be re-run via `Help -> Run Onboarding Again` and `AI -> Speech -> Open Speech Center...`.
+
+#### 5.25a.9 Accessibility and safety requirements
+
+- Every Speech Center control is a stock wx control with correct label, role, and state.
+- Progress updates are announced without flooding speech output.
+- No auto-downloads or silent background network actions.
+- All destructive actions (remove voice, reset defaults) require confirmation.
+- All errors are plain-language and actionable.
+
+#### 5.25a.10 Delivery phases (bold, realistic)
+
+Phase 1: Foundation
+
+- AI menu Speech submenu
+- Speech Center shell
+- installed-voice management for existing Windows native voices
+
+Phase 2: Downloadable voices
+
+- Kokoro and Piper catalog
+- download, verify, install, remove
+- preferred voice and per-engine defaults
+
+Phase 3: Advanced polish
+
+- A/B preview panel
+- storage budget manager and cleanup recommendations
+- per-language preferred voice routing
+- richer voice profile presets (Narration, Proofread, Fast skim)
+
+#### 5.25a.11 Acceptance criteria
+
+- A new user can install at least one Kokoro or Piper voice in under 3 minutes from Speech Center.
+- A user can preview at least two voices and set one preferred without opening Settings.
+- A user can remove a voice and recover disk space with clear confirmation and fallback behavior.
+- All commands are available through menu, command palette, and keybindings.
+- Installer size does not increase due to bundled voice payloads.
+
+#### 5.25a.12 DECtalk compatibility evaluation track
+
+Quill should explicitly evaluate adding DECtalk as an optional speech engine path.
+
+Why consider it:
+
+- DECtalk remains important to many long-time screen-reader and speech users.
+- It offers a distinctive speech character some users actively prefer for proofreading and navigation tasks.
+- Community-maintained projects (including modern build efforts) suggest practical integration paths worth exploration.
+
+Plan scope (evaluation first, not automatic ship):
+
+- Add `dectalk-local` as a candidate engine in Speech Center behind an experimental flag.
+- Prototype voice discovery, preview, and preferred-voice selection through the same Speech lifecycle model used for Kokoro and Piper.
+- Keep no-bundle policy: no DECtalk voice payloads included in installer or portable builds.
+
+Hard gates before general availability:
+
+- **Licensing and redistribution clarity**: legal review confirms what can be downloaded, redistributed, or user-supplied.
+- **Accessibility parity**: DECtalk path must pass the same screen-reader announcement, keyboard-only, and status reporting requirements as other engines.
+- **Stability and performance**: startup, preview, and long-form read-aloud must meet baseline responsiveness and failure-recovery standards.
+- **Configuration parity**: preferred voice, per-voice settings, per-engine defaults, and removal behavior must match other engines.
+
+User experience requirements if approved:
+
+- DECtalk appears in `AI -> Speech` as another engine option, not a separate workflow.
+- Voice install/onboarding language is plain and explicit about source, size, and any licensing constraints.
+- Users can preview and set a DECtalk voice as preferred in one flow.
+- Users can remove DECtalk voices and recover storage with deterministic fallback behavior.
+
+Positioning:
+
+- DECtalk is treated as a high-value compatibility and user-preference path.
+- It does not replace Windows native, Kokoro, or Piper; it complements them when available and compliant.
+
 ### 5.26 Number lines and strip line numbers
 
 A small tool that addresses a real recurring user request.
@@ -1708,7 +1958,7 @@ A dedicated menu surfacing transforms that are otherwise reachable via Tools or 
 
 ### 5.29a Magical HTML and Markdown tag picker
 
-- `Format → Insert HTML Tag…` opens a keyboard-first picker of common tags (`section`, `article`, headings, list/table tags, inline emphasis, links, images, code).  
+- `Format → Insert HTML Tag…` opens a keyboard-first picker of common tags (`section`, `article`, headings, list/table tags, inline emphasis, links, images, code).
 - After selecting a tag, Quill prompts for optional attributes in a compact `key=value; key2=value2` format and inserts valid tag text into the editor.
 - If text is selected, Quill wraps the selection in the chosen non-void tag. If not selected, Quill inserts an opening/closing pair and places the cursor between them. Void tags (`img`, `br`, `hr`, `input`) are inserted self-closing.
 - `Format → Insert Markdown Tag…` opens a semantic picker (`Bold`, `Italic`, `Inline Code`, `Code Block`, `Heading`, `List`, `Task List`, `Blockquote`, `Link`, `Image`, `Table`, `Footnote`) and inserts the matching markdown snippet.
@@ -1934,10 +2184,10 @@ A five-step welcome flow the first time Quill launches. Each step is a normal mo
 1. **Profile**: System, Word-like, Vim, Emacs.
 2. **Theme**: System, Light, Dark, High Contrast.
 3. **Spell-check languages**: multi-select from the bundled launch set; the active document language is added automatically when later opened.
-4. **AI provider**: Off (default), OpenAI, Azure OpenAI, Anthropic, Ollama. If a provider is picked, the API-key dialog opens; the key is stored via DPAPI (10.11). Network is never used without explicit per-action consent.
+4. **AI provider**: Off (default), Ollama local, Ollama Cloud, OpenAI, Azure OpenAI, Anthropic/Claude, OpenRouter, Gemini, or a custom OpenAI-compatible endpoint. Providers include sensible default hosts where possible; advanced custom mode allows manual endpoint override. If a provider is picked, the API-key dialog opens when required; the key is stored via DPAPI (10.11). Network is never used without explicit per-action consent.
 5. **Telemetry**: confirms it stays off (default). A short plain-language sentence explains what telemetry would collect if turned on later.
 
-The onboarding completion writes `%APPDATA%\Quill\onboarding-complete.json`. Re-running `Help → Run Onboarding Again` reopens the flow without resetting anything else.
+The onboarding completion writes `%APPDATA%\Quill\onboarding-complete.json`. Trust and privacy consent acknowledgement is stored separately in `%APPDATA%\Quill\trust-consent.json` and is versioned so policy text updates can require re-acknowledgement. Re-running `Help → Run Onboarding Again` reopens the flow without resetting anything else.
 
 ### 5.57 Privacy summary
 
@@ -2881,7 +3131,7 @@ All JSON files validate against schemas in `quill/core/schemas/`. All writes are
 
 ### 10.11 Security architecture
 
-- **Secrets**: AI provider keys stored via DPAPI (`platform.windows.dpapi`); never in plain text on disk; never logged; never in diagnostics bundles.
+- **Secrets**: AI provider keys stored via Windows Credential Manager where available, with DPAPI-encrypted fallback (`platform.windows.dpapi`) when vault APIs are unavailable; never in plain text on disk; never logged; never in diagnostics bundles.
 - **Document data**: never leaves the machine without per-action consent.
 - **Network calls**: an internal `ai.safety.consent(action, host, size_estimate)` gate is required before any network call; the call records what was sent (action name, host, size only) in the audit log.
 - **Updates**: manifest signature verified with a pinned Ed25519 public key; artefact SHA-256 verified before install.
@@ -2907,7 +3157,13 @@ All JSON files validate against schemas in `quill/core/schemas/`. All writes are
 - Pluralisation uses `ngettext`.
 - Date/number formatting uses `babel`.
 - Bidirectional text in user documents is rendered by the OS edit control; full RTL UI is v1.2.
-- A translation portal (Weblate or Crowdin) is set up at v1.0 beta; community translators are credited in About.
+- A translation portal (Weblate or Crowdin) is set up at v1.0 beta; community translators are credited in About and release notes.
+- Translation operations follow a documented contributor plan with:
+  - gettext `POT -> PO -> MO` workflow,
+  - translator comments and placeholder-preservation rules,
+  - beta translation push and pre-release string freeze,
+  - CI quality gates for extraction, syntax, compile, and placeholder validation.
+- Contributor process and policy reference: `docs/localization/translation-contributor-plan.md`.
 
 ### 10.14 Performance budgets and instrumentation
 
@@ -2962,12 +3218,13 @@ The engineering choices above add up to the user-visible magic the product promi
 ## 12. Privacy and security
 
 - Local first. Nothing leaves the machine without an explicit per-action confirmation.
-- AI provider keys stored via Windows DPAPI; never plain text.
+- AI provider keys stored via Windows Credential Manager when available, with DPAPI-encrypted fallback; never plain text.
 - Logs never include document content. Logs include action names and outcomes only.
 - Spell-check learning data stays on disk under the user profile and can be wiped from a single button.
 - Crash reports are opt-in and scrubbed of paths and content.
 - All file dialogs use the OS dialog so the user controls disclosure.
 - Network calls show host, payload size, and estimated cost (where the provider supplies it) before sending.
+- Startup includes a trust/privacy/responsible-AI consent acknowledgement before guided onboarding continues.
 
 ---
 
@@ -3116,7 +3373,7 @@ The organising principle is simple: **v1.0 ships only Confidence A. Confidence B
 - **Linked-notes / wikilink editor (Obsidian-style).** Backlog.
 - **Per-file-class backup retention policy.** v1.0 ships a single global retention rule (5.13). v1.1 introduces per-format-class defaults (e.g. 100 backups for source code, 25 for long-form documents) once we have telemetry on user save patterns.
 - **Single-line compose box mode.** A small, screen-reader-optimised composer dialog whose Enter sends back to the main editor at the cursor. Useful for slow-speech users; needs user testing to confirm it is worth the surface area. Backlog for v1.1.
-- **Advanced model lifecycle in core app flow.** Quill now ships a local Writing Assistant shell, prompt presets, generated tool catalog, assistant onboarding, AI connection preferences, connection verification/model discovery actions, AI menu status-detail feedback, and sandboxed Python runner. Broader built-in model catalog lifecycle and background prefetch policy remain future work.
+- **Advanced model lifecycle in core app flow.** Quill now ships a local Writing Assistant shell, prompt presets, generated tool catalog, assistant onboarding, AI Hub entry point, Prompt Studio custom templates, Agent Center guided plans, AI connection preferences, connection verification/model discovery actions, searchable model selection, provider-aware guided recommendations, AI menu status-detail feedback, and sandboxed Python runner. Broader built-in model catalog lifecycle and background prefetch policy remain future work.
 
 ### 17.4 Explicitly out of scope for Quill (any version unless re-evaluated)
 
@@ -3127,7 +3384,7 @@ Quill is opinionated about what it is *not*. The following are intentionally and
 - **Cloud-sync of documents.** Sync is for keymap and settings only (8.8). Document storage stays on the user's machine and chosen cloud-drive folder.
 - **Mobile, web, macOS, or Linux ports.** Cross-platform is post-v2 at earliest. The `core/` layer has no `wx` so it remains *possible*, not *committed*.
 - **Voice input / dictation.** Use Windows dictation; Quill does not reinvent the mic/STT stack. An opt-in Hey QUILL command layer may sit on top of dictation and dispatch existing Quill commands, but it stays silent and only listens while dictation is active.
-- **AI authoring assistant.** The current build exposes a local Writing Assistant shell, prompt presets, AI connection preferences, provider verification/model discovery, status-detail accessibility announcements, and a sandboxed Python tool. Longer-horizon autocomplete policy tuning and richer model-catalog management remain future work.
+- **AI authoring assistant.** The current build exposes a local Writing Assistant shell, prompt presets, Prompt Studio reusable prompt templates, Agent Center guided profiles, AI Hub launch surface, AI connection preferences (Ollama local/cloud, OpenAI, Claude, OpenRouter, Gemini, Azure OpenAI, custom OpenAI-compatible), provider verification/model discovery, searchable model filtering, status-detail accessibility announcements, and a sandboxed Python tool. Longer-horizon autocomplete policy tuning and richer model-catalog management remain future work.
 - **Project workspaces and Find in Folder.** Deferred to v1.2 (see 17.2).
 - **Embedded media playback inside documents.** Out of scope for the editor.
 - **PDF form filling and signing.** Out of scope.
@@ -3428,3 +3685,16 @@ The governing rules remain the same throughout the roadmap: local-first processi
 - [x] Audit transform/convert menu placement and command-ID consistency after Convert-menu migration.
 - [x] Synchronize PRD checklist details with implemented macro and compare scope.
 - [x] Run macro/compare regression suite and resolve resulting failures.
+
+### 21.16 wx stability and hang resistance
+
+- [x] Add a `quill.stability` package for logging, diagnostics, dispatch, heartbeat, task management, safe subprocesses, guarded regex, memory tracing, safe mode, and feature contracts.
+- [x] Configure startup logging through a queue-backed listener so the wx main thread never blocks on file I/O.
+- [x] Enable faulthandler at startup and keep a manual thread-stack dump path available from the CLI.
+- [x] Add a `wx.Timer` heartbeat and watchdog that detect stalled UI loops.
+- [x] Centralize worker-to-UI handoff through `wx.CallAfter`, custom wx events, and a coalesced progress reporter.
+- [x] Route user-supplied regex through timeout-aware matching helpers.
+- [x] Add a safe subprocess helper with explicit timeouts.
+- [x] Add optional tracemalloc support and diagnostic bundle support for freeze reports.
+- [x] Add a Safe Mode configuration path and startup flag handling.
+- [x] Add feature contract validation for risky features.

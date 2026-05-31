@@ -3,6 +3,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+import regex as regex_module
+
+from quill.stability.safe_regex import RegexTimeoutError, safe_finditer, safe_subn
+
 
 @dataclass(frozen=True, slots=True)
 class SearchOptions:
@@ -25,9 +29,18 @@ def find_matches(
     if not query:
         return []
     pattern = _pattern(query, options)
-    flags = 0 if options.case_sensitive else re.IGNORECASE
     try:
+        if options.use_regex or options.wildcard:
+            flags = 0 if options.case_sensitive else re.IGNORECASE
+            return [
+                (match.start(), match.end()) for match in safe_finditer(pattern, text, flags=flags)
+            ]
+        flags = 0 if options.case_sensitive else re.IGNORECASE
         return [(match.start(), match.end()) for match in re.finditer(pattern, text, flags)]
+    except RegexTimeoutError as error:
+        raise SearchPatternError(str(error)) from error
+    except regex_module.error as error:
+        raise SearchPatternError(_friendly_regex_error(error)) from error
     except re.error as error:
         raise SearchPatternError(_friendly_regex_error(error)) from error
 
@@ -42,9 +55,16 @@ def replace_all(
     if not query:
         return text, 0
     pattern = _pattern(query, options)
-    flags = 0 if options.case_sensitive else re.IGNORECASE
     try:
+        if options.use_regex or options.wildcard:
+            flags = 0 if options.case_sensitive else re.IGNORECASE
+            return safe_subn(pattern, replacement, text, flags=flags)
+        flags = 0 if options.case_sensitive else re.IGNORECASE
         return re.subn(pattern, replacement, text, flags=flags)
+    except RegexTimeoutError as error:
+        raise SearchPatternError(str(error)) from error
+    except regex_module.error as error:
+        raise SearchPatternError(_friendly_regex_error(error)) from error
     except re.error as error:
         raise SearchPatternError(_friendly_regex_error(error)) from error
 

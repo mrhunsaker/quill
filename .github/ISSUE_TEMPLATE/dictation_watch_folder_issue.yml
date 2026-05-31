@@ -1,0 +1,60 @@
+name: Dictation / Watch Folder issue
+description: Report issues in dictation control, voice commands, or watch-folder automation.
+title: "[Dictation]: "
+labels: ["bug", "dictation"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Start/stop dictation
+        - Voice commands ("Hey QUILL")
+        - Watch Folder startup/auto-start
+        - Watch Folder file detection/opening
+        - Watch Folder status reporting
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: folder
+    attributes:
+      label: Watch folder path (optional)
+      placeholder: "Provide sanitized path only"
+  - type: input
+    id: version
+    attributes:
+      label: QUILL version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Windows 11"
+    validations:
+      required: true

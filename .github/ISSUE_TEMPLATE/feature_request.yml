@@ -1,0 +1,90 @@
+name: Feature request
+description: Propose an enhancement for QUILL.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature area
+      options:
+        - Editor and writing workflow
+        - Navigation and structure tools
+        - Search and replace
+        - Formatting and markup (Markdown/HTML)
+        - Snippets and word prediction
+        - Compare and review
+        - GLOW audit/fix
+        - AI connection / assistant
+        - Dictation / Watch Folder
+        - Read Aloud
+        - Document intake and conversion
+        - Accessibility and low-vision support
+        - Profiles, keymap, customization
+        - Installer, update, distribution
+    validations:
+      required: true
+  - type: dropdown
+    id: user_group
+    attributes:
+      label: Primary user group
+      options:
+        - Screen reader users
+        - Keyboard-only users
+        - Low-vision users
+        - Technical writers/developers
+        - General writing/editing users
+        - Mixed users
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe your suggested behavior or workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Suggested acceptance criteria
+      description: What should be true when this is done?
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility considerations
+      description: Note keyboard, screen reader, focus, and discoverability impact.
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and trade-offs
+      description: Any behavior, migration, or compatibility concerns?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked existing issues for similar requests.
+          required: true
+        - label: I described user impact, not just implementation details.
+          required: true

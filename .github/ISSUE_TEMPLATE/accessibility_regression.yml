@@ -1,0 +1,93 @@
+name: Accessibility regression
+description: Report regressions in screen reader, keyboard, focus, contrast, or announcements.
+title: "[A11y]: "
+labels: ["bug", "accessibility"]
+body:
+  - type: dropdown
+    id: a11y_area
+    attributes:
+      label: Accessibility area
+      options:
+        - Screen reader announcement wording or timing
+        - Focus order or keyboard trap
+        - Region navigation (F6 / Shift+F6)
+        - Status bar accessibility
+        - Dialog accessibility labels/descriptions
+        - Contrast or theme behavior
+        - Command discoverability / keyboard flow
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: What accessibility behavior regressed?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected accessible behavior
+      description: Describe what should be announced or how focus should move.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open ...
+        2. Press ...
+        3. Listen/observe ...
+    validations:
+      required: true
+  - type: dropdown
+    id: screen_reader
+    attributes:
+      label: Screen reader
+      options:
+        - NVDA
+        - JAWS
+        - Narrator
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: sr_version
+    attributes:
+      label: Screen reader version
+      placeholder: "Example: NVDA 2026.1"
+  - type: input
+    id: quill_version
+    attributes:
+      label: QUILL version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: windows_version
+    attributes:
+      label: Windows version/build
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics bundle details (optional)
+      description: Include relevant output from Help -> Save Diagnostics.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I verified this issue is not already tracked.
+          required: true
+        - label: I included enough steps to reproduce with keyboard-only flow.
+          required: true

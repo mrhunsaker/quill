@@ -1,0 +1,17 @@
+# Default ownership
+* @Community-Access
+
+# Accessibility-critical surfaces
+/quill/ui/ @Community-Access
+/quill/platform/windows/ @Community-Access
+/tests/accessibility/ @Community-Access
+
+# Core logic and format handling
+/quill/core/ @Community-Access
+/quill/io/ @Community-Access
+
+# Governance and process docs
+/CODE_OF_CONDUCT.md @Community-Access
+/CONTRIBUTING.md @Community-Access
+/SECURITY.md @Community-Access
+/docs/ @Community-Access

@@ -1,0 +1,86 @@
+name: AI assistant / connection issue
+description: Report issues with AI connection, verification, model listing, or assistant workflows.
+title: "[AI]: "
+labels: ["bug", "ai"]
+body:
+  - type: dropdown
+    id: ai_area
+    attributes:
+      label: AI area
+      options:
+        - Connection verification
+        - Provider setup (local/cloud/custom)
+        - Model listing / selection
+        - Assistant response quality
+        - Action approval flow
+        - Run Python transform flow
+        - AI status line / announcements
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider type
+      options:
+        - Ollama (local)
+        - Ollama Cloud (API key)
+        - Custom HTTP endpoint
+        - Other / unsure
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open AI -> AI Connection...
+        2. Configure ...
+        3. Run Verify/List Models/Assistant action ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: sanitized_output
+    attributes:
+      label: Sanitized error output
+      description: Include messages with API keys/tokens removed.
+  - type: input
+    id: version
+    attributes:
+      label: QUILL version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Windows 11"
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I removed API keys/secrets from this report.
+          required: true
+        - label: I included only non-sensitive logs/details.
+          required: true

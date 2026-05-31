@@ -1,0 +1,79 @@
+- name: accessibility
+  color: "0e8a16"
+  description: Screen reader, keyboard, focus, or low-vision behavior.
+
+- name: ai
+  color: "5319e7"
+  description: AI connection, model selection, assistant workflows.
+
+- name: intake
+  color: "1d76db"
+  description: Document intake and extraction behavior.
+
+- name: conversion
+  color: "1d76db"
+  description: File conversion and format processing issues.
+
+- name: snippets
+  color: "c5def5"
+  description: Snippet insertion, expansion, and prediction.
+
+- name: dictation
+  color: "fbca04"
+  description: Dictation, voice commands, and watch-folder flows.
+
+- name: performance
+  color: "d73a4a"
+  description: Performance regressions and bottlenecks.
+
+- name: stability
+  color: "b60205"
+  description: Crashes, hangs, watchdog, and reliability behavior.
+
+- name: security
+  color: "b60205"
+  description: Security hardening and vulnerability-related work.
+
+- name: dependencies
+  color: "0366d6"
+  description: Dependency and supply-chain updates.
+
+- name: documentation
+  color: "0075ca"
+  description: Documentation and process updates.
+
+- name: community
+  color: "7057ff"
+  description: Open-source governance and community operations.
+
+- name: feature
+  color: "a2eeef"
+  description: New feature work.
+
+- name: enhancement
+  color: "84b6eb"
+  description: Existing feature improvement.
+
+- name: bug
+  color: "d73a4a"
+  description: Bug report or confirmed defect.
+
+- name: p0
+  color: "b60205"
+  description: Release-blocking issue (data loss, launch crash, severe accessibility failure).
+
+- name: p1
+  color: "d93f0b"
+  description: High-priority workflow break with major user impact.
+
+- name: stale
+  color: "ededed"
+  description: Inactive issue or PR awaiting update.
+
+- name: fix
+  color: "d73a4a"
+  description: Bug fix implementation.
+
+- name: breaking-change
+  color: "b60205"
+  description: Backward-incompatible behavior or API changes.

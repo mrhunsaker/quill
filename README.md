@@ -1,5 +1,7 @@
 # QUILL
 
+[![Contributors](https://contrib.rocks/image?repo=Community-Access/quill)](https://github.com/Community-Access/quill/graphs/contributors)
+
 **QUILL** stands for **Quality, Usable, Inclusive, Lightweight, Literate**.
 
 **QUILL: A quality, usable, inclusive, lightweight, and literate editor built for everyone who writes, codes, learns, and creates.**
@@ -18,24 +20,28 @@ Quill is designed to stay focused and useful:
 
 ## Current release line
 
-Current release line: **0.1.2**
+Current release line: **0.1.5**
 
-Highlights in 0.1.2 include:
+Highlights in 0.1.5 include:
 
 - Insert menu with searchable Markdown/HTML insertion.
 - Word Prediction with `Ctrl+Space` plus HTML/Markdown tag IntelliSense.
 - New snippet system with `Ctrl+Alt+Space` insertion, trigger expansion, and starter packs.
-- Release-safety default for 0.1.2 testing: Word and CSV open in the normal plain-text editor surface.
+- Release-safety default for 0.1.5 testing: Word and CSV open in the normal plain-text editor surface.
 - Structured Word view and CSV grid code paths remain in-repo behind an internal gate for continued verification.
 - Expanded structured intake for `.doc`/`.docx`, `.ppt`/`.pptx`, `.xlsx`/`.xls`, `.pages`, and low-confidence PDF fallback via MarkItDown when available.
 - Writing Assistant shell with prompt presets, generated tool suggestions, and a sandboxed Python runner.
 - AI Connection workflow from both Preferences and the AI menu, with provider-aware host defaults.
 - Verify Connection, List Models, and Recommend Model actions in AI Connection settings.
 - AI menu status line with plain-language detail (`Ready` or `Needs attention`) and immediate accessible feedback.
+- BITS Whisperer rollout surfaces for provider onboarding, readiness checks, status-page live updates, and guarded download queue controls.
+- General Preferences controls for AI enable state, BW Safe Mode Lock, auto-open status behavior, and refresh cadence.
 - Optional Ollama cloud key mode over HTTPS (no local Ollama required for cloud endpoint access).
 - In-App Preview and Side-by-Side Preview with a dedicated Focus Preview command.
 - Heading styling tools to apply font family, size, and alignment to current-level or all headings in Markdown/HTML.
 - Heading Organizer (`Ctrl+Alt+Shift+H`) with keyboard-driven heading level changes, section reordering, and accessibility validation.
+- Watch Folder automation under **Tools -> Dictation** to auto-open newly dropped supported files.
+- Startup Wizard now includes a Watch Folder setup step so automation can be configured on first run.
 - Search menu simplification with replace-all inside the Replace dialog.
 - Unified diagnostics-backed support flow under **Help -> Report a Bug**.
 - Menu IA refinement, including **Insert** before **View** and **Search** after **View**.
@@ -63,6 +69,14 @@ Related commands:
 - `Ctrl+Alt+Shift+Space`: Manage snippets (create, edit, delete, import/export, starter packs).
 - `Preferences -> Install Starter Snippet Packs`: install sample packs for writing, developer flow, and accessibility/support notes.
 
+Watch Folder quick start:
+
+1. Open `Help -> Startup Wizard...` and run the Watch Folder setup step, or open `Preferences -> Watch Folder Automation`.
+2. Choose a folder where you will drop supported Quill files.
+3. Enable watch folder monitoring.
+4. Turn on auto-start if you want it running every launch.
+5. Drop supported files into the folder; Quill opens them automatically.
+
 ## Project layout
 
 - `quill/` -- application code.
@@ -89,6 +103,18 @@ Optional launch flags:
 
 - `--safe-mode`
 - `--reset-profile`
+- `--version` (prints version and exits without launching UI)
+- `--line N --column M` (place cursor for the first startup file)
+- `--new-window` (force a new process instead of forwarding to existing instance)
+- `--wait` (when forwarding to an existing instance, wait until it exits)
+- `--diagnostics`
+- `--dump-stacks`
+
+Examples:
+
+- `python -m quill --version`
+- `python -m quill notes.md --line 120 --column 1`
+- `python -m quill --new-window notes.md`
 
 ## Development checks
 
@@ -112,27 +138,52 @@ PRD and engineering docs for anyone who wants the deeper implementation detail.
 
 ## One-command release readiness
 
-Run the full 0.1.2 readiness flow:
+Run the full 0.1.5 readiness flow:
 
 - `python scripts/release_readiness.py`
 
 This runs:
 
 1. Lint (`ruff check .`)
-2. Tests (`pytest -q`)
-3. Docs rebuild for `docs/*.md` (HTML + EPUB)
-4. Docs artifact parity check
-5. Release corpus verification
+2. Dependency audit (`pip-audit --strict`)
+3. Tests (`pytest -q`)
+4. Docs rebuild for `docs/*.md` (HTML + EPUB)
+5. Docs artifact parity check
+6. Release corpus verification
 
 ## CI and release automation
 
 - CI workflow: `.github/workflows/accessibility-ci.yml`
+- Security workflow: `.github/workflows/security-ci.yml`
 - Windows release workflow: `.github/workflows/windows-release.yml`
 - Docs site workflow: `.github/workflows/github-pages.yml` (publishes the docs hub and updates feed)
 
 ## Support and issue reporting
 
 Use **Help -> Report a Bug** inside Quill. The flow supports diagnostics bundle generation, report preview, clipboard copy, and browser handoff to support submission.
+
+## Contributing
+
+Community contributions are welcome.
+
+- Read **[CONTRIBUTING.md](CONTRIBUTING.md)** for setup, workflow, and PR expectations.
+- Read **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** before participating.
+- Read **[SECURITY.md](SECURITY.md)** for private vulnerability reporting.
+- Read **[PRIVACY.md](PRIVACY.md)** for data handling and retention behavior.
+- Read **[RESPONSIBLE_AI_USE.md](RESPONSIBLE_AI_USE.md)** for ethical and accountable AI use requirements.
+- Read **[GOVERNANCE.md](GOVERNANCE.md)** for project decision model.
+- Read **[MAINTAINERS.md](MAINTAINERS.md)** for maintainer responsibilities.
+- Contributor graph: **[contrib.rocks / QUILL](https://contrib.rocks/image?repo=Community-Access/quill)**
+
+## Community discussions
+
+- Use GitHub Discussions for Q&A and feature ideation.
+- Use GitHub Issues for confirmed bugs and scoped feature requests.
+
+## Release governance
+
+- Release process and branch policy: **[RELEASE.md](RELEASE.md)**
+- Security advisory runbook: **[docs/engineering/security-advisory-workflow.md](docs/engineering/security-advisory-workflow.md)**
 
 ## License
 

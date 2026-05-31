@@ -32,6 +32,21 @@ def test_settings_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
             announcement_trace_enabled=True,
             assistant_enabled=True,
             assistant_prompt_style="technical",
+            bw_speech_selection_mode="manual",
+            bw_speech_model_id="whisper-small",
+            bw_enable_parakeet_models=False,
+            bw_provider_id="openai_whisper",
+            bw_provider_mode="cloud_first",
+            bw_show_cloud_providers=False,
+            bw_auto_open_status_page_on_download_start=True,
+            bw_safe_mode_lock=True,
+            status_page_refresh_announcement_cadence="verbose",
+            watch_folder_enabled=True,
+            watch_folder_path="C:\\incoming-audio",
+            watch_folder_include_subfolders=True,
+            watch_folder_process_existing=True,
+            watch_folder_auto_start=True,
+            watch_folder_poll_interval_seconds=12,
             status_bar_order=["line_column", "mode", "message", "file_path", "selection"],
             status_bar_hidden=["selection"],
         )
@@ -59,18 +74,31 @@ def test_settings_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     assert loaded.announcement_trace_enabled is True
     assert loaded.assistant_enabled is True
     assert loaded.assistant_prompt_style == "technical"
+    assert loaded.bw_speech_selection_mode == "manual"
+    assert loaded.bw_speech_model_id == "whisper-small"
+    assert loaded.bw_enable_parakeet_models is False
+    assert loaded.bw_provider_id == "openai_whisper"
+    assert loaded.bw_provider_mode == "cloud_first"
+    assert loaded.bw_show_cloud_providers is False
+    assert loaded.bw_auto_open_status_page_on_download_start is True
+    assert loaded.bw_safe_mode_lock is True
+    assert loaded.status_page_refresh_announcement_cadence == "verbose"
+    assert loaded.watch_folder_enabled is True
+    assert loaded.watch_folder_path == "C:\\incoming-audio"
+    assert loaded.watch_folder_include_subfolders is True
+    assert loaded.watch_folder_process_existing is True
+    assert loaded.watch_folder_auto_start is True
+    assert loaded.watch_folder_poll_interval_seconds == 12
     assert loaded.show_tab_control is False
     expected_order = list(
-        dict.fromkeys(
-            [
-                "line_column",
-                "mode",
-                "message",
-                "file_path",
-                "selection",
-                *STATUS_BAR_ITEMS,
-            ]
-        )
+        dict.fromkeys([
+            "line_column",
+            "mode",
+            "message",
+            "file_path",
+            "selection",
+            *STATUS_BAR_ITEMS,
+        ])
     )
     assert loaded.status_bar_order == expected_order
     assert loaded.status_bar_hidden == ["selection"]
@@ -200,3 +228,51 @@ def test_settings_defaults_assistant_to_disabled(
     loaded = load_settings()
     assert loaded.assistant_enabled is False
     assert loaded.assistant_prompt_style == "balanced"
+
+
+def test_settings_clamps_watch_folder_poll_interval(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text(
+        '{"watch_folder_poll_interval_seconds":0}',
+        encoding="utf-8",
+    )
+    loaded = load_settings()
+    assert loaded.watch_folder_poll_interval_seconds == 2
+
+
+def test_settings_normalize_bw_speech_selection_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text(
+        '{"bw_speech_selection_mode":"invalid"}',
+        encoding="utf-8",
+    )
+    loaded = load_settings()
+    assert loaded.bw_speech_selection_mode == "recommended"
+
+
+def test_settings_normalize_bw_provider_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text(
+        '{"bw_provider_mode":"invalid"}',
+        encoding="utf-8",
+    )
+    loaded = load_settings()
+    assert loaded.bw_provider_mode == "local_first"
+
+
+def test_settings_normalize_status_page_refresh_announcement_cadence(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text(
+        '{"status_page_refresh_announcement_cadence":"invalid"}',
+        encoding="utf-8",
+    )
+    loaded = load_settings()
+    assert loaded.status_page_refresh_announcement_cadence == "quiet"
