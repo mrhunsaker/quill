@@ -9000,6 +9000,7 @@ class MainFrame:
         ("Taylor Arndt on GitHub", "https://github.com/taylorarndt"),
         ("Michael Doise on GitHub", "https://github.com/mikedoise"),
         ("Becky K on GitHub", "https://github.com/BeckyK102125"),
+        ("Doug Langley on GitHub", "https://github.com/douglangley"),
         ("wx-accessible-webview on GitHub", "https://github.com/Community-Access/wx-accessible-webview"),
     )
 
@@ -9042,7 +9043,7 @@ class MainFrame:
             "and Community Access.\n\n"
             "With sincere thanks to our contributors and beta testers: "
             "Techopolis, Taylor Arndt, Michael Doise, Kayla Bentas, "
-            "Shane Popplestone, and Becky K.\n\n"
+            "Shane Popplestone, Doug Langley, and Becky K.\n\n"
             "## Links\n\n" + md_links(self._ABOUT_LINKS) + "\n\n"
             "## Contributors on GitHub\n\n" + md_links(self._ABOUT_GITHUB_LINKS) + "\n\n"
             "## Open-source acknowledgments\n\n" + acks + "\n\n"
