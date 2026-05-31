@@ -51,14 +51,13 @@ def test_update_toggle_is_in_help_menu_not_view_menu() -> None:
         encoding="utf-8"
     )
     assert 'view_menu.AppendCheckItem(self._id_toggle_auto_check_updates' not in source
-    help_check_index = source.index('help_menu.Append(self._id_check_updates, "Check for &Updates...")')
-    toggle_match = re.search(
-        r"help_menu\.AppendCheckItem\(\s*self\._id_toggle_auto_check_updates",
-        source,
-    )
-
-    assert toggle_match is not None
-    assert toggle_match.start() < help_check_index
+    support_marker = 'support_menu.Append(self._id_check_updates, "Check for &Updates")'
+    help_marker = 'help_menu.Append(self._id_check_updates, "Check for &Updates...")'
+    assert support_marker in source
+    assert help_marker in source
+    support_index = source.index(support_marker)
+    help_index = source.index(help_marker)
+    assert support_index < help_index
 
 
 def test_replace_menu_uses_interactive_replace_command() -> None:

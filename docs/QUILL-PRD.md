@@ -175,7 +175,7 @@ Quill explains what it did, how confident it is, and how to recover if extractio
 - **Cleanup recipes**: deterministic review-and-apply transforms for OCR/PDF cleanup (dehyphenate, remove headers/footers, normalize ligatures, line reflow).
 - **Report Bad Extraction**: creates a support package with version, metadata, and no document content unless the user explicitly opts in.
 - **What Can I Do Here?**: context-sensitive help for the current surface, available from the Help menu and command palette.
-- **Safe mode**: a startup-safe mode disables plugins, custom keymaps, AI, recent docs, themes, and other optional state for troubleshooting.
+- **Safe mode**: a startup-safe mode disables plugins, experimental features, AI integrations, startup restore, background indexing, file watchers, custom themes, custom snippets, and network services for troubleshooting.
 - **Portable mode clarity**: portable builds can store settings locally next to Quill.exe or in AppData, with a first-run choice and an independence command.
 - **Golden document corpus**: release testing includes a canonical corpus of PDFs, DOCX, XLSX, PPTX, EPUB, Markdown, HTML, and OCR samples with expected extraction and announcement snapshots.
 
@@ -3651,3 +3651,16 @@ The governing rules remain the same throughout the roadmap: local-first processi
 - [x] Audit transform/convert menu placement and command-ID consistency after Convert-menu migration.
 - [x] Synchronize PRD checklist details with implemented macro and compare scope.
 - [x] Run macro/compare regression suite and resolve resulting failures.
+
+### 21.16 wx stability and hang resistance
+
+- [x] Add a `quill.stability` package for logging, diagnostics, dispatch, heartbeat, task management, safe subprocesses, guarded regex, memory tracing, safe mode, and feature contracts.
+- [x] Configure startup logging through a queue-backed listener so the wx main thread never blocks on file I/O.
+- [x] Enable faulthandler at startup and keep a manual thread-stack dump path available from the CLI.
+- [x] Add a `wx.Timer` heartbeat and watchdog that detect stalled UI loops.
+- [x] Centralize worker-to-UI handoff through `wx.CallAfter`, custom wx events, and a coalesced progress reporter.
+- [x] Route user-supplied regex through timeout-aware matching helpers.
+- [x] Add a safe subprocess helper with explicit timeouts.
+- [x] Add optional tracemalloc support and diagnostic bundle support for freeze reports.
+- [x] Add a Safe Mode configuration path and startup flag handling.
+- [x] Add feature contract validation for risky features.

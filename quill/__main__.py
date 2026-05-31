@@ -5,38 +5,54 @@ import sys
 from pathlib import Path
 
 from quill.core.features import reset_feature_profile_store
+from quill.core.paths import app_data_dir, ensure_app_directories
 from quill.core.storage_mode import load_storage_mode, portable_root_dir, save_storage_mode
+from quill.stability.diagnostics import dump_all_thread_stacks, setup_fault_handler
+from quill.stability.logging_config import configure_logging
 
 
 def main() -> int:
-    _bootstrap_storage_mode()
-
+    ensure_app_directories()
+    log_listener = configure_logging(app_data_dir() / "logs")
+    setup_fault_handler()
     try:
-        from quill.ui.main_frame import run_app
-    except ModuleNotFoundError as exc:
-        if exc.name == "wx":
-            print("wxPython is required to run the UI. Install with: pip install -e .[ui]")
-            return 1
-        raise
+        _bootstrap_storage_mode()
 
-    from quill.core.ipc import (
-        enqueue_open_request,
-        release_primary_instance,
-        try_claim_primary_instance,
-    )
+        try:
+            from quill.ui.main_frame import run_app
+        except ModuleNotFoundError as exc:
+            if exc.name == "wx":
+                print("wxPython is required to run the UI. Install with: pip install -e .[ui]")
+                return 1
+            raise
 
-    launch_paths, safe_mode, reset_profile = _launch_arguments(sys.argv[1:])
-    if reset_profile:
-        reset_feature_profile_store()
-    if not try_claim_primary_instance():
-        for path in launch_paths:
-            enqueue_open_request(path)
-        enqueue_open_request(None)
-        return 0
-    try:
-        run_app(launch_paths, safe_mode=safe_mode)
+        from quill.core.ipc import (
+            enqueue_open_request,
+            release_primary_instance,
+            try_claim_primary_instance,
+        )
+
+        dump_stacks = "--dump-stacks" in sys.argv[1:]
+        diagnostics_mode = "--diagnostics" in sys.argv[1:]
+        if dump_stacks:
+            dump_file = dump_all_thread_stacks("manual CLI request")
+            print(dump_file)
+            return 0
+
+        launch_paths, safe_mode, reset_profile = _launch_arguments(sys.argv[1:])
+        if reset_profile:
+            reset_feature_profile_store()
+        if not try_claim_primary_instance():
+            for path in launch_paths:
+                enqueue_open_request(path)
+            enqueue_open_request(None)
+            return 0
+        try:
+            run_app(launch_paths, safe_mode=safe_mode, diagnostics_mode=diagnostics_mode)
+        finally:
+            release_primary_instance()
     finally:
-        release_primary_instance()
+        log_listener.stop()
     return 0
 
 

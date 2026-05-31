@@ -309,6 +309,9 @@ from quill.core.voice_commands import (
     split_text_delta,
 )
 from quill.core.watch_folder import WatchFolderConfig, WatchFolderResult, WatchFolderService
+from quill.stability.memory_watch import should_trace_memory, start_memory_tracing
+from quill.stability.ui_responsiveness import mark_wx_main_thread
+from quill.stability.wx_heartbeat import HeartbeatState, WxHeartbeatTimer, WxHeartbeatWatchdog
 from quill.core.yaml_structure import (
     YamlNode,
     YamlNodeKind,
@@ -17166,13 +17169,33 @@ class MainFrame:
         self.frame.Close()
 
 
-def run_app(startup_paths: list[Path] | None = None, safe_mode: bool = False) -> None:
+def run_app(
+    startup_paths: list[Path] | None = None,
+    safe_mode: bool = False,
+    diagnostics_mode: bool = False,
+) -> None:
     import wx
 
     app = wx.App(False)
+    mark_wx_main_thread()
+    if diagnostics_mode or should_trace_memory():
+        start_memory_tracing()
     frame = MainFrame(safe_mode=safe_mode)
+    heartbeat_state = HeartbeatState()
+    frame._stability_heartbeat_state = heartbeat_state
+    frame._stability_heartbeat_timer = WxHeartbeatTimer(frame.frame, heartbeat_state)
+    frame._stability_watchdog = WxHeartbeatWatchdog(heartbeat_state)
+    frame._stability_watchdog.start()
     for path in startup_paths or []:
         if path.exists() and path.is_file():
             frame.open_file(path)
     frame.show()
-    app.MainLoop()
+    try:
+        app.MainLoop()
+    finally:
+        timer = getattr(frame, "_stability_heartbeat_timer", None)
+        if timer is not None:
+            timer.stop()
+        watchdog = getattr(frame, "_stability_watchdog", None)
+        if watchdog is not None:
+            watchdog.stop()
