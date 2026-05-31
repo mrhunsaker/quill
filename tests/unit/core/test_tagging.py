@@ -91,6 +91,12 @@ def test_search_html_choices_matches_radio_to_input() -> None:
     assert results[0] == "input"
 
 
+def test_search_html_choices_matches_heading_words() -> None:
+    results = search_html_tag_choices("heading 1")
+    assert results[0] == "h1"
+    assert "h2" in search_html_tag_choices("heading two")
+
+
 def test_search_markdown_choices_matches_heading_six() -> None:
     results = search_markdown_tag_choices("h6")
     assert "Heading 6" in results

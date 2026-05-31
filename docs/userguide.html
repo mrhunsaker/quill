@@ -185,7 +185,7 @@ Quill is not only a place to write plain text. It is a place to open
 difficult documents, inspect structure, navigate long material, compare
 revisions, prepare content for Markdown or HTML, and work with
 accessibility and extraction issues without leaving the editor.</p>
-<p>This guide is aligned to Quill 0.1.1 Beta, built by Blind Information
+<p>This guide is aligned to Quill 0.1.2 Beta, built by Blind Information
 Technology Solutions (BITS) together with Community Access.</p>
 <p>This guide is written as a companion, not a reference wall. Read it
 from the beginning if you are new to Quill. Dip into the sections that
@@ -294,11 +294,11 @@ expect:</p>
 <ul>
 <li>File</li>
 <li>Edit</li>
-<li>Search</li>
+<li>Insert</li>
 <li>View</li>
+<li>Search</li>
 <li>Navigate</li>
 <li>Format</li>
-<li>Insert</li>
 <li>Tools</li>
 <li>Window</li>
 <li>Help</li>
@@ -365,7 +365,8 @@ Customize → Status Bar Settings...</strong>. Right-click a focused
 status cell to <strong>Activate</strong>, <strong>Hide this
 item</strong>, or open <strong>Status bar settings...</strong>. Use
 <strong>Restore Defaults</strong> in status bar settings to reset
-visibility and order.</p>
+visibility and order. When title mode is set to full path, Quill
+automatically hides the duplicate file-path status cell.</p>
 <h3 id="region-cycling">Region cycling</h3>
 <p>Use <code>F6</code> and <code>Shift+F6</code> to move between major
 regions. Quill treats region movement as a first-class accessibility
@@ -522,43 +523,51 @@ markup-aware editing.</p>
 <li>Italic</li>
 <li>Insert Heading levels 1 through 6</li>
 <li>Increase or decrease heading level</li>
+<li>Style headings (font, size, alignment) for the current level or all
+levels</li>
+<li>Open Heading Organizer (<code>Ctrl+Alt+Shift+H</code>) for
+heading-level edits, section reorder, and heading validation</li>
 <li>Insert bullet, numbered, and task lists</li>
 <li>Insert code block</li>
 <li>Insert footnote</li>
 <li>Insert table</li>
 <li>Insert HTML tag</li>
 <li>Insert Markdown tag</li>
-<li>Insert snippet (<code>Ctrl+Space</code>)</li>
-<li>Manage snippets (<code>Ctrl+Alt+Space</code>)</li>
+<li>Word prediction (<code>Ctrl+Space</code>)</li>
+<li>Insert snippet (<code>Ctrl+Alt+Space</code>)</li>
+<li>Manage snippets (<code>Ctrl+Alt+Shift+Space</code>)</li>
 </ul>
 <p>Quill treats Markdown and HTML as working surfaces, not
 special-purpose export formats. This menu is where that philosophy
 becomes practical.</p>
-<h3 id="snippets">Snippets</h3>
-<p>Quill 0.1.1 adds a full snippet flow designed for keyboard and
-screen-reader users:</p>
+<h3 id="word-prediction-and-snippets">Word prediction and snippets</h3>
+<p>Quill 0.1.2 separates live prediction from snippet insertion so the
+hotkeys feel more like a modern editor:</p>
 <ol type="1">
-<li>Press <code>Ctrl+Space</code> to open <strong>Insert
-Snippet</strong>.</li>
-<li>Type part of a name, trigger, tag, or body text to filter.</li>
-<li>Use arrow keys to choose a snippet and press Enter to insert.</li>
-<li>If the snippet includes placeholders (<code>${input:name}</code>,
-<code>${choice:a|b}</code>, <code>${date}</code>, <code>${time}</code>,
-<code>${cursor}</code>), Quill prompts in sequence and places the caret
-at <code>${cursor}</code>.</li>
+<li>Press <code>Ctrl+Space</code> to open <strong>Word
+Prediction</strong>.</li>
+<li>Type to surface matching document words, HTML tags, and Markdown
+tags.</li>
+<li>Use arrow keys to choose a result and press Enter to insert it.</li>
 </ol>
 <p>For setup and maintenance:</p>
 <ul>
-<li>Press <code>Ctrl+Alt+Space</code> for <strong>Manage
+<li>Press <code>Ctrl+Alt+Space</code> for <strong>Insert
+Snippet</strong>.</li>
+<li>Press <code>Ctrl+Alt+Shift+Space</code> for <strong>Manage
 Snippets</strong> (create, edit, delete, import, export, and starter
 packs).</li>
 <li>Open <strong>Preferences -&gt; Install Starter Snippet
 Packs</strong> to install sample libraries for daily writing, developer
 flow, and support/accessibility notes.</li>
-<li>In <strong>General Preferences</strong>, toggle <strong>Expand
-snippet triggers while typing</strong> to enable or disable trigger
-expansion.</li>
+<li>In <strong>General Preferences</strong>, toggle <strong>Word
+prediction and tag IntelliSense</strong> or <strong>Expand snippet
+triggers while typing</strong> as needed.</li>
 </ul>
+<p>Snippets still support placeholders such as
+<code>${input:name}</code>, <code>${choice:a|b}</code>,
+<code>${date}</code>, <code>${time}</code>, and
+<code>${cursor}</code>.</p>
 <h3 id="tools">Tools</h3>
 <p>The <strong>Tools</strong> menu is Quill's workshop. It contains
 high-value actions that are not best understood as raw editing.</p>
@@ -583,19 +592,105 @@ naturally.</p>
 <li><strong>Next Misspelling</strong></li>
 <li><strong>Thesaurus...</strong></li>
 <li><strong>Dictionary Status...</strong></li>
+<li><strong>Writing Assistant...</strong></li>
+<li><strong>Rewrite Selection</strong></li>
+<li><strong>Summarize Selection</strong></li>
+<li><strong>Continue Writing</strong></li>
+<li><strong>Fix Grammar</strong></li>
+<li><strong>Run Python...</strong></li>
+<li><strong>Browser Preview...</strong> (<code>Ctrl+Shift+V</code>)</li>
 </ul>
+<p>Browser Preview opens the current document in your chosen browser,
+defaulting to the system browser. It refreshes as you type so Markdown
+and HTML changes stay visible without leaving Quill.</p>
+<p>The Writing Assistant shell ranks Quill commands from your prompt,
+offers preset prompts for rewrite/summarize/continue/grammar flows, and
+Run Python executes a sandboxed transform against the current document
+text and selection.</p>
+<p>Use <strong>AI -&gt; AI Connection...</strong> or <strong>Preferences
+-&gt; AI Connection</strong> to set provider, host, model, and optional
+key.</p>
+<p>AI connection flow:</p>
+<ol type="1">
+<li>Choose provider (<code>Ollama (local)</code>,
+<code>Ollama Cloud (API key)</code>, or <code>Custom HTTP</code>).</li>
+<li>Confirm host URL and model.</li>
+<li>Enter key only when your endpoint requires authentication.</li>
+<li>Use <strong>Verify Connection</strong> to test endpoint and
+credentials.</li>
+<li>Use <strong>List Models</strong> to fetch available models and
+select one.</li>
+<li>Save settings. Quill auto-runs verification and updates the AI
+status line in the AI menu.</li>
+</ol>
+<p>Quill stores optional keys with Windows DPAPI and announces the
+verification result in plain language for immediate screen-reader
+feedback.</p>
 <p>These help you stay inside the editor instead of breaking flow for
 small writing chores.</p>
+<h3 id="ask-quill-chat-setup-on-device-ai">Ask Quill Chat setup
+(on-device AI)</h3>
+<p>Ask Quill Chat (<code>AI -&gt; Ask Quill Chat...</code>) is a
+message-style assistant that can answer, draft text, propose edits, and
+run Quill commands with approval before changes are applied.</p>
+<p>Runtime backends:</p>
+<ul>
+<li>Windows and Linux: <code>llama.cpp</code>
+(<code>llama-cpp-python</code>, GGUF model)</li>
+<li>macOS (Apple Silicon, macOS 26+): Apple Foundation Models</li>
+</ul>
+<p>Setup:</p>
+<ol type="1">
+<li>Install dependencies:
+<code>pip install -r requirements.txt</code></li>
+<li>Put a <code>.gguf</code> model in
+<code>%APPDATA%\\Quill\\models\\</code> (Windows) or set
+<code>QUILL_LLAMA_MODEL</code> to a full path.</li>
+<li>Open <code>AI -&gt; Ask Quill Chat...</code> and send a prompt.</li>
+</ol>
+<p>Behavior notes:</p>
+<ul>
+<li>Proposed actions use an explicit <code>Approve</code> or
+<code>Discard</code> step.</li>
+<li>If model/runtime is unavailable, Quill reports this clearly and does
+not apply destructive changes.</li>
+</ul>
+<h3 id="writing-assistant-connection-setup">Writing Assistant connection
+setup</h3>
+<p>For release-safe beta validation, Word and CSV open in the normal
+plain-text editor surface. AI connection and chat flows remain
+available.</p>
+<p>Provider setup:</p>
+<ol type="1">
+<li>Open <code>AI -&gt; AI Connection...</code> (or
+<code>Preferences -&gt; AI Connection</code>).</li>
+<li>Choose provider: <code>Ollama (local)</code>,
+<code>Ollama Cloud (API key)</code>, or <code>Custom HTTP</code>.</li>
+<li>Enter host and model.</li>
+<li>Enter API key only if required.</li>
+<li>Use <code>Verify Connection</code>.</li>
+<li>Use <code>List Models</code> to select from endpoint-reported
+models.</li>
+<li>Save settings. Quill auto-verifies and updates AI status/detail
+lines.</li>
+</ol>
+<p>After save, Quill announces plain-language verification feedback (for
+example, ready, auth failure, timeout, or endpoint unreachable).</p>
 <h4 id="read-aloud-and-integrations">Read aloud and integrations</h4>
 <ul>
 <li><strong>Read Aloud</strong> submenu for start or pause, stop, and
 voice selection</li>
+<li><strong>Dictation</strong> submenu for Windows dictation, plus an
+opt-in <strong>Hey QUILL Commands</strong> toggle that lets dictation
+phrases trigger Quill commands instead of inserting text.</li>
 <li><strong>Integrations</strong> submenu with <strong>OCR
 Image...</strong> and shell integration commands.</li>
 </ul>
 <p>Read Aloud is particularly useful for proofreading by ear. OCR Image
-handles image-to-text work with an explicit consent and progress
-flow.</p>
+handles image-to-text work with an explicit consent and progress flow.
+Dictation uses Windows' own speech input. When Hey QUILL Commands is
+enabled, Quill stays silent and only listens while dictation is active,
+then runs the matching action after the wake phrase.</p>
 <h4 id="document-intake-and-extraction-review">Document intake and
 extraction review</h4>
 <ul>
@@ -611,6 +706,14 @@ like:</p>
 <li>Did the source likely contain structure that did not survive?</li>
 <li>Is this document safe to quote from directly?</li>
 <li>Do I need to escalate this source for manual cleanup?</li>
+</ul>
+<p>Release-safety note for current beta validation:</p>
+<ul>
+<li>Word files (<code>.doc</code>, <code>.docx</code>) open into the
+normal plain-text editing surface.</li>
+<li>CSV/TSV files open into the normal plain-text editing surface.</li>
+<li>Structured Word and CSV grid surfaces remain in the codebase behind
+an internal verification gate.</li>
 </ul>
 <h4 id="glow">GLOW</h4>
 <ul>
@@ -827,6 +930,25 @@ commands that make sense in context.</p>
 <p>The heading tools do more than insert decoration. They help you
 maintain usable structure. The list tools speed up common authoring
 patterns without forcing you into a separate composer.</p>
+<p>Markdown list editing now follows editor-standard behavior:
+<code>Enter</code> continues the current bullet/numbered/task item, and
+<code>Enter</code> on an empty list marker exits the list. When the
+caret is on a list item, <code>Tab</code> nests it and
+<code>Shift+Tab</code> promotes it. For larger reorganizations, use
+<strong>Format -&gt; List -&gt; List Manager...</strong>
+(<code>Ctrl+Alt+L</code>) to move, promote/demote, add, edit, and delete
+list items from a tree view.</p>
+<p>For heading presentation control, open <strong>Insert -&gt; Heading
+-&gt; Style Headings...</strong>. You can style either all heading
+levels or the current heading level, then set font family, point size,
+and alignment. In Markdown documents, styled headings are written as
+HTML heading tags so the formatting is preserved.</p>
+<p>For structure editing, open <strong>Navigate -&gt; Heading
+Organizer...</strong> (<code>Ctrl+Alt+Shift+H</code>). The organizer
+lists each heading as level + title, supports keyboard
+promotion/demotion (<code>Tab</code> and <code>Shift+Tab</code>), lets
+you move sections up/down, rename headings, and validates heading order
+(start level, skipped levels, empty headings) before apply.</p>
 <h3 id="tables-code-blocks-and-tags">Tables, code blocks, and tags</h3>
 <p>Quill includes guided insertion for tables, code blocks, HTML tags,
 and Markdown snippets. This is especially useful for users who want
@@ -923,10 +1045,23 @@ advanced users.</p>
 <p>Use <strong>Profiles and Features...</strong> to:</p>
 <ul>
 <li>switch profiles</li>
+<li>quick-switch profiles from anywhere with
+<code>Alt+Shift+P</code></li>
 <li>compare profiles</li>
 <li>undo the last profile change</li>
 <li>reset to Essential</li>
 <li>import and export profile data</li>
+<li>create custom profiles</li>
+<li>update a custom profile from your current feature/settings/keymap
+state</li>
+<li>delete custom profiles</li>
+</ul>
+<p>Custom profiles support an explicit inheritance choice:</p>
+<ul>
+<li><strong>Inherit parent profile</strong> keeps the selected built-in
+profile as the starting point.</li>
+<li><strong>Bare-bones start</strong> opts out of inherited features and
+starts with only locked core safety features enabled.</li>
 </ul>
 <h3 id="keyboard-packs">Keyboard packs</h3>
 <p>Quill now supports golden keyboard packs so the editor can feel
@@ -1031,7 +1166,8 @@ download.</p>
 Document Types</h2>
 <p>Quill is strongest today with plain text, Markdown, HTML, RTF, EPUB,
 and extracted text workflows. It also has intake and extraction review
-features for imported material such as PDF and OCR sources.</p>
+features for imported material such as PDF/OCR sources and structured
+import support for Office-style formats.</p>
 <h3 id="plain-text">Plain text</h3>
 <p>Plain text stays plain. Quill does not force hidden formatting into
 it.</p>
@@ -1047,8 +1183,33 @@ order, and table headers.</p>
 formatting fidelity matters. Commands such as bold, italic, and
 underline are exposed contextually in this mode while preserving Quill's
 keyboard-first, screen-reader-first behavior.</p>
+<h3 id="csv-and-tsv">CSV and TSV</h3>
+<p>CSV and TSV files open through a choice flow: special CSV grid mode
+or normal text editor mode. You can remember your preferred default and
+still switch modes from inside the tab at any time. Grid mode is
+keyboard-friendly and designed for screen-reader users who need
+cell-level table editing without leaving Quill.</p>
+<h3 id="word-docx-and-doc">Word (.docx and .doc)</h3>
+<p>Word documents open through a choice flow: structured Word view or
+normal text editor mode. You can remember your preferred default and
+still switch modes inside the tab.</p>
+<p>Structured Word view is optimized for accessibility: it prioritizes
+readable structure and linearized table narration (headers and rows) for
+screen readers. Normal text mode keeps full Quill editing behavior for
+direct edits.</p>
 <h3 id="epub">EPUB</h3>
 <p>EPUB gets navigator support and chapter-oriented reading.</p>
+<h3 id="powerpoint-pptx-and-ppt">PowerPoint (.pptx and .ppt)</h3>
+<p>PowerPoint imports are structure-aware: slide titles become headings,
+slide bullets become nested list items, tables are rendered into
+tab-friendly text tables, and speaker notes are included when
+present.</p>
+<h3 id="excel-style-spreadsheets-xlsx-and-xls">Excel-style spreadsheets
+(.xlsx and .xls)</h3>
+<p>Spreadsheet intake is text-first and structure-aware. Quill extracts
+sheets into readable table-oriented text so you can inspect and review
+content quickly. If optional converters are installed, extraction
+quality improves for legacy and mixed-format files.</p>
 <h3 id="pdf-and-ocr-derived-text">PDF and OCR-derived text</h3>
 <p>PDF and OCR work are where Quill's extraction review commands matter
 most. Treat those commands as quality checks, not optional extras.</p>
@@ -1071,7 +1232,7 @@ have disappeared.</li>
 feature visibility from a mystery into an explanation.</p>
 <h2 id="beta-feedback-and-bug-reporting">Beta Feedback and Bug
 Reporting</h2>
-<p>Quill is ready for serious beta use, and Quill 0.1.1 Beta now ships a
+<p>Quill is ready for serious beta use, and Quill 0.1.2 Beta now ships a
 real in-app support starting point.</p>
 <h3 id="what-exists-today">What exists today</h3>
 <p>Today, Quill already has the foundations for careful support
@@ -1108,7 +1269,7 @@ reproduction steps</li>
 as the guided in-app bridge until the fuller route is live</li>
 </ol>
 <p>Until that exists, use the current Help-menu path as the practical
-bridge. The important improvement in Quill 0.1.1 Beta is that Quill now
+bridge. The important improvement in Quill 0.1.2 Beta is that Quill now
 helps users gather diagnostics locally, review what is being shared, and
 start a structured support report without forcing them to begin outside
 the tool.</p>
@@ -1123,6 +1284,7 @@ here:</p>
 <code>Alt+F3</code></li>
 <li><code>Ctrl+G</code> and <code>Ctrl+Shift+G</code></li>
 <li><code>Ctrl+K</code> and <code>Ctrl+Enter</code></li>
+<li><code>Ctrl+Alt+L</code> for List Manager</li>
 <li><code>F7</code>, <code>Alt+F7</code>, <code>Shift+F7</code></li>
 <li><code>Ctrl+Shift+W</code> for Word Count</li>
 <li><code>Ctrl+Tab</code> and <code>Ctrl+Shift+Tab</code></li>

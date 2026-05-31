@@ -31,6 +31,7 @@ def main() -> int:
     if not try_claim_primary_instance():
         for path in launch_paths:
             enqueue_open_request(path)
+        enqueue_open_request(None)
         return 0
     try:
         run_app(launch_paths, safe_mode=safe_mode)

@@ -74,6 +74,12 @@ MARKDOWN_TAG_CHOICES = [
 ]
 
 _HTML_SEARCH_ALIASES: dict[str, tuple[str, ...]] = {
+    "h1": ("heading 1", "heading one", "level 1", "h one"),
+    "h2": ("heading 2", "heading two", "level 2", "h two"),
+    "h3": ("heading 3", "heading three", "level 3", "h three"),
+    "h4": ("heading 4", "heading four", "level 4", "h four"),
+    "h5": ("heading 5", "heading five", "level 5", "h five"),
+    "h6": ("heading 6", "heading six", "level 6", "h six"),
     "input": ("text", "textbox", "field", "radio", "checkbox", "email", "password"),
     "button": ("click", "submit", "reset", "action"),
     "select": ("dropdown", "combo", "pick"),

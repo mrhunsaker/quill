@@ -12,6 +12,8 @@ def infer_markup_kind(path: Path | None) -> str:
         return "markdown"
     if suffix in {".html", ".htm", ".xhtml"}:
         return "html"
+    if suffix in {".yaml", ".yml"}:
+        return "yaml"
     return "plain"
 
 

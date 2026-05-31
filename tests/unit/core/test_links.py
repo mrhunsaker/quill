@@ -6,6 +6,7 @@ from quill.core.links import build_link_text, find_link_at_cursor, infer_markup_
 def test_infer_markup_kind() -> None:
     assert infer_markup_kind(Path("doc.md")) == "markdown"
     assert infer_markup_kind(Path("page.html")) == "html"
+    assert infer_markup_kind(Path("config.yaml")) == "yaml"
     assert infer_markup_kind(Path("notes.txt")) == "plain"
 
 

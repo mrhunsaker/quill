@@ -77,6 +77,42 @@ def test_save_diagnostics_bundle_cancels_when_review_cancelled(monkeypatch) -> N
     assert frame._status_message == "Diagnostics export cancelled"
 
 
+def test_open_logs_folder_uses_app_data_logs_path(monkeypatch, tmp_path: Path) -> None:
+    frame = _build_frame()
+    revealed: list[Path] = []
+    root = tmp_path / "Quill"
+    root.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(
+        main_frame_module,
+        "app_data_dir",
+        lambda: root,
+    )
+    monkeypatch.setattr(frame, "_reveal_in_explorer", lambda path: revealed.append(path))
+
+    frame.open_logs_folder()
+
+    assert revealed == [root / "logs"]
+
+
+def test_open_diagnostics_folder_uses_app_data_diagnostics_path(
+    monkeypatch, tmp_path: Path
+) -> None:
+    frame = _build_frame()
+    revealed: list[Path] = []
+    root = tmp_path / "Quill"
+    root.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(
+        main_frame_module,
+        "app_data_dir",
+        lambda: root,
+    )
+    monkeypatch.setattr(frame, "_reveal_in_explorer", lambda path: revealed.append(path))
+
+    frame.open_diagnostics_folder()
+
+    assert revealed == [root / "diagnostics"]
+
+
 def test_open_notifications_clears_from_dialog_action(monkeypatch) -> None:
     frame = _build_frame()
     frame._notifications = [Notification.create("Saved diagnostics to quill.zip", "diagnostics")]

@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "docs/site/**"
+      - "docs/**"
       - ".github/workflows/github-pages.yml"
 
 permissions:
@@ -26,8 +26,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stage docs site
+        shell: bash
+        run: |
+          rm -rf site-root
+          mkdir -p site-root/docs
+          cp -R docs/site/. site-root/
+          cp docs/userguide.* site-root/docs/ 2>/dev/null || true
+          cp docs/announcement-beta.* site-root/docs/ 2>/dev/null || true
+          cp docs/QUILL-PRD.* site-root/docs/ 2>/dev/null || true
+          cp -R docs/engineering site-root/docs/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/site
+          path: site-root
       - id: deployment
         uses: actions/deploy-pages@v4

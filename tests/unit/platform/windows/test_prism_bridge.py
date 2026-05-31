@@ -56,3 +56,34 @@ def test_announcement_engine_falls_back_to_status_when_prism_missing(monkeypatch
     assert state.requested_backend == "prism"
     assert state.active_backend == "status_only"
     assert "not installed" in state.last_error.lower()
+
+
+def test_announcement_engine_uses_system_speech_when_prism_is_missing(monkeypatch) -> None:
+    class _FakeSpeechEngine:
+        def __init__(self) -> None:
+            self.messages: list[str] = []
+
+        def say(self, message: str) -> None:
+            self.messages.append(message)
+
+        def runAndWait(self) -> None:
+            return None
+
+        def stop(self) -> None:
+            return None
+
+    speech_engine = _FakeSpeechEngine()
+    monkeypatch.setattr(
+        "quill.platform.windows.prism_bridge.pyttsx3",
+        types.SimpleNamespace(init=lambda: speech_engine),
+    )
+    monkeypatch.setattr(
+        "quill.platform.windows.prism_bridge.import_module",
+        lambda _name: (_ for _ in ()).throw(ImportError),
+    )
+
+    engine = AnnouncementEngine("auto")
+
+    assert engine.announce("hello") is None
+    assert speech_engine.messages == ["hello"]
+    assert engine.state().active_backend == "speech"

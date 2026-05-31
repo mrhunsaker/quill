@@ -14,6 +14,7 @@ class OutlineEntry:
 _MD_HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
 _HTML_HEADING_PATTERN = re.compile(r"<h([1-6])[^>]*>(.*?)</h\1>", re.IGNORECASE | re.DOTALL)
 _HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
+_YAML_DOC_MARKERS = {"---", "..."}
 
 
 def extract_outline_entries(text: str, markup_kind: str) -> list[OutlineEntry]:
@@ -33,4 +34,8 @@ def extract_outline_entries(text: str, markup_kind: str) -> list[OutlineEntry]:
                 OutlineEntry(level=level, title=title or "(empty heading)", position=match.start())
             )
         return entries
+    if markup_kind == "yaml":
+        from quill.core.yaml_structure import extract_yaml_outline_entries
+
+        return extract_yaml_outline_entries(text)
     return []

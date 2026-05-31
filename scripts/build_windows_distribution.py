@@ -287,8 +287,8 @@ def _render_readme(
         docs_paragraph = (
             "\nIncluded guides:\n"
             "- docs\\userguide.md - the full guided user manual\n"
-            "- docs\\announcement-beta.md - deep feature announcement\n"
-            "- docs\\QUILL-PRD.md - the product requirements document and roadmap\n"
+            "Internal engineering docs are published on the Quill GitHub Pages site\n"
+            "instead of being bundled in the installer.\n"
         )
     bundled_tools_paragraph = ""
     if bundled_tools:
@@ -393,9 +393,14 @@ def build_inno_setup_script(version: str) -> str:
         ' for common text formats (.txt, .md, .rst, .log, .csv, .json)";'
         ' GroupDescription: "File associations:"; Flags: unchecked',
         "",
+        "[Components]",
+        'Name: "aiassistant"; Description: "Install the Writing Assistant setup guide and AI connection shortcut";'
+        ' Types: full compact custom; Flags: checkablealone',
+        "",
         "[Files]",
         'Source: "..\\portable\\*"; DestDir: "{app}";'
-        " Flags: ignoreversion recursesubdirs createallsubdirs",
+        ' Flags: ignoreversion recursesubdirs createallsubdirs;'
+        ' Excludes: "docs\\announcement-beta.md,docs\\QUILL-PRD.md"',
         "",
         "[Icons]",
         'Name: "{group}\\{#AppName}"; Filename: "{app}\\{#AppExeName}"; WorkingDir: "{app}"',
@@ -405,12 +410,8 @@ def build_inno_setup_script(version: str) -> str:
             'Filename: "{app}\\docs\\userguide.md"'
         ),
         (
-            'Name: "{group}\\{#AppName} Beta Announcement"; '
-            'Filename: "{app}\\docs\\announcement-beta.md"'
-        ),
-        (
-            'Name: "{group}\\{#AppName} Product Requirements"; '
-            'Filename: "{app}\\docs\\QUILL-PRD.md"'
+            'Name: "{group}\\Writing Assistant Setup"; '
+            'Filename: "{app}\\docs\\userguide.md"; Components: aiassistant'
         ),
         'Name: "{group}\\Uninstall {#AppName}"; Filename: "{uninstallexe}"',
         'Name: "{autodesktop}\\{#AppName}"; Filename: "{app}\\{#AppExeName}";'
@@ -439,6 +440,9 @@ def build_inno_setup_script(version: str) -> str:
         "[Run]",
         'Filename: "{app}\\README.txt"; Description: "View the Quill README";'
         " Flags: postinstall shellexec skipifsilent unchecked",
+        'Filename: "{app}\\docs\\userguide.md";'
+        ' Description: "View the Writing Assistant setup guide";'
+        " Flags: postinstall shellexec skipifsilent unchecked; Components: aiassistant",
         'Filename: "{app}\\{#AppExeName}"; Description: "Launch {#AppName}";'
         " Flags: postinstall nowait skipifsilent unchecked",
         "",
@@ -612,8 +616,6 @@ def _stage_distribution_docs(portable_dir: Path, source_root: Path) -> list[Path
     staged: list[Path] = []
     for relative in (
         Path("docs") / "userguide.md",
-        Path("docs") / "announcement-beta.md",
-        Path("docs") / "QUILL-PRD.md",
     ):
         source = source_root / relative
         if not source.exists():

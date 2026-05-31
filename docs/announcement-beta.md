@@ -8,17 +8,25 @@
 
 Quill Beta is here.
 
-This release is Quill 0.1.1 Beta from Blind Information Technology Solutions (BITS) and Community Access.
+This release is Quill 0.1.2 Beta from Blind Information Technology Solutions (BITS) and Community Access.
 
 Quill is a writing, reading, review, and document-intelligence environment for Windows built around a simple idea: powerful tools should feel calm, predictable, and welcoming from the keyboard. The editor is local-first, screen-reader-first, and designed to make serious text work feel steady instead of fragile.
 
-The name is intentional. Quill reflects both writing craft and a love of magical storytelling (yes, Harry Potter), but grounded in dependable engineering. This work is built by us, for us, and for the wider world.
+The name is intentional. Quill reflects writing craft and dependable engineering. This work is built by us, for us, and for the wider world.
 
 Quill is not only a place to type notes. It is a place to open and write plain text, Markdown, HTML, and RTF; inspect structure; compare revisions; navigate EPUB content; review extraction quality; run accessibility checks; work with spelling and thesaurus tools; use golden keyboard packs; and move through real documents with confidence.
 
 It is also a place to grow. Quill now includes guided onboarding for optional external tools, so users can see exactly what helpers such as Pandoc, Tesseract OCR, LibreOffice, and Ghostscript would unlock before they install anything. When Pandoc is present, Quill can open a native conversion wizard and turn supported source files into Markdown, HTML, or plain text surfaces ready for reading, editing, or GLOW-oriented downstream workflows.
 
 This beta also includes a menu discoverability pass. The Tools menu is grouped into plain-language submenus (Writing and Language, Read Aloud, Integrations, Document Intake, Authoring and Automation, Compare Documents, Accessibility, Support, and Customize), and mark-ring wording now reads as Recent Marks (Ring) to lower jargon. The interactive status bar is also fuller: focused cells now expose direct context actions (Activate, Hide this item, Status bar settings), and status bar settings now include Restore Defaults.
+
+Quill 0.1.2 extends that foundation with editor-quality workflow upgrades: word prediction and tag IntelliSense (`Ctrl+Space`), dedicated snippet hotkeys (`Ctrl+Alt+Space` and `Ctrl+Alt+Shift+Space`), browser preview (`Ctrl+Shift+V`), Markdown list continuation/nesting plus a List Manager tree (`Ctrl+Alt+L`), heading style controls for live font/size/alignment updates, a keyboard-first Heading Organizer (`Ctrl+Alt+Shift+H`) for level/reorder/validation, a local Writing Assistant surface with rewrite/summarize/continue/grammar quick actions, and AI connection preferences for local Ollama, Ollama cloud key mode, or custom endpoints with DPAPI-protected optional keys.
+
+This cycle also improves AI connection confidence and accessibility. The connection dialog now supports Verify Connection, List Models, and model recommendations, and saving settings automatically runs verification. The AI menu shows a one-line status and detail (`Ready` or `Needs attention` with reason), and the same plain-language result is announced for screen-reader users immediately.
+
+This cycle also strengthens customization with custom profiles (including opt-in inheritance or bare-bones starts), a quick profile picker on `Alt+Shift+P`, and cleaner status/title behavior by suppressing duplicate file-path reporting when full-path title mode is enabled.
+
+This cycle also expands document-intake depth. For release-safe beta validation, Word and CSV/TSV currently open in the normal plain-text editing surface by default. Structured Word and CSV grid paths remain in the codebase behind an internal gate for continued verification before wider rollout.
 
 ## What makes Quill special
 
@@ -28,9 +36,10 @@ Quill Beta already includes a broad set of everyday and specialist features:
 - plain text, Markdown, HTML, and RTF workflows that stay readable and structured
 - spell check, thesaurus, word count, link insertion, and source-aware copy
 - heading, list, table, code block, and markup insertion tools
-- a new snippet system with searchable insertion (`Ctrl+Space`), management (`Ctrl+Alt+Space`), and starter packs
+- a new snippet system with searchable insertion (`Ctrl+Alt+Space`), management (`Ctrl+Alt+Shift+Space`), and starter packs
 - compare workflows for file-to-file and document-to-document review
 - EPUB navigation, OCR image intake, and extraction-quality review
+- expanded structured intake for `.doc`/`.docx`, `.ppt`/`.pptx`, `.xlsx`/`.xls`, `.pages`, and low-confidence PDF fallback via MarkItDown when available
 - feature profiles that keep the interface calm without taking power away
 - golden keyboard packs inspired by Windows Notepad, Notepad++, VS Code, Microsoft Word, and Quill-native workflows
 - the first native GLOW workflows for deterministic audit and fix work inside the editor itself
@@ -84,7 +93,7 @@ If something feels rough, that feedback is valuable. If something delights you, 
 
 We want the beta feedback path to be inclusive and low-friction.
 
-Inside Quill 0.1.1 Beta, the primary feedback path starts in the Help menu.
+Inside Quill 0.1.2 Beta, the primary feedback path starts in the Help menu.
 
 If you want to report a problem, Quill now guides you through it like this:
 
@@ -97,7 +106,7 @@ If you want to report a problem, Quill now guides you through it like this:
 
 That is the intended unified user route. It keeps the work inside Quill for as long as possible, explains what is being shared, and gives the user a clearer handoff into the Community Access support process.
 
-There is still room to improve this over time, especially around future no-login upload flows, but the important point for Quill 0.1.1 Beta is that users should start in **Help**, not by hunting for a GitHub page.
+There is still room to improve this over time, especially around future no-login upload flows, but the important point for Quill 0.1.2 Beta is that users should start in **Help**, not by hunting for a GitHub page.
 
 ## Thank you for trying Quill
 

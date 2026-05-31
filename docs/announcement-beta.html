@@ -181,15 +181,14 @@ creates.</strong></p>
 <h2 id="a-screen-reader-first-writing-environment-for-windows">A
 screen-reader-first writing environment for Windows</h2>
 <p>Quill Beta is here.</p>
-<p>This release is Quill 0.1.1 Beta from Blind Information Technology
+<p>This release is Quill 0.1.2 Beta from Blind Information Technology
 Solutions (BITS) and Community Access.</p>
 <p>Quill is a writing, reading, review, and document-intelligence
 environment for Windows built around a simple idea: powerful tools
 should feel calm, predictable, and welcoming from the keyboard. The
 editor is local-first, screen-reader-first, and designed to make serious
 text work feel steady instead of fragile.</p>
-<p>The name is intentional. Quill reflects both writing craft and a love
-of magical storytelling (yes, Harry Potter), but grounded in dependable
+<p>The name is intentional. Quill reflects writing craft and dependable
 engineering. This work is built by us, for us, and for the wider
 world.</p>
 <p>Quill is not only a place to type notes. It is a place to open and
@@ -212,6 +211,35 @@ now reads as Recent Marks (Ring) to lower jargon. The interactive status
 bar is also fuller: focused cells now expose direct context actions
 (Activate, Hide this item, Status bar settings), and status bar settings
 now include Restore Defaults.</p>
+<p>Quill 0.1.2 extends that foundation with editor-quality workflow
+upgrades: word prediction and tag IntelliSense
+(<code>Ctrl+Space</code>), dedicated snippet hotkeys
+(<code>Ctrl+Alt+Space</code> and <code>Ctrl+Alt+Shift+Space</code>),
+browser preview (<code>Ctrl+Shift+V</code>), Markdown list
+continuation/nesting plus a List Manager tree (<code>Ctrl+Alt+L</code>),
+heading style controls for live font/size/alignment updates, a
+keyboard-first Heading Organizer (<code>Ctrl+Alt+Shift+H</code>) for
+level/reorder/validation, a local Writing Assistant surface with
+rewrite/summarize/continue/grammar quick actions, and AI connection
+preferences for local Ollama, Ollama cloud key mode, or custom endpoints
+with DPAPI-protected optional keys.</p>
+<p>This cycle also improves AI connection confidence and accessibility.
+The connection dialog now supports Verify Connection, List Models, and
+model recommendations, and saving settings automatically runs
+verification. The AI menu shows a one-line status and detail
+(<code>Ready</code> or <code>Needs attention</code> with reason), and
+the same plain-language result is announced for screen-reader users
+immediately.</p>
+<p>This cycle also strengthens customization with custom profiles
+(including opt-in inheritance or bare-bones starts), a quick profile
+picker on <code>Alt+Shift+P</code>, and cleaner status/title behavior by
+suppressing duplicate file-path reporting when full-path title mode is
+enabled.</p>
+<p>This cycle also expands document-intake depth. For release-safe beta
+validation, Word and CSV/TSV currently open in the normal plain-text
+editing surface by default. Structured Word and CSV grid paths remain in
+the codebase behind an internal gate for continued verification before
+wider rollout.</p>
 <h2 id="what-makes-quill-special">What makes Quill special</h2>
 <p>Quill Beta already includes a broad set of everyday and specialist
 features:</p>
@@ -224,12 +252,16 @@ structured</li>
 copy</li>
 <li>heading, list, table, code block, and markup insertion tools</li>
 <li>a new snippet system with searchable insertion
-(<code>Ctrl+Space</code>), management (<code>Ctrl+Alt+Space</code>), and
-starter packs</li>
+(<code>Ctrl+Alt+Space</code>), management
+(<code>Ctrl+Alt+Shift+Space</code>), and starter packs</li>
 <li>compare workflows for file-to-file and document-to-document
 review</li>
 <li>EPUB navigation, OCR image intake, and extraction-quality
 review</li>
+<li>expanded structured intake for <code>.doc</code>/<code>.docx</code>,
+<code>.ppt</code>/<code>.pptx</code>,
+<code>.xlsx</code>/<code>.xls</code>, <code>.pages</code>, and
+low-confidence PDF fallback via MarkItDown when available</li>
 <li>feature profiles that keep the interface calm without taking power
 away</li>
 <li>golden keyboard packs inspired by Windows Notepad, Notepad++, VS
@@ -309,7 +341,7 @@ delights you, that is valuable too. Both help shape what Quill becomes
 next.</p>
 <h2 id="feedback-and-bug-reports">Feedback and bug reports</h2>
 <p>We want the beta feedback path to be inclusive and low-friction.</p>
-<p>Inside Quill 0.1.1 Beta, the primary feedback path starts in the Help
+<p>Inside Quill 0.1.2 Beta, the primary feedback path starts in the Help
 menu.</p>
 <p>If you want to report a problem, Quill now guides you through it like
 this:</p>
@@ -330,7 +362,7 @@ Quill for as long as possible, explains what is being shared, and gives
 the user a clearer handoff into the Community Access support
 process.</p>
 <p>There is still room to improve this over time, especially around
-future no-login upload flows, but the important point for Quill 0.1.1
+future no-login upload flows, but the important point for Quill 0.1.2
 Beta is that users should start in <strong>Help</strong>, not by hunting
 for a GitHub page.</p>
 <h2 id="thank-you-for-trying-quill">Thank you for trying Quill</h2>

@@ -20,18 +20,29 @@ from quill.core.features import (
 
 def test_feature_mapping_infers_command_groups() -> None:
     assert feature_for_command("edit.find") == "core.search"
+    assert feature_for_command("edit.replace") == "core.search"
     assert feature_for_command("edit.replace_all") == "core.search.regex"
     assert feature_for_command("tools.read_aloud_start_pause") == "core.read_aloud"
     assert feature_for_command("tools.announcement_backend") == "core.accessibility"
     assert feature_for_command("tools.announcement_trace_toggle") == "core.accessibility"
     assert feature_for_command("format.insert_table") == "core.format"
+    assert feature_for_command("edit.word_prediction") == "core.intellisense"
+    assert feature_for_command("help.open_logs_folder") == "core.help"
+    assert feature_for_command("help.open_diagnostics_folder") == "core.help"
+    assert feature_for_command("tools.yaml_structure_editor") == "core.format"
+    assert feature_for_command("tools.ai_assistant") == "future.ai"
+    assert feature_for_command("tools.ai_rewrite_selection") == "future.ai"
+    assert feature_for_command("tools.ai_summarize_selection") == "future.ai"
+    assert feature_for_command("tools.ai_continue_writing") == "future.ai"
+    assert feature_for_command("tools.ai_fix_grammar") == "future.ai"
+    assert feature_for_command("tools.run_python") == "future.ai"
 
 
 def test_feature_manager_respects_profile_state() -> None:
     manager = FeatureManager(active_profile_id=PROFILE_ESSENTIAL)
     assert manager.state_for("core.file") == FEATURE_STATE_ON
     assert manager.state_for("core.search.regex") == FEATURE_STATE_QUIET
-    assert manager.state_for("future.ai") == FEATURE_STATE_OFF
+    assert manager.state_for("future.ai") == FEATURE_STATE_QUIET
 
 
 def test_feature_manager_can_switch_profiles() -> None:
@@ -77,6 +88,10 @@ def test_feature_registry_includes_shipped_profiles() -> None:
     assert "office_and_admin" in PROFILE_DEFINITIONS
     assert "low_vision" in PROFILE_DEFINITIONS
     assert "braille_screen_reader_power_user" in PROFILE_DEFINITIONS
+
+
+def test_intellisense_feature_is_in_registry() -> None:
+    assert "core.intellisense" in PROFILE_DEFINITIONS[PROFILE_FULL_QUILL].states
 
 
 def test_feature_profile_import_and_export_roundtrip() -> None:

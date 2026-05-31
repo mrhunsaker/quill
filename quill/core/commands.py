@@ -48,6 +48,9 @@ class CommandRegistry:
             self._on_run(command_id)
         command.handler()
 
+    def get(self, command_id: str) -> Command | None:
+        return self._commands.get(command_id)
+
     def set_run_listener(self, listener: Callable[[str], None] | None) -> None:
         self._on_run = listener
 

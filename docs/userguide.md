@@ -6,7 +6,7 @@
 
 Quill is a screen-reader-first writing and reading environment for Windows. It is designed to feel calm, predictable, deeply keyboard-friendly, and respectful of your focus. It is also ambitious. Quill is not only a place to write plain text. It is a place to open difficult documents, inspect structure, navigate long material, compare revisions, prepare content for Markdown or HTML, and work with accessibility and extraction issues without leaving the editor.
 
-This guide is aligned to Quill 0.1.1 Beta, built by Blind Information Technology Solutions (BITS) together with Community Access.
+This guide is aligned to Quill 0.1.2 Beta, built by Blind Information Technology Solutions (BITS) together with Community Access.
 
 This guide is written as a companion, not a reference wall. Read it from the beginning if you are new to Quill. Dip into the sections that matter most if you already know what kind of work you want to do.
 
@@ -84,11 +84,11 @@ The menu bar follows the Windows and Office order you likely expect:
 
 - File
 - Edit
-- Search
+- Insert
 - View
+- Search
 - Navigate
 - Format
-- Insert
 - Tools
 - Window
 - Help
@@ -146,6 +146,7 @@ Use `F6` to move into it. Once there, you can move between cells and activate th
 You can reorder or hide status items through **Tools → Customize → Status Bar Settings...**.
 Right-click a focused status cell to **Activate**, **Hide this item**, or open **Status bar settings...**.
 Use **Restore Defaults** in status bar settings to reset visibility and order.
+When title mode is set to full path, Quill automatically hides the duplicate file-path status cell.
 
 ### Region cycling
 
@@ -280,31 +281,36 @@ Inline and structural formatting:
 - Italic
 - Insert Heading levels 1 through 6
 - Increase or decrease heading level
+- Style headings (font, size, alignment) for the current level or all levels
+- Open Heading Organizer (`Ctrl+Alt+Shift+H`) for heading-level edits, section reorder, and heading validation
 - Insert bullet, numbered, and task lists
 - Insert code block
 - Insert footnote
 - Insert table
 - Insert HTML tag
 - Insert Markdown tag
-- Insert snippet (`Ctrl+Space`)
-- Manage snippets (`Ctrl+Alt+Space`)
+- Word prediction (`Ctrl+Space`)
+- Insert snippet (`Ctrl+Alt+Space`)
+- Manage snippets (`Ctrl+Alt+Shift+Space`)
 
 Quill treats Markdown and HTML as working surfaces, not special-purpose export formats. This menu is where that philosophy becomes practical.
 
-### Snippets
+### Word prediction and snippets
 
-Quill 0.1.1 adds a full snippet flow designed for keyboard and screen-reader users:
+Quill 0.1.2 separates live prediction from snippet insertion so the hotkeys feel more like a modern editor:
 
-1. Press `Ctrl+Space` to open **Insert Snippet**.
-2. Type part of a name, trigger, tag, or body text to filter.
-3. Use arrow keys to choose a snippet and press Enter to insert.
-4. If the snippet includes placeholders (`${input:name}`, `${choice:a|b}`, `${date}`, `${time}`, `${cursor}`), Quill prompts in sequence and places the caret at `${cursor}`.
+1. Press `Ctrl+Space` to open **Word Prediction**.
+2. Type to surface matching document words, HTML tags, and Markdown tags.
+3. Use arrow keys to choose a result and press Enter to insert it.
 
 For setup and maintenance:
 
-- Press `Ctrl+Alt+Space` for **Manage Snippets** (create, edit, delete, import, export, and starter packs).
+- Press `Ctrl+Alt+Space` for **Insert Snippet**.
+- Press `Ctrl+Alt+Shift+Space` for **Manage Snippets** (create, edit, delete, import, export, and starter packs).
 - Open **Preferences -> Install Starter Snippet Packs** to install sample libraries for daily writing, developer flow, and support/accessibility notes.
-- In **General Preferences**, toggle **Expand snippet triggers while typing** to enable or disable trigger expansion.
+- In **General Preferences**, toggle **Word prediction and tag IntelliSense** or **Expand snippet triggers while typing** as needed.
+
+Snippets still support placeholders such as `${input:name}`, `${choice:a|b}`, `${date}`, `${time}`, and `${cursor}`.
 
 ### Tools
 
@@ -330,15 +336,77 @@ The palette also learns from usage. Commands you use more often rise naturally.
 - **Next Misspelling**
 - **Thesaurus...**
 - **Dictionary Status...**
+- **Writing Assistant...**
+- **Rewrite Selection**
+- **Summarize Selection**
+- **Continue Writing**
+- **Fix Grammar**
+- **Run Python...**
+- **Browser Preview...** (`Ctrl+Shift+V`)
+
+Browser Preview opens the current document in your chosen browser, defaulting to the system browser. It refreshes as you type so Markdown and HTML changes stay visible without leaving Quill.
+
+The Writing Assistant shell ranks Quill commands from your prompt, offers preset prompts for rewrite/summarize/continue/grammar flows, and Run Python executes a sandboxed transform against the current document text and selection.
+
+Use **AI -> AI Connection...** or **Preferences -> AI Connection** to set provider, host, model, and optional key.
+
+AI connection flow:
+
+1. Choose provider (`Ollama (local)`, `Ollama Cloud (API key)`, or `Custom HTTP`).
+2. Confirm host URL and model.
+3. Enter key only when your endpoint requires authentication.
+4. Use **Verify Connection** to test endpoint and credentials.
+5. Use **List Models** to fetch available models and select one.
+6. Save settings. Quill auto-runs verification and updates the AI status line in the AI menu.
+
+Quill stores optional keys with Windows DPAPI and announces the verification result in plain language for immediate screen-reader feedback.
 
 These help you stay inside the editor instead of breaking flow for small writing chores.
+
+### Ask Quill Chat setup (on-device AI)
+
+Ask Quill Chat (`AI -> Ask Quill Chat...`) is a message-style assistant that can answer, draft text, propose edits, and run Quill commands with approval before changes are applied.
+
+Runtime backends:
+
+- Windows and Linux: `llama.cpp` (`llama-cpp-python`, GGUF model)
+- macOS (Apple Silicon, macOS 26+): Apple Foundation Models
+
+Setup:
+
+1. Install dependencies: `pip install -r requirements.txt`
+2. Put a `.gguf` model in `%APPDATA%\\Quill\\models\\` (Windows) or set `QUILL_LLAMA_MODEL` to a full path.
+3. Open `AI -> Ask Quill Chat...` and send a prompt.
+
+Behavior notes:
+
+- Proposed actions use an explicit `Approve` or `Discard` step.
+- If model/runtime is unavailable, Quill reports this clearly and does not apply destructive changes.
+
+### Writing Assistant connection setup
+
+For release-safe beta validation, Word and CSV open in the normal plain-text editor surface. AI connection and chat flows remain available.
+
+Provider setup:
+
+1. Open `AI -> AI Connection...` (or `Preferences -> AI Connection`).
+2. Choose provider: `Ollama (local)`, `Ollama Cloud (API key)`, or `Custom HTTP`.
+3. Enter host and model.
+4. Enter API key only if required.
+5. Use `Verify Connection`.
+6. Use `List Models` to select from endpoint-reported models.
+7. Save settings. Quill auto-verifies and updates AI status/detail lines.
+
+After save, Quill announces plain-language verification feedback (for example, ready, auth failure, timeout, or endpoint unreachable).
 
 #### Read aloud and integrations
 
 - **Read Aloud** submenu for start or pause, stop, and voice selection
+- **Dictation** submenu for Windows dictation, plus an opt-in **Hey QUILL Commands** toggle that lets dictation phrases trigger Quill commands instead of inserting text.
 - **Integrations** submenu with **OCR Image...** and shell integration commands.
 
 Read Aloud is particularly useful for proofreading by ear. OCR Image handles image-to-text work with an explicit consent and progress flow.
+Dictation uses Windows' own speech input. When Hey QUILL Commands is enabled, Quill stays silent and only listens while dictation is active, then runs the matching action after the wake phrase.
 
 #### Document intake and extraction review
 
@@ -352,6 +420,12 @@ These commands matter when Quill is acting as a trusted reader for imported form
 - Did the source likely contain structure that did not survive?
 - Is this document safe to quote from directly?
 - Do I need to escalate this source for manual cleanup?
+
+Release-safety note for current beta validation:
+
+- Word files (`.doc`, `.docx`) open into the normal plain-text editing surface.
+- CSV/TSV files open into the normal plain-text editing surface.
+- Structured Word and CSV grid surfaces remain in the codebase behind an internal verification gate.
 
 #### GLOW
 
@@ -531,6 +605,12 @@ Quill detects whether the current surface looks like Markdown, HTML, or plain te
 
 The heading tools do more than insert decoration. They help you maintain usable structure. The list tools speed up common authoring patterns without forcing you into a separate composer.
 
+Markdown list editing now follows editor-standard behavior: `Enter` continues the current bullet/numbered/task item, and `Enter` on an empty list marker exits the list. When the caret is on a list item, `Tab` nests it and `Shift+Tab` promotes it. For larger reorganizations, use **Format -> List -> List Manager...** (`Ctrl+Alt+L`) to move, promote/demote, add, edit, and delete list items from a tree view.
+
+For heading presentation control, open **Insert -> Heading -> Style Headings...**. You can style either all heading levels or the current heading level, then set font family, point size, and alignment. In Markdown documents, styled headings are written as HTML heading tags so the formatting is preserved.
+
+For structure editing, open **Navigate -> Heading Organizer...** (`Ctrl+Alt+Shift+H`). The organizer lists each heading as level + title, supports keyboard promotion/demotion (`Tab` and `Shift+Tab`), lets you move sections up/down, rename headings, and validates heading order (start level, skipped levels, empty headings) before apply.
+
 ### Tables, code blocks, and tags
 
 Quill includes guided insertion for tables, code blocks, HTML tags, and Markdown snippets. This is especially useful for users who want structure but do not want to hand-type every opening and closing marker correctly every time.
@@ -619,10 +699,19 @@ Profiles shape which feature clusters are on, quiet, or off. This helps Quill st
 Use **Profiles and Features...** to:
 
 - switch profiles
+- quick-switch profiles from anywhere with `Alt+Shift+P`
 - compare profiles
 - undo the last profile change
 - reset to Essential
 - import and export profile data
+- create custom profiles
+- update a custom profile from your current feature/settings/keymap state
+- delete custom profiles
+
+Custom profiles support an explicit inheritance choice:
+
+- **Inherit parent profile** keeps the selected built-in profile as the starting point.
+- **Bare-bones start** opts out of inherited features and starts with only locked core safety features enabled.
 
 ### Keyboard packs
 
@@ -718,7 +807,7 @@ Quill keeps an internal notification center for update and workflow events. Upda
 
 ## Working with Different Document Types
 
-Quill is strongest today with plain text, Markdown, HTML, RTF, EPUB, and extracted text workflows. It also has intake and extraction review features for imported material such as PDF and OCR sources.
+Quill is strongest today with plain text, Markdown, HTML, RTF, EPUB, and extracted text workflows. It also has intake and extraction review features for imported material such as PDF/OCR sources and structured import support for Office-style formats.
 
 ### Plain text
 
@@ -736,9 +825,27 @@ HTML gets tag insertion, structure-aware editing help, link handling, and GLOW r
 
 RTF documents can use Quill's rich-text-capable editing surface when formatting fidelity matters. Commands such as bold, italic, and underline are exposed contextually in this mode while preserving Quill's keyboard-first, screen-reader-first behavior.
 
+### CSV and TSV
+
+CSV and TSV files open through a choice flow: special CSV grid mode or normal text editor mode. You can remember your preferred default and still switch modes from inside the tab at any time. Grid mode is keyboard-friendly and designed for screen-reader users who need cell-level table editing without leaving Quill.
+
+### Word (.docx and .doc)
+
+Word documents open through a choice flow: structured Word view or normal text editor mode. You can remember your preferred default and still switch modes inside the tab.
+
+Structured Word view is optimized for accessibility: it prioritizes readable structure and linearized table narration (headers and rows) for screen readers. Normal text mode keeps full Quill editing behavior for direct edits.
+
 ### EPUB
 
 EPUB gets navigator support and chapter-oriented reading.
+
+### PowerPoint (.pptx and .ppt)
+
+PowerPoint imports are structure-aware: slide titles become headings, slide bullets become nested list items, tables are rendered into tab-friendly text tables, and speaker notes are included when present.
+
+### Excel-style spreadsheets (.xlsx and .xls)
+
+Spreadsheet intake is text-first and structure-aware. Quill extracts sheets into readable table-oriented text so you can inspect and review content quickly. If optional converters are installed, extraction quality improves for legacy and mixed-format files.
 
 ### PDF and OCR-derived text
 
@@ -758,7 +865,7 @@ That last command matters more than it first appears. It turns feature visibilit
 
 ## Beta Feedback and Bug Reporting
 
-Quill is ready for serious beta use, and Quill 0.1.1 Beta now ships a real in-app support starting point.
+Quill is ready for serious beta use, and Quill 0.1.2 Beta now ships a real in-app support starting point.
 
 ### What exists today
 
@@ -785,7 +892,7 @@ Before the broadest public rollout, publish one secure feedback route that does 
 3. a plain-language bug template with environment summary and reproduction steps
 4. the current **Help -> Report a Bug...** handoff kept as the guided in-app bridge until the fuller route is live
 
-Until that exists, use the current Help-menu path as the practical bridge. The important improvement in Quill 0.1.1 Beta is that Quill now helps users gather diagnostics locally, review what is being shared, and start a structured support report without forcing them to begin outside the tool.
+Until that exists, use the current Help-menu path as the practical bridge. The important improvement in Quill 0.1.2 Beta is that Quill now helps users gather diagnostics locally, review what is being shared, and start a structured support report without forcing them to begin outside the tool.
 
 ## A Fast Shortcut Tour
 
@@ -796,6 +903,7 @@ If you want a compact set of shortcuts to remember first, start here:
 - `Ctrl+F`, `F3`, `Shift+F3`, `Alt+F3`
 - `Ctrl+G` and `Ctrl+Shift+G`
 - `Ctrl+K` and `Ctrl+Enter`
+- `Ctrl+Alt+L` for List Manager
 - `F7`, `Alt+F7`, `Shift+F7`
 - `Ctrl+Shift+W` for Word Count
 - `Ctrl+Tab` and `Ctrl+Shift+Tab`

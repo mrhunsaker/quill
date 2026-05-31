@@ -34,6 +34,10 @@ def _validate_docs_artifacts(changed_paths: set[str]) -> list[str]:
         source_path = Path(source)
         if source_path.parent.as_posix() != "docs" or source_path.suffix.lower() != ".md":
             continue
+        if not source_path.exists():
+            # Source markdown was removed or moved; matching artifact files are
+            # expected to be removed as well, not regenerated.
+            continue
         expected = {
             source_path.with_suffix(".html").as_posix(),
             source_path.with_suffix(".epub").as_posix(),

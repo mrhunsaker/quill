@@ -47,8 +47,8 @@ version = "2.4.6"
     assert "Pandoc Conversion Wizard" in readme_text
 
     assert (portable_dir / "docs" / "userguide.md").exists()
-    assert (portable_dir / "docs" / "announcement-beta.md").exists()
-    assert (portable_dir / "docs" / "QUILL-PRD.md").exists()
+    assert not (portable_dir / "docs" / "announcement-beta.md").exists()
+    assert not (portable_dir / "docs" / "QUILL-PRD.md").exists()
 
     manifest_path = portable_dir / "manifest.json"
     assert manifest_path.exists()
@@ -60,6 +60,7 @@ version = "2.4.6"
     assert manifest["version"] == "2.4.6"
     assert manifest["bundledPython"] is False
     assert manifest["bundledTools"] == []
+    assert manifest["docs"] == [r"docs\userguide.md"]
 
     assert installer_script.exists()
     assert bundle["installer_script"] == str(installer_script)
@@ -78,9 +79,12 @@ def test_build_inno_setup_script_mentions_portable_bundle() -> None:
     assert "WizardStyle=modern" in script
     assert "DisableDirPage=no" in script
     assert "InfoAfterFile=..\\portable\\README.txt" in script
+    assert "aiassistant" in script
+    assert "Writing Assistant Setup" in script
     assert "User Guide" in script
-    assert "Beta Announcement" in script
-    assert "Product Requirements" in script
+    assert "Beta Announcement" not in script
+    assert "Product Requirements" not in script
+    assert 'Excludes: "docs\\announcement-beta.md,docs\\QUILL-PRD.md"' in script
     # File-association registry entries use HKCU only (never overwrite defaults).
     assert "HKCU" in script
     assert "HKLM" not in script

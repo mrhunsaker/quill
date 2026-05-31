@@ -6,6 +6,41 @@
 
 **QUILL: A quality, usable, inclusive, lightweight, and literate editor built for everyone who writes, codes, learns, and creates.**
 
+## Quill 0.1.2 Beta
+
+Quill 0.1.2 Beta expands Quill's writing flow with prediction, snippets, browser preview, local assistant workflows, and packaging/onboarding polish.
+
+### Added and improved in 0.1.2
+
+- Added **Word Prediction** with `Ctrl+Space`, including document-word, HTML tag, and Markdown tag suggestions.
+- Moved **Insert Snippet** to `Ctrl+Alt+Space` and **Manage Snippets** to `Ctrl+Alt+Shift+Space` so snippet insertion no longer clashes with prediction.
+- Added a **Word Prediction as you type** preference and View-menu toggle.
+- Added **Browser Preview** (`Ctrl+Shift+V`) with system-default browser support and selectable browser preference.
+- Added a local **Writing Assistant** menu surface with rewrite/summarize/continue/grammar quick actions and ranked command suggestions.
+- Added a sandboxed **Run Python** transform tool for document/selection automation.
+- Added first-run **Writing Assistant onboarding** plus **Preferences -> AI Connection** for provider, host, and model setup.
+- Added secure optional API-key storage for AI endpoints using **Windows DPAPI**.
+- Added AI provider support for **Ollama Cloud (API key)** and improved custom-endpoint handling.
+- Added **Verify Connection**, **List Models**, and **Recommend Model** actions in AI connection settings.
+- Added automatic AI-connection verification on save and an AI-menu status flow with **Ready / Needs attention / Not checked**.
+- Added an AI-menu detail line with short verification reason text.
+- Improved screen-reader behavior by announcing plain-language AI verification outcomes immediately.
+- Improved Ask Quill chat accessibility by announcing incoming responses/proposals/errors as they arrive.
+- Updated Windows packaging to stage an assistant setup guide and expose an optional `aiassistant` installer component.
+- Added custom profile management with opt-in inheritance from a parent built-in profile or an explicit bare-bones start.
+- Added profile quick picker hotkey **Alt+Shift+P** (`help.switch_feature_profile`).
+- Updated profile switching so custom profiles can carry feature states, settings, and keymap bindings together.
+- Added Markdown list editing flow updates: `Enter` continues list items, `Enter` on an empty marker exits the list, and `Tab`/`Shift+Tab` nest or promote list items.
+- Added a **List Manager** (`Ctrl+Alt+L`) under Format -> List for tree-based list restructuring (move, promote/demote, add, edit, delete).
+- Added structured **PowerPoint (.pptx) import** with slide titles as headings, bullet levels as nested lists, table extraction, and speaker-note extraction.
+- Added **Style Headings...** under Insert -> Heading to apply font family, size, and alignment to current-level or all headings in Markdown/HTML.
+- Added **Heading Organizer** (`Ctrl+Alt+Shift+H`) for keyboard-first heading promotion/demotion, section reordering, heading renaming, and accessibility validation before apply.
+- Added release-safety fallback for beta testing: Word (`.doc`, `.docx`) and CSV/TSV now open in the standard plain-text editing surface by default.
+- Kept structured Word and CSV grid implementations in-repo behind an internal gate for continued verification.
+- Removed duplicate path reporting by hiding the status-bar file path item when full path is already shown in the title bar.
+- Fixed intermittent unit-test file-locking in UI navigation tests by isolating `QUILL_DATA_DIR` per test.
+- Expanded docs and release notes for the complete 0.1.2 feature set.
+
 ## Quill 0.1.1 Beta
 
 Quill 0.1.1 Beta advances the 0.1 baseline with update-path hardening, status-bar parity completion, menu/discoverability polish, and documentation alignment.

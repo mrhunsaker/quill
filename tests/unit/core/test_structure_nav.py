@@ -21,3 +21,9 @@ def test_structure_positions_include_headings_and_brackets() -> None:
     assert first is not None
     later = previous_structure_position(text, len(text), "markdown")
     assert later is not None
+
+
+def test_structure_positions_include_yaml_structure() -> None:
+    text = "root:\n  child: value\n"
+    assert next_structure_position(text, 0, "yaml") == 6
+    assert previous_structure_position(text, len(text), "yaml") == 6

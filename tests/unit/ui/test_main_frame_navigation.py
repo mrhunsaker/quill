@@ -15,6 +15,11 @@ from quill.core.spellcheck import Misspelling
 from quill.ui.main_frame import MainFrame
 
 
+@pytest.fixture(autouse=True)
+def _isolated_quill_data_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+
+
 class _Editor:
     def __init__(self, text: str, insertion_point: int = 0) -> None:
         self._text = text
@@ -83,9 +88,16 @@ class _Notebook:
         self.pages: list[object] = []
         self.selection = 0
         self.titles: list[str] = []
+        self.visible = True
 
     def Bind(self, *_args: object, **_kwargs: object) -> None:
         return None
+
+    def Show(self, value: bool = True) -> None:
+        self.visible = value
+
+    def Hide(self) -> None:
+        self.visible = False
 
     def AddPage(self, page: object, title: str, select: bool = False) -> None:
         self.pages.append(page)
@@ -105,11 +117,17 @@ class _Notebook:
     def SetSelection(self, index: int) -> None:
         self.selection = index
 
+    def ChangeSelection(self, index: int) -> None:
+        self.selection = index
+
     def GetPageCount(self) -> int:
         return len(self.pages)
 
     def SetPageText(self, index: int, title: str) -> None:
         self.titles[index] = title
+
+    def GetPageText(self, index: int) -> str:
+        return self.titles[index]
 
 
 class _MenuItem:
@@ -176,6 +194,7 @@ def _build_frame(text: str, insertion_point: int = 0) -> MainFrame:
         {
             "persistent_undo": False,
             "wrap_find": True,
+            "show_tab_control": False,
             "title_bar_path_mode": "name",
             "dirty_title_style": "text",
             "status_bar_order": ["message", "line_column", "mode", "selection", "file_path"],
@@ -214,6 +233,7 @@ def test_persistent_undo_steps_across_history() -> None:
         {
             "persistent_undo": True,
             "wrap_find": True,
+            "show_tab_control": False,
             "title_bar_path_mode": "name",
             "dirty_title_style": "text",
             "status_bar_order": ["message", "line_column", "mode", "selection", "file_path"],
@@ -254,6 +274,26 @@ def test_refresh_title_uses_full_path_when_enabled() -> None:
     frame._refresh_title()
 
     assert frame.frame.title == f"{frame.document.path} * - Quill"
+
+
+def test_statusbar_hides_file_path_when_title_uses_full_path() -> None:
+    frame = _build_frame("hello", insertion_point=0)
+    frame.settings.title_bar_path_mode = "full_path"
+
+    items = frame._statusbar_items()
+
+    assert "file_path" not in items
+
+
+def test_statusbar_hides_modified_message_when_title_shows_dirty_state() -> None:
+    frame = _build_frame("hello", insertion_point=0)
+    frame.document.modified = True
+    frame.settings.dirty_title_style = "text"
+    frame._status_message = "Modified"
+
+    message = frame._statusbar_text_for_item("message")
+
+    assert message == "Ready"
 
 
 def test_refresh_title_uses_asterisk_text_dirty_style() -> None:
@@ -325,6 +365,41 @@ def test_close_current_document_removes_tab() -> None:
     assert frame.document.path == Path("note.md")
 
 
+def test_prompt_to_save_active_document_saves_when_requested() -> None:
+    frame = _build_frame("one", insertion_point=0)
+    frame.document.modified = True
+    frame._wx = type("WX", (), {"ID_YES": 1, "ID_CANCEL": 0})()
+    actions: list[str] = []
+
+    frame._prompt_unsaved_changes_action = lambda *_args: 1  # type: ignore[method-assign]
+
+    def _save_file() -> None:
+        actions.append("saved")
+        frame.document.modified = False
+
+    frame.save_file = _save_file  # type: ignore[method-assign]
+
+    assert frame._prompt_to_save_active_document("closing") is True
+    assert actions == ["saved"]
+
+
+def test_prompt_to_save_active_document_cancels_when_requested() -> None:
+    frame = _build_frame("one", insertion_point=0)
+    frame.document.modified = True
+    frame._wx = type("WX", (), {"ID_YES": 1, "ID_CANCEL": 0})()
+    frame._prompt_unsaved_changes_action = lambda *_args: 0  # type: ignore[method-assign]
+
+    assert frame._prompt_to_save_active_document("closing") is False
+
+
+def test_confirm_discard_changes_accepts_reload_only() -> None:
+    frame = _build_frame("one", insertion_point=0)
+    frame._wx = type("WX", (), {"ID_YES": 1, "ID_CANCEL": 0})()
+    frame._prompt_unsaved_changes_action = lambda *_args: 1  # type: ignore[method-assign]
+
+    assert frame._confirm_discard_changes() is True
+
+
 def test_compare_group_builder_classifies_case_only_changes() -> None:
     frame = _build_frame("Alpha")
     groups = frame._build_compare_groups([("left.txt", "Alpha\n"), ("right.txt", "alpha\n")])
@@ -387,6 +462,83 @@ def test_ctrl_shift_o_opens_outline_navigator_from_editor() -> None:
     frame._on_editor_key_down(event)
 
     assert called["outline"] is True
+
+
+def test_enter_continues_markdown_list_item() -> None:
+    frame = _build_frame("- item", insertion_point=6)
+    frame._wx = type(
+        "WX",
+        (),
+        {
+            "WXK_INSERT": 45,
+            "WXK_F8": 119,
+            "WXK_RETURN": 13,
+            "WXK_NUMPAD_ENTER": 370,
+            "WXK_TAB": 9,
+        },
+    )()
+    event = _KeyEvent(13)
+
+    frame._on_editor_key_down(event)
+
+    assert frame.editor.GetValue() == "- item\n- "
+    assert frame._status_message == "Continued list item"
+
+
+def test_enter_on_empty_list_item_exits_list() -> None:
+    frame = _build_frame("- ", insertion_point=2)
+    frame._wx = type(
+        "WX",
+        (),
+        {
+            "WXK_INSERT": 45,
+            "WXK_F8": 119,
+            "WXK_RETURN": 13,
+            "WXK_NUMPAD_ENTER": 370,
+            "WXK_TAB": 9,
+        },
+    )()
+    event = _KeyEvent(13)
+
+    frame._on_editor_key_down(event)
+
+    assert frame.editor.GetValue() == ""
+    assert frame._status_message == "Exited list"
+
+
+def test_tab_and_shift_tab_adjust_list_nesting() -> None:
+    frame = _build_frame("- one\n- two", insertion_point=8)
+    frame._wx = type(
+        "WX",
+        (),
+        {
+            "WXK_INSERT": 45,
+            "WXK_F8": 119,
+            "WXK_RETURN": 13,
+            "WXK_NUMPAD_ENTER": 370,
+            "WXK_TAB": 9,
+        },
+    )()
+    event = _KeyEvent(9)
+    frame._on_editor_key_down(event)
+    assert frame.editor.GetValue() == "- one\n    - two"
+    assert frame._status_message == "Nested list item"
+
+    shift_event = _KeyEvent(9)
+    shift_event._shift = True
+    frame._on_editor_key_down(shift_event)
+    assert frame.editor.GetValue() == "- one\n- two"
+    assert frame._status_message == "Promoted list item"
+
+
+def test_extract_list_manager_state_tracks_nested_items() -> None:
+    frame = _build_frame("- Parent\n    - [x] Child\n1. Ordered", insertion_point=14)
+
+    state = frame._extract_list_manager_state()
+
+    assert state is not None
+    assert [item.kind for item in state.items] == ["bullet", "task", "ordered"]
+    assert [item.level for item in state.items] == [0, 1, 0]
 
 
 def test_open_outline_navigator_routes_epub_to_epub_navigator() -> None:
@@ -599,9 +751,7 @@ def test_find_heading_position_returns_matching_heading_offset() -> None:
 
 def test_build_misspelling_navigator_nodes_uses_line_and_column() -> None:
     frame = _build_frame("hello\nwrng word\n", insertion_point=0)
-    nodes = frame._build_misspelling_navigator_nodes(
-        [Misspelling(word="wrng", start=6, end=10)]
-    )
+    nodes = frame._build_misspelling_navigator_nodes([Misspelling(word="wrng", start=6, end=10)])
 
     assert nodes[0].label == "wrng (Ln 2, Col 1)"
     assert nodes[0].action_label == "Jump to Occurrence"
@@ -931,6 +1081,162 @@ def test_find_text_sets_anchor_and_extends_when_mode_is_on() -> None:
     assert frame._status_message == "Found at position 12"
 
 
+def test_prompt_search_defers_focus_and_wires_escape() -> None:
+    frame = _build_frame("alpha beta", insertion_point=0)
+    frame._last_find_query = "alpha"
+    deferred: list[object] = []
+    captured: dict[str, object] = {}
+
+    class _Button:
+        def SetDefault(self) -> None:
+            return None
+
+    class _ButtonSizer:
+        def FindWindowById(self, _window_id: int) -> _Button:
+            return _Button()
+
+    class _TextCtrl:
+        def __init__(self, _parent: object, value: str = "", style: int = 0) -> None:
+            self.value = value
+            self.style = style
+            self.focused = False
+            self.selection: tuple[int, int] | None = None
+            self.handlers: dict[int, object] = {}
+            captured["query"] = self
+
+        def Bind(self, event: int, handler: object) -> None:
+            self.handlers[event] = handler
+
+        def GetValue(self) -> str:
+            return self.value
+
+        def SetFocus(self) -> None:
+            self.focused = True
+
+        def SetSelection(self, start: int, end: int) -> None:
+            self.selection = (start, end)
+
+    class _Dialog:
+        def __init__(self, _parent: object, title: str, size: tuple[int, int]) -> None:
+            self.title = title
+            self.size = size
+            self.affirmative_id: int | None = None
+            self.escape_id: int | None = None
+            self.handlers: dict[int, object] = {}
+            self.destroyed = False
+            captured["dialog"] = self
+
+        def CreateButtonSizer(self, _style: int) -> _ButtonSizer:
+            return _ButtonSizer()
+
+        def SetAffirmativeId(self, value: int) -> None:
+            self.affirmative_id = value
+
+        def SetEscapeId(self, value: int) -> None:
+            self.escape_id = value
+
+        def SetSizerAndFit(self, _sizer: object) -> None:
+            return None
+
+        def Bind(self, event: int, handler: object) -> None:
+            self.handlers[event] = handler
+
+        def EndModal(self, _result: int) -> None:
+            return None
+
+        def Destroy(self) -> None:
+            self.destroyed = True
+
+    class _Panel:
+        def __init__(self, _parent: object) -> None:
+            return None
+
+        def SetSizer(self, _sizer: object) -> None:
+            return None
+
+    class _BoxSizer:
+        def __init__(self, _orientation: int) -> None:
+            return None
+
+        def Add(self, _item: object, *_args: object, **_kwargs: object) -> None:
+            return None
+
+    class _StaticText:
+        def __init__(self, _parent: object, label: str) -> None:
+            self.label = label
+
+    class _Choice:
+        def __init__(self, _parent: object, choices: list[str]) -> None:
+            self.choices = choices
+            self.selection = 0
+
+        def SetSelection(self, selection: int) -> None:
+            self.selection = selection
+
+        def GetStringSelection(self) -> str:
+            return self.choices[self.selection]
+
+    class _CheckBox:
+        def __init__(self, _parent: object, label: str) -> None:
+            self.label = label
+            self.value = False
+
+        def GetValue(self) -> bool:
+            return self.value
+
+    wx = type(
+        "WX",
+        (),
+        {
+            "Dialog": _Dialog,
+            "Panel": _Panel,
+            "BoxSizer": _BoxSizer,
+            "StaticText": _StaticText,
+            "TextCtrl": _TextCtrl,
+            "Choice": _Choice,
+            "CheckBox": _CheckBox,
+            "TE_PROCESS_ENTER": 0,
+            "VERTICAL": 1,
+            "EXPAND": 2,
+            "ALL": 4,
+            "LEFT": 8,
+            "RIGHT": 16,
+            "TOP": 32,
+            "OK": 1,
+            "CANCEL": 2,
+            "ID_OK": 1,
+            "ID_CANCEL": 0,
+            "EVT_CHAR_HOOK": 100,
+            "EVT_TEXT_ENTER": 101,
+            "WXK_ESCAPE": 27,
+            "WXK_RETURN": 13,
+            "WXK_NUMPAD_ENTER": 312,
+            "CallAfter": staticmethod(lambda callback: deferred.append(callback)),
+        },
+    )()
+    frame._wx = wx
+
+    def _show_modal(dialog: object, _label: str) -> int:
+        assert dialog.affirmative_id == wx.ID_OK  # type: ignore[attr-defined]
+        assert dialog.escape_id == wx.ID_CANCEL  # type: ignore[attr-defined]
+        query = captured["query"]
+        assert query.focused is False  # type: ignore[attr-defined]
+        assert deferred
+        for callback in deferred:
+            callback()
+        assert query.focused is True  # type: ignore[attr-defined]
+        assert query.selection == (0, len("alpha"))  # type: ignore[attr-defined]
+        assert wx.EVT_CHAR_HOOK in dialog.handlers  # type: ignore[attr-defined]
+        return wx.ID_CANCEL
+
+    frame._show_modal_dialog = _show_modal  # type: ignore[method-assign]
+
+    result = frame._prompt_search("Find")
+
+    assert result is None
+    assert deferred
+
+
 def test_find_previous_sets_anchor_and_extends_when_mode_is_on() -> None:
     frame = _build_frame("alpha beta alpha", insertion_point=len("alpha beta alpha"))
     frame._last_find_query = "alpha"
@@ -1004,3 +1310,154 @@ def test_restore_backup_loads_selected_snapshot(
     frame._wx = type("WX", (), {"ID_OK": 1, "SingleChoiceDialog": _Dialog})()
     frame.restore_backup()
     assert frame.editor.GetValue() == "restored text"
+
+
+def test_prompt_untrusted_location_uses_single_checkbox_dialog() -> None:
+    frame = _build_frame("hello")
+
+    class _CheckBox:
+        def __init__(self, _parent: object, label: str) -> None:
+            self.label = label
+            self.value = True
+
+        def GetValue(self) -> bool:
+            return self.value
+
+    class _Panel:
+        def __init__(self, _parent: object) -> None:
+            return None
+
+        def SetSizer(self, _sizer: object) -> None:
+            return None
+
+    class _BoxSizer:
+        def __init__(self, _orientation: int) -> None:
+            return None
+
+        def Add(self, _item: object, *_args: object, **_kwargs: object) -> None:
+            return None
+
+    class _StaticText:
+        def __init__(self, _parent: object, label: str) -> None:
+            self.label = label
+
+    class _Dialog:
+        def __init__(self, _parent: object, title: str) -> None:
+            self.title = title
+            self.affirmative_id: int | None = None
+            self.escape_id: int | None = None
+            self.show_count = 0
+
+        def CreateButtonSizer(self, _style: int) -> object:
+            return object()
+
+        def SetAffirmativeId(self, value: int) -> None:
+            self.affirmative_id = value
+
+        def SetEscapeId(self, value: int) -> None:
+            self.escape_id = value
+
+        def ShowModal(self) -> int:
+            self.show_count += 1
+            return 1
+
+    wx = type(
+        "WX",
+        (),
+        {
+            "Dialog": _Dialog,
+            "Panel": _Panel,
+            "BoxSizer": _BoxSizer,
+            "StaticText": _StaticText,
+            "CheckBox": _CheckBox,
+            "VERTICAL": 1,
+            "ALL": 2,
+            "EXPAND": 4,
+            "LEFT": 8,
+            "RIGHT": 16,
+            "BOTTOM": 32,
+            "ALIGN_RIGHT": 64,
+            "OK": 1,
+            "CANCEL": 2,
+            "ID_OK": 1,
+            "ID_CANCEL": 0,
+        },
+    )()
+    frame._wx = wx
+
+    result = frame._prompt_untrusted_location(Path(r"C:\Users\Jeff\Notes"))
+
+    assert result is True
+
+
+def test_prompt_table_shape_reprompts_invalid_values() -> None:
+    frame = _build_frame("hello")
+    messages: list[str] = []
+
+    class _TextEntryDialog:
+        values = iter(["abc", "3", "0", "4"])
+
+        def __init__(self, _parent: object, _message: str, _title: str, value: str) -> None:
+            self.value = next(self.values, value)
+
+        def __enter__(self) -> _TextEntryDialog:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def ShowModal(self) -> int:
+            return 1
+
+        def GetValue(self) -> str:
+            return self.value
+
+    class _MessageDialog:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            return None
+
+        def __enter__(self) -> _MessageDialog:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def ShowModal(self) -> int:
+            return 1
+
+    wx = type(
+        "WX",
+        (),
+        {
+            "TextEntryDialog": _TextEntryDialog,
+            "MessageDialog": _MessageDialog,
+            "VERTICAL": 1,
+            "YES_NO": 2,
+            "ICON_QUESTION": 4,
+            "ICON_ERROR": 8,
+            "OK": 16,
+            "ID_OK": 1,
+            "ID_YES": 2,
+        },
+    )()
+    frame._wx = wx
+
+    def _show_modal(dialog: object, _label: str) -> int:
+        if isinstance(dialog, _MessageDialog):
+            return wx.ID_YES
+        return wx.ID_OK
+
+    def _show_message_box(message: str, caption: str, _style: int) -> int:
+        messages.append(f"{caption}: {message}")
+        return wx.OK
+
+    frame._show_modal_dialog = _show_modal  # type: ignore[method-assign]
+    frame._show_message_box = _show_message_box  # type: ignore[method-assign]
+
+    result = frame._prompt_table_shape()
+
+    assert result == (4, 3, True)
+    assert messages == [
+        "Insert Table: Rows and columns must be whole numbers.",
+        "Insert Table: Rows must be between 1 and 50.",
+    ]
