@@ -11164,10 +11164,9 @@ class MainFrame:
                 self._record_notification(f"Update check failed: {error}", "update")
                 self._set_status("Update check failed")
                 return
-            self._show_message_box(
-                f"Could not check for updates: {error}",
+            self._html_info(
                 "Check for Updates",
-                wx.ICON_ERROR | wx.OK,
+                f"# Update check failed\n\nCould not check for updates:\n\n`{error}`",
             )
             self._set_status("Update check failed")
             self._record_notification("Update check failed", "update")
@@ -11228,10 +11227,11 @@ class MainFrame:
         self._set_status("No update available")
         self._record_notification("Update check found no newer version", "update")
         if beta:
-            self._show_message_box(
-                f"You're up to date on the beta channel.\nCurrent: {current_version}",
+            self._html_info(
                 "Check for Updates",
-                wx.ICON_INFORMATION | wx.OK,
+                "# You're up to date\n\n"
+                "You're on the **beta** channel and running the newest build.\n\n"
+                f"**Current version:** {current_version}",
             )
         else:
             self._offer_beta_switch(current_version, latest_stable)
@@ -11253,6 +11253,14 @@ class MainFrame:
         from quill.core.browser_preview import render_preview_body
 
         return render_preview_body(markdown_text, "markdown")
+
+    def _html_info(self, title: str, markdown_text: str) -> None:
+        """Show an informational message in the WebView dialog (with an OK button)."""
+        from quill.ui.preview_dialog import HtmlMessageDialog
+
+        HtmlMessageDialog(
+            self.frame, title, self._render_html(markdown_text), [("OK", self._wx.ID_OK)]
+        ).show_modal()
 
     def _show_update_available_dialog(self, current_version: str, release: GitHubRelease) -> bool:
         from quill.ui.preview_dialog import HtmlMessageDialog
@@ -11308,21 +11316,18 @@ class MainFrame:
             self._offer_latest_beta(current_version)
 
     def _offer_latest_beta(self, current_version: str) -> None:
-        wx = self._wx
         try:
             release = fetch_latest_release(include_prereleases=True)
         except (URLError, ValueError, OSError) as error:
-            self._show_message_box(
-                f"Could not check beta updates: {error}",
+            self._html_info(
                 "Check for Updates",
-                wx.ICON_ERROR | wx.OK,
+                f"# Update check failed\n\nCould not check beta updates: {error}",
             )
             return
         if release is None:
-            self._show_message_box(
-                "No beta (prerelease) build is available yet.",
+            self._html_info(
                 "Check for Updates",
-                wx.ICON_INFORMATION | wx.OK,
+                "# No beta build yet\n\nNo beta (prerelease) build is available yet.",
             )
             return
         if self._show_update_available_dialog(current_version, release):
