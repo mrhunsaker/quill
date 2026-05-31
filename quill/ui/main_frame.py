@@ -8104,9 +8104,9 @@ class MainFrame:
 
     # Org links shown in the About dialog.
     _ABOUT_LINKS: tuple[tuple[str, str], ...] = (
-        ("Techopolis", "https://techopolis.app"),
-        ("Blind Information Technology Solutions (BITS)", "https://bits-acb.org"),
         ("Community Access", "https://community-access.org"),
+        ("Blind Information Technology Solutions (BITS)", "https://bits-acb.org"),
+        ("Techopolis", "https://techopolis.app"),
         ("GLOW (Community Access)", "https://letitglow.app"),
     )
 
