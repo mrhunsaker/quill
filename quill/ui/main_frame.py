@@ -361,6 +361,13 @@ from quill.ui.sticky_notes import StickyNoteEditorDialog, StickyNotesVaultDialog
 from quill.ui.word_view import WordDocumentSurface
 
 
+def _vibevoice_feature_enabled() -> bool:
+    """VibeVoice (offline speech-file generator) is an experimental feature gated
+    off by default. Set the QUILL_VIBEVOICE env var (1/true/yes/on) to surface its
+    AI > Speech menu items. The feature is developed on the feature/vibevoice branch."""
+    return os.environ.get("QUILL_VIBEVOICE", "").strip().lower() in ("1", "true", "yes", "on")
+
+
 @dataclass(slots=True)
 class _DocumentTab:
     panel: object
@@ -1283,18 +1290,22 @@ class MainFrame:
             self.generate_speech_audio,
             None,
         )
-        self.commands.register(
-            "tools.download_vibevoice",
-            "Download VibeVoice Speech Model...",
-            self.download_vibevoice_model,
-            None,
-        )
-        self.commands.register(
-            "tools.generate_vibevoice_audio",
-            "Generate Speech with VibeVoice...",
-            self.generate_speech_with_vibevoice,
-            None,
-        )
+        # VibeVoice is experimental and hidden behind a feature gate (set the
+        # QUILL_VIBEVOICE env var to enable). Lives on the feature/vibevoice
+        # branch; off by default so it doesn't show up.
+        if _vibevoice_feature_enabled():
+            self.commands.register(
+                "tools.download_vibevoice",
+                "Download VibeVoice Speech Model...",
+                self.download_vibevoice_model,
+                None,
+            )
+            self.commands.register(
+                "tools.generate_vibevoice_audio",
+                "Generate Speech with VibeVoice...",
+                self.generate_speech_with_vibevoice,
+                None,
+            )
         self.commands.register(
             "tools.announcement_backend",
             "Announcement Backend...",
@@ -3103,14 +3114,15 @@ class MainFrame:
             self._id_ai_speech_generate_audio,
             self._menu_label("Generate &Audio...", "tools.read_aloud_generate_audio"),
         )
-        speech_menu.Append(
-            self._id_ai_speech_download_vibevoice,
-            self._menu_label("&Download VibeVoice Model...", "tools.download_vibevoice"),
-        )
-        speech_menu.Append(
-            self._id_ai_speech_vibevoice_generate,
-            self._menu_label("Generate with &VibeVoice...", "tools.generate_vibevoice_audio"),
-        )
+        if _vibevoice_feature_enabled():
+            speech_menu.Append(
+                self._id_ai_speech_download_vibevoice,
+                self._menu_label("&Download VibeVoice Model...", "tools.download_vibevoice"),
+            )
+            speech_menu.Append(
+                self._id_ai_speech_vibevoice_generate,
+                self._menu_label("Generate with &VibeVoice...", "tools.generate_vibevoice_audio"),
+            )
         ai_menu.AppendSubMenu(speech_menu, "&Speech")
         menu_bar.Append(ai_menu, "A&I")
         whisperer_menu = wx.Menu()
