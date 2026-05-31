@@ -101,10 +101,10 @@ def guess_preview_kind(path: Path | None, text: str) -> str:
         if suffix in {".html", ".htm", ".xhtml"}:
             return "html"
     stripped = text.lstrip()
-    if stripped.startswith("# "):
-        return "markdown"
     if re.search(r"^<h[1-6]\b", stripped, flags=re.IGNORECASE | re.MULTILINE):
         return "html"
+    if re.search(r"^#{1,6} ", text, flags=re.MULTILINE):
+        return "markdown"
     return "plain"
 
 
