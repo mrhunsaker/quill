@@ -8,7 +8,7 @@
 
 ## What Quill is
 
-Quill is a screen-reader-first Windows writing and document environment focused on practical keyboard workflows, stable editing, and accessible diagnostics/support flows.
+Quill is a screen-reader-first writing and document environment for **Windows and macOS**, focused on practical keyboard workflows, stable editing, and accessible diagnostics/support flows.
 
 Quill is designed to stay focused and useful:
 
@@ -77,12 +77,22 @@ Watch Folder quick start:
 4. Turn on auto-start if you want it running every launch.
 5. Drop supported files into the folder; Quill opens them automatically.
 
+## Platforms and on-device AI
+
+- **Cross-platform.** Quill runs on **Windows and macOS** from one codebase. The macOS build ships as a signed, notarized `.app`; screen-reader announcements route to **VoiceOver** on macOS and to NVDA/JAWS/Narrator (via Prism) on Windows.
+- **Ask Quill chat.** An on-device AI chat (**AI -> Ask Quill Chat**) rendered as a fully accessible WebView document: each turn is a heading you can navigate, new replies are announced, the message box lives in-page, and Escape closes it. Verified in **NVDA, JAWS, and VoiceOver**.
+- **On-device AI, no cloud required.** macOS uses **Apple Foundation Models** (Apple Intelligence); Windows/Linux use **llama.cpp** (CPU, GGUF). You can optionally connect **Ollama (local)**, **Ollama Cloud (API key)**, or a custom HTTP endpoint. The assistant defaults to answering in chat and never edits your document without approval.
+- **Accessible WebView, preview, and dialogs** are built on the open-source [`wx-accessible-webview`](https://github.com/Community-Access/wx-accessible-webview) library (extracted from Quill), which also powers the live Markdown/HTML preview, the About dialog, and the update/consent dialogs.
+- **Train Writing Style** (**AI -> Train Writing Style...**) conditions the assistant on your own writing.
+
 ## Project layout
 
 - `quill/` -- application code.
   - `quill/core/` -- core logic and document operations.
   - `quill/ui/` -- wxPython interface and dialogs.
   - `quill/platform/windows/` -- Windows integration points.
+  - `quill/platform/macos/` -- macOS integration (VoiceOver announcements, Keychain, high-contrast, screen-reader detection).
+  - `quill/core/ai/` -- on-device assistant backends (Apple Foundation Models, llama.cpp) and the Ask Quill agent.
 - `docs/` -- product docs and generated artifacts.
   - `QUILL-PRD.md` (+ `.html`, `.epub`)
   - `userguide.md` (+ `.html`, `.epub`)
@@ -93,11 +103,16 @@ Watch Folder quick start:
 
 ## Run Quill locally
 
+Runs on **Windows and macOS** (Python 3.12).
+
 1. Install Python 3.12.
 2. Install dependencies:
    - `pip install -e ".[ui,dev]"`
+   - On-device AI for Ask Quill: add `ai` on Windows/Linux (`pip install -e ".[ui,ai]"`, pulls llama.cpp). macOS uses Apple Foundation Models — no extra needed.
 3. Launch:
-   - `python -m quill`
+   - `python -m quill`  (on Windows, `pythonw -m quill` for no console window)
+
+To build a signed, notarized macOS app, see `scripts/build_macos.sh` and `docs/engineering/macos-build.md`.
 
 Optional launch flags:
 
