@@ -11,3 +11,4 @@ release-dist-*/
 release-artifacts-*/
 installer-smoke*/
 *.log
+.quill-reqs.sha256

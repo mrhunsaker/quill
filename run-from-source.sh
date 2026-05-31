@@ -37,5 +37,27 @@ if [ "${1:-}" = "--print-python" ]; then
   exit 0
 fi
 
+# --- Auto-install dependencies when requirements.txt changes ---
+# Reinstall only when requirements.txt changed (e.g. after a git pull).
+# Skip with QUILL_NO_AUTO_DEPS=1.
+REQ="$ROOT/requirements.txt"
+STAMP="$ROOT/.quill-reqs.sha256"
+if [ -z "${QUILL_NO_AUTO_DEPS:-}" ] && [ -f "$REQ" ]; then
+  if command -v shasum >/dev/null 2>&1; then
+    NEW_HASH="$(shasum -a 256 "$REQ" | awk '{print $1}')"
+  else
+    NEW_HASH="$(sha256sum "$REQ" | awk '{print $1}')"
+  fi
+  OLD_HASH="$(cat "$STAMP" 2>/dev/null || true)"
+  if [ -n "$NEW_HASH" ] && [ "$NEW_HASH" != "$OLD_HASH" ]; then
+    echo "Requirements changed — installing dependencies..."
+    if "$PYTHON_EXE" -m pip install -r "$REQ"; then
+      printf '%s\n' "$NEW_HASH" > "$STAMP"
+    else
+      echo "Dependency install failed; launching with the existing environment." >&2
+    fi
+  fi
+fi
+
 cd "$ROOT"
 exec "$PYTHON_EXE" -m quill "$@"
