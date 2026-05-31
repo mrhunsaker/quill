@@ -1433,6 +1433,135 @@ def test_prompt_untrusted_location_uses_single_checkbox_dialog() -> None:
     assert result is True
 
 
+def test_prompt_unsaved_changes_space_activates_focused_dont_save() -> None:
+    frame = _build_frame("hello")
+    captured: dict[str, object] = {}
+
+    class _KeyEvent:
+        def __init__(self, key_code: int) -> None:
+            self._key_code = key_code
+            self.skipped = False
+
+        def GetKeyCode(self) -> int:
+            return self._key_code
+
+        def Skip(self) -> None:
+            self.skipped = True
+
+    class _Dialog:
+        def __init__(self, _parent: object, title: str) -> None:
+            self.title = title
+            self.handlers: dict[int, object] = {}
+            self.buttons: list[object] = []
+            self.focused: object | None = None
+            self.modal_result: int | None = None
+            captured["dialog"] = self
+
+        def Bind(self, event: int, handler: object) -> None:
+            self.handlers[event] = handler
+
+        def EndModal(self, result: int) -> None:
+            self.modal_result = result
+
+        def SetAffirmativeId(self, _value: int) -> None:
+            return None
+
+        def SetEscapeId(self, _value: int) -> None:
+            return None
+
+        def SetSizerAndFit(self, _sizer: object) -> None:
+            return None
+
+        def FindFocus(self) -> object | None:
+            return self.focused
+
+        def Destroy(self) -> None:
+            return None
+
+    class _Panel:
+        def __init__(self, parent: object) -> None:
+            self.dialog = parent
+
+        def SetSizer(self, _sizer: object) -> None:
+            return None
+
+    class _Button:
+        def __init__(self, parent: object, id: int, label: str) -> None:
+            self.id = id
+            self.label = label
+            self.handlers: dict[int, object] = {}
+            parent.dialog.buttons.append(self)
+
+        def Bind(self, event: int, handler: object) -> None:
+            self.handlers[event] = handler
+
+        def SetDefault(self) -> None:
+            return None
+
+    class _StaticText:
+        def __init__(self, _parent: object, label: str) -> None:
+            self.label = label
+            return None
+
+    class _BoxSizer:
+        def __init__(self, _orientation: int) -> None:
+            return None
+
+        def Add(self, _item: object, *_args: object, **_kwargs: object) -> None:
+            return None
+
+        def AddStretchSpacer(self, _prop: int) -> None:
+            return None
+
+    wx = type(
+        "WX",
+        (),
+        {
+            "Dialog": _Dialog,
+            "Panel": _Panel,
+            "BoxSizer": _BoxSizer,
+            "Button": _Button,
+            "StaticText": _StaticText,
+            "VERTICAL": 1,
+            "HORIZONTAL": 2,
+            "ALL": 4,
+            "EXPAND": 8,
+            "LEFT": 16,
+            "RIGHT": 32,
+            "BOTTOM": 64,
+            "ID_YES": 1,
+            "ID_NO": 2,
+            "ID_CANCEL": 0,
+            "EVT_BUTTON": 100,
+            "EVT_CHAR_HOOK": 101,
+            "WXK_ESCAPE": 27,
+            "WXK_RETURN": 13,
+            "WXK_NUMPAD_ENTER": 312,
+            "WXK_SPACE": 32,
+        },
+    )()
+    frame._wx = wx
+
+    def _show_modal(dialog: object, _label: str) -> int:
+        dont_save = next(
+            button for button in dialog.buttons if getattr(button, "id", None) == wx.ID_NO
+        )
+        dialog.focused = dont_save
+        dialog.handlers[wx.EVT_CHAR_HOOK](_KeyEvent(wx.WXK_SPACE))
+        return dialog.modal_result
+
+    frame._show_modal_dialog = _show_modal  # type: ignore[method-assign]
+
+    result = frame._prompt_unsaved_changes_action(
+        "Unsaved changes",
+        "You have unsaved changes. Save before closing?",
+        "Save",
+        "Don't Save",
+    )
+
+    assert result == wx.ID_NO
+
+
 def test_prompt_table_shape_reprompts_invalid_values() -> None:
     frame = _build_frame("hello")
     messages: list[str] = []

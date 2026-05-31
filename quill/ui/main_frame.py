@@ -6860,6 +6860,13 @@ class MainFrame:
         save_button.SetDefault()
         discard_button = wx.Button(panel, id=wx.ID_NO, label=negative_label)
         cancel_button = wx.Button(panel, id=wx.ID_CANCEL, label="Cancel")
+        button_results = (
+            (save_button, wx.ID_YES),
+            (discard_button, wx.ID_NO),
+            (cancel_button, wx.ID_CANCEL),
+        )
+        for button, result_id in button_results:
+            button.Bind(wx.EVT_BUTTON, lambda _e, modal_id=result_id: dialog.EndModal(modal_id))
         buttons.AddStretchSpacer(1)
         buttons.Add(save_button, 0, wx.RIGHT, 6)
         buttons.Add(discard_button, 0, wx.RIGHT, 6)
@@ -6874,13 +6881,31 @@ class MainFrame:
         if hasattr(dialog, "SetEscapeId"):
             dialog.SetEscapeId(wx.ID_CANCEL)
 
+        def _focused_button_result() -> int | None:
+            focused = None
+            if hasattr(dialog, "FindFocus"):
+                focused = dialog.FindFocus()
+            elif hasattr(wx, "Window") and hasattr(wx.Window, "FindFocus"):
+                focused = wx.Window.FindFocus()
+            for button, result_id in button_results:
+                if focused is button:
+                    return result_id
+            return None
+
         def _on_char_hook(event: object) -> None:
             key_code = event.GetKeyCode()
             if key_code == wx.WXK_ESCAPE:
                 dialog.EndModal(wx.ID_CANCEL)
                 return
             if key_code in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
-                dialog.EndModal(wx.ID_YES)
+                dialog.EndModal(_focused_button_result() or wx.ID_YES)
+                return
+            if key_code == getattr(wx, "WXK_SPACE", 32):
+                focused_result = _focused_button_result()
+                if focused_result is not None:
+                    dialog.EndModal(focused_result)
+                    return
+                event.Skip()
                 return
             event.Skip()
 
