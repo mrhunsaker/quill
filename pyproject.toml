@@ -26,9 +26,6 @@ ui = [
     # Accessible wx.html2.WebView surfaces (chat, preview, dialogs) — extracted
     # from Quill and published so any wxPython app can reuse it.
     "wx-accessible-webview>=0.2.0",
-    # Offline VibeVoice speech-FILE generator (download model+voices from the GUI).
-    # Core is light (huggingface-hub); add [model] for on-device synthesis (torch).
-    "vibevoice-cpu @ git+https://github.com/Community-Access/vibevoice-cpu.git",
     "pyttsx3>=2.99",
     # CA bundle for verified HTTPS update checks (macOS Python lacks trusted roots).
     "certifi>=2024.2.2",
@@ -37,6 +34,12 @@ ui = [
     "prismatoid>=0.16; sys_platform == 'win32'",
 ]
 spellcheck = ["pyenchant>=3.2"]
+# Offline VibeVoice speech-FILE generator (AI > Speech > Download VibeVoice Model).
+# Heavy + optional, so it's its own extra; the GUI degrades gracefully without it.
+# Installed from a zip archive so no `git` is required on the target machine.
+vibevoice = [
+    "vibevoice-cpu[model] @ https://github.com/Community-Access/vibevoice-cpu/archive/refs/heads/main.zip",
+]
 # On-device AI for the Ask Quill chat. Windows/Linux use llama.cpp (CPU, GGUF);
 # a GGUF model (e.g. Phi-4-mini Q4) goes in <app data>/models or QUILL_LLAMA_MODEL.
 ai = ["llama-cpp-python>=0.3"]
