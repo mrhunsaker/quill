@@ -608,7 +608,8 @@ The **Help** menu is where Quill becomes a guide.
 - **Feature Profiles** commands let you switch profile, run health checks, undo the last profile change, reset to Essential, and run onboarding.
 - **Startup Wizard...** can be rerun at any time and now includes watch-folder setup.
 - **Check for Updates...** verifies the signed update manifest, opens the installer download page, and can close Quill so setup can run immediately.
-- **About Quill** shows version and publisher details.
+- **About Quill** shows version, publisher details, and linked third-party dependency attribution with license and version metadata.
+- **Open Third-Party Notices** opens a full notices document with dependency tables and bundled license texts.
 
 If you only remember one thing about Help, remember this: it is a working surface, not a dead-end menu. The welcome guide teaches the basics, the keyboard reference reflects your live bindings, the user guide gives the full map, diagnostics package the current state, and the bug-report action turns that state into a support-ready starting point.
 

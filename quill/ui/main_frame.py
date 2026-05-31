@@ -86,6 +86,13 @@ from quill.core.bw_providers import (
     recommended_provider_id as bw_recommended_provider_id,
 )
 from quill.core.commands import CommandRegistry
+from quill.core.compliance import (
+    build_dependency_notices,
+    bundled_component_notices,
+    render_bundled_component_table,
+    render_dependency_notice_table,
+    render_full_third_party_notices,
+)
 from quill.core.contrast import render_contrast_report, validate_theme_contrast
 from quill.core.custom_profiles import (
     CustomProfile,
@@ -1688,6 +1695,12 @@ class MainFrame:
             "help.open_user_guide",
             "Open User Guide",
             self.open_user_guide,
+            None,
+        )
+        self.commands.register(
+            "help.open_third_party_notices",
+            "Open Third-Party Notices",
+            self.open_third_party_notices,
             None,
         )
         self.commands.register(
@@ -3551,7 +3564,12 @@ class MainFrame:
         )
         help_menu.AppendSeparator()
         self._id_open_user_guide = wx.NewIdRef()
+        self._id_open_third_party_notices = wx.NewIdRef()
         help_menu.Append(self._id_open_user_guide, "Open User &Guide")
+        help_menu.Append(
+            self._id_open_third_party_notices,
+            "Open &Third-Party Notices",
+        )
         help_menu.Append(self._id_open_welcome_guide, "Open &Welcome Guide")
         help_menu.Append(self._id_open_keyboard_reference, "Open Keyboard &Reference")
         help_menu.Append(
@@ -4525,6 +4543,11 @@ class MainFrame:
             wx.EVT_MENU,
             lambda _e: self.open_user_guide(),
             id=self._id_open_user_guide,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self.open_third_party_notices(),
+            id=self._id_open_third_party_notices,
         )
         self.frame.Bind(
             wx.EVT_MENU,
@@ -8986,6 +9009,19 @@ class MainFrame:
         self._refresh_title()
         self._set_status("Opened user guide")
 
+    def open_third_party_notices(self) -> None:
+        project_root = self._project_root_path()
+        pyproject_path = self._pyproject_path()
+        notices = render_full_third_party_notices(pyproject_path, project_root)
+        self._create_document_tab(
+            Document(text=notices, path=None, modified=False),
+            select=True,
+        )
+        self._location_ring = LocationRing()
+        self._location_ring.record(0)
+        self._refresh_title()
+        self._set_status("Opened third-party notices")
+
     # Org links shown in the About dialog.
     _ABOUT_LINKS: tuple[tuple[str, str], ...] = (
         ("Community Access", "https://community-access.org"),
@@ -9004,37 +9040,21 @@ class MainFrame:
         ("wx-accessible-webview on GitHub", "https://github.com/Community-Access/wx-accessible-webview"),
     )
 
-    # Open-source projects Quill is built with (credited in About).
-    _ABOUT_ACKNOWLEDGMENTS: str = (
-        "Quill is built with these open-source projects, with gratitude:\n\n"
-        "• wxPython / wxWidgets — application UI toolkit\n"
-        "• wx-accessible-webview — accessible wx.html2.WebView surfaces "
-        "(chat, preview, dialogs), by Taylor Arndt / Community Access\n"
-        "• Prism (prismatoid) — screen-reader speech bridge (Windows)\n"
-        "• pyttsx3 — system text-to-speech\n"
-        "• llama.cpp / llama-cpp-python — on-device AI (Windows and Linux)\n"
-        "• pyenchant / Hunspell — spell checking\n"
-        "• SpeechRecognition — dictation\n"
-        "• keynote-parser and MarkItDown — document import\n"
-        "• pyobjc and py2app — macOS integration and packaging\n"
-        "• WordNet (Princeton University) — thesaurus data\n"
-        "• words_alpha — English word list\n"
-        "• DECtalk and Piper — bundled speech engines\n"
-        "• eSpeak NG — phoneme generation used by Piper\n"
-        "• Kokoro and VibeVoice — additional neural speech voices\n\n"
-        "On macOS, on-device AI uses Apple Foundation Models.\n"
-        "Each project is owned by its respective authors and used under its own license."
-    )
+    def _project_root_path(self) -> Path:
+        return Path(__file__).resolve().parent.parent.parent
+
+    def _pyproject_path(self) -> Path:
+        return self._project_root_path() / "pyproject.toml"
 
     def _about_markdown(self) -> str:
         def md_links(links: tuple[tuple[str, str], ...]) -> str:
             return "\n".join(f"- [{name}]({url})" for name, url in links)
 
-        # Reuse the acknowledgments text as a markdown list.
-        acks = "\n".join(
-            (f"- {line[2:]}" if line.startswith("• ") else line)
-            for line in self._ABOUT_ACKNOWLEDGMENTS.splitlines()
-        )
+        pyproject_path = self._pyproject_path()
+        dependency_rows = build_dependency_notices(pyproject_path)
+        bundled_rows = bundled_component_notices()
+        dependency_table = render_dependency_notice_table(dependency_rows)
+        bundled_table = render_bundled_component_table(bundled_rows)
         return (
             f"# Quill 0.1 Beta\n\n"
             f"Version {__version__}\n\n"
@@ -9046,7 +9066,17 @@ class MainFrame:
             "Shane Popplestone, Doug Langley, and Becky K.\n\n"
             "## Links\n\n" + md_links(self._ABOUT_LINKS) + "\n\n"
             "## Contributors on GitHub\n\n" + md_links(self._ABOUT_GITHUB_LINKS) + "\n\n"
-            "## Open-source acknowledgments\n\n" + acks + "\n\n"
+            "## Dependencies and attributions\n\n"
+            "The tables below are generated from declared project metadata and installed package metadata. "
+            "They include dependency versions, licenses, and upstream links.\n\n"
+            "### Declared dependencies\n\n"
+            + dependency_table
+            + "\n\n"
+            "### Bundled components and data sources\n\n"
+            + bundled_table
+            + "\n\n"
+            "For full license texts and expanded notices, open "
+            "**Help -> Open Third-Party Notices**.\n\n"
             "Copyright (c) Blind Information Technology Solutions (BITS) and Community Access"
         )
 
@@ -15449,10 +15479,18 @@ class MainFrame:
 
     def _refresh_side_preview(self) -> None:
         tab = self._active_tab()
-        if tab is None or tab.preview is None:
+        if tab is None:
             return
         splitter = getattr(tab, "splitter", None)
-        if splitter is None or not splitter.IsSplit():
+        if splitter is None:
+            return
+        if not splitter.IsSplit():
+            if getattr(self.settings, "auto_side_preview", True):
+                text = tab.editor.GetValue()
+                if guess_preview_kind(tab.document.path, text) != "plain":
+                    self._show_side_preview_for(tab)
+            return
+        if tab.preview is None:
             return
         # Debounce: refresh shortly after typing pauses so each keystroke stays
         # snappy (re-rendering on every character can stutter the editor).
