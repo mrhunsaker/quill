@@ -654,6 +654,7 @@ class MainFrame:
         "autosave": "Autosave",
         "search_term": "Search Term",
         "file_path": "File Path",
+        "quill_key_mode": "QUILL Key",
     }
     _STATUS_BAR_WIDTHS: dict[str, int] = {
         "message": -1,
@@ -670,6 +671,7 @@ class MainFrame:
         "autosave": 130,
         "search_term": 160,
         "file_path": 260,
+        "quill_key_mode": 130,
     }
     _STATUS_BAR_FEATURES: dict[str, str] = {
         "message": "core.app",
@@ -686,6 +688,7 @@ class MainFrame:
         "autosave": "core.recovery",
         "search_term": "core.search",
         "file_path": "core.file",
+        "quill_key_mode": "core.navigate",
     }
     _MACRO_CONTROL_COMMANDS: frozenset[str] = frozenset({
         "tools.start_macro_recording",
@@ -769,6 +772,7 @@ class MainFrame:
         self._quill_key_prefix_started_at = 0.0
         self._quill_key_mode_started_at = 0.0
         self._quill_key_mode_timeout_seconds = 1.5
+        self._quill_key_mode_sticky = False
         self._notifications = [] if safe_mode else load_notifications()
         self._mark_ring = MarkRing()
         self._location_ring = LocationRing()
@@ -5205,18 +5209,26 @@ class MainFrame:
     def _handle_quill_key_mode_event(self, event: object) -> bool:
         wx = self._wx
         key_code = event.GetKeyCode()
-        prefix_key = getattr(wx, "WXK_BACKTICK", ord("`"))
+        timeout = self._quill_key_timeout()
         if not self._quill_key_mode_active:
             if self._quill_key_prefix_pending:
-                if (
-                    time.monotonic() - self._quill_key_prefix_started_at
-                ) > self._quill_key_mode_timeout_seconds:
+                if timeout > 0 and (time.monotonic() - self._quill_key_prefix_started_at) > timeout:
                     self._quill_key_prefix_pending = False
                     self._quill_key_prefix_started_at = 0.0
+                    self._set_status_quiet("QUILL key timed out")
+                    self._refresh_statusbar()
                     return False
                 if key_code in {getattr(wx, "WXK_ESCAPE", 27), 27}:
                     self._quill_key_prefix_pending = False
                     self._quill_key_prefix_started_at = 0.0
+                    self._refresh_statusbar()
+                    return True
+                # QK-5: a second press of the QUILL key locks a sticky browse
+                # mode that ignores the timeout until Escape.
+                if self._quill_key_prefix_matches(event):
+                    self._quill_key_prefix_pending = False
+                    self._quill_key_prefix_started_at = 0.0
+                    self._enter_quill_key_mode(sticky=True)
                     return True
                 if (
                     not event.ControlDown()
@@ -5230,16 +5242,13 @@ class MainFrame:
                     return True
                 self._quill_key_prefix_pending = False
                 self._quill_key_prefix_started_at = 0.0
+                self._refresh_statusbar()
                 return False
-            if (
-                event.ControlDown()
-                and event.ShiftDown()
-                and key_code == prefix_key
-                and not event.AltDown()
-            ):
+            if self._quill_key_prefix_matches(event):
                 self._quill_key_prefix_pending = True
                 self._quill_key_prefix_started_at = time.monotonic()
                 self._set_status_quiet("QUILL key prefix active. Press N for browse mode")
+                self._refresh_statusbar()
                 return True
             return False
 
@@ -5256,12 +5265,7 @@ class MainFrame:
             self._exit_quill_key_mode("Exited QUILL browse mode")
             return True
 
-        if (
-            event.ControlDown()
-            and event.ShiftDown()
-            and key_code == prefix_key
-            and not event.AltDown()
-        ):
+        if self._quill_key_prefix_matches(event):
             self._exit_quill_key_mode("Exited QUILL browse mode")
             return True
 
@@ -5281,28 +5285,100 @@ class MainFrame:
         self._run_quill_key_action(action)
         return True
 
-    def _enter_quill_key_mode(self) -> None:
+    def _enter_quill_key_mode(self, *, sticky: bool = False) -> None:
         self._quill_key_prefix_pending = False
         self._quill_key_prefix_started_at = 0.0
         self._quill_key_mode_active = True
+        self._quill_key_mode_sticky = sticky
         self._quill_key_mode_started_at = time.monotonic()
+        if sticky:
+            self._quill_feedback(
+                "QUILL browse mode locked. It stays active until you press Escape.",
+                status_message="QUILL browse mode locked",
+                sound_kind="enter",
+            )
+            self._refresh_statusbar()
+            return
         self._quill_feedback(
             "QUILL browse mode active. A links, L lists, I list items, T tables, Q block quotes, B bookmarks, apostrophe code blocks, C table of contents, P paragraphs, S sentences, H headings, 1 through 6 heading levels, right bracket skips forward past list or table, left bracket skips backward, Shift+Escape refreshes cache, Escape exits.",
             status_message="QUILL browse mode active",
             sound_kind="enter",
         )
+        self._refresh_statusbar()
 
     def _exit_quill_key_mode(self, message: str) -> None:
         self._quill_key_mode_active = False
+        self._quill_key_mode_sticky = False
         self._quill_key_mode_started_at = 0.0
         self._quill_feedback(message, status_message=message, sound_kind="exit")
+        self._refresh_statusbar()
 
     def _quill_key_mode_timed_out(self) -> bool:
         if not self._quill_key_mode_active:
             return False
+        if self._quill_key_mode_sticky:
+            return False
+        timeout = self._quill_key_timeout()
+        if timeout <= 0:
+            return False
+        return (time.monotonic() - self._quill_key_mode_started_at) > timeout
+
+    def _quill_key_timeout(self) -> float:
+        """Return the configured QUILL key timeout in seconds (0 = no timeout)."""
+        raw = getattr(
+            self.settings, "quill_key_timeout_seconds", self._quill_key_mode_timeout_seconds
+        )
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            value = self._quill_key_mode_timeout_seconds
+        return max(value, 0.0)
+
+    def _parse_quill_key_binding(self, binding: str | None) -> tuple[bool, bool, bool, int] | None:
+        """Parse the configurable QUILL key binding into (ctrl, shift, alt, key_code).
+
+        Understands the Grave/backtick key that ``_parse_keybinding`` does not.
+        """
+        if not binding:
+            return None
+        parts = [part.strip() for part in str(binding).split("+") if part.strip()]
+        if not parts:
+            return None
+        ctrl = shift = alt = False
+        for modifier in parts[:-1]:
+            lowered = modifier.lower()
+            if lowered == "ctrl":
+                ctrl = True
+            elif lowered == "shift":
+                shift = True
+            elif lowered == "alt":
+                alt = True
+            else:
+                return None
+        token = parts[-1].upper()
+        if token in {"GRAVE", "BACKTICK", "`"}:
+            key_code = getattr(self._wx, "WXK_BACKTICK", ord("`"))
+            return ctrl, shift, alt, key_code
+        parsed = self._parse_keybinding("+".join(parts))
+        if parsed is None:
+            return None
+        _flags, key_code = parsed
+        return ctrl, shift, alt, key_code
+
+    def _quill_key_prefix_matches(self, event: object) -> bool:
+        binding = getattr(self.settings, "quill_key_binding", "Ctrl+Shift+Grave")
+        parsed = self._parse_quill_key_binding(binding)
+        if parsed is None:
+            parsed = self._parse_quill_key_binding("Ctrl+Shift+Grave")
+        if parsed is None:
+            return False
+        need_ctrl, need_shift, need_alt, key_code = parsed
         return (
-            time.monotonic() - self._quill_key_mode_started_at
-        ) > self._quill_key_mode_timeout_seconds
+            bool(event.ControlDown()) == need_ctrl
+            and bool(event.ShiftDown()) == need_shift
+            and bool(event.AltDown()) == need_alt
+            and event.GetKeyCode() == key_code
+        )
 
     def _event_has_modifiers(self, event: object) -> bool:
         return bool(event.ControlDown() or event.AltDown() or event.ShiftDown())
@@ -7412,6 +7488,11 @@ class MainFrame:
             visible.append("background_tasks")
         if getattr(self.settings, "spellcheck_as_you_type", False) and "spell_check" not in visible:
             visible.append("spell_check")
+        quill_key_active = getattr(self, "_quill_key_mode_active", False) or getattr(
+            self, "_quill_key_prefix_pending", False
+        )
+        if quill_key_active and "quill_key_mode" not in visible:
+            visible.append("quill_key_mode")
         editor = getattr(self, "editor", None)
         if editor is None:
             return visible or ["message"]
@@ -7515,6 +7596,14 @@ class MainFrame:
             if last_find_query:
                 return f'Find: "{last_find_query}"'
             return "No search term"
+        if item == "quill_key_mode":
+            if getattr(self, "_quill_key_mode_sticky", False):
+                return "Locked"
+            if getattr(self, "_quill_key_mode_active", False):
+                return "Browse"
+            if getattr(self, "_quill_key_prefix_pending", False):
+                return "Prefix"
+            return "Off"
         return ""
 
     def _statusbar_button_label(self, item: str) -> str:
@@ -7552,6 +7641,7 @@ class MainFrame:
             "autosave": "Cycle autosave interval",
             "search_term": "Reopen Find",
             "file_path": "Open containing folder",
+            "quill_key_mode": "QUILL key mode state",
         }
         return labels.get(item, self._STATUS_BAR_LABELS.get(item, item))
 

@@ -1206,26 +1206,35 @@ the format. (Pairs with SET-7.)</td>
 <td>Name and remappable QUILL key</td>
 <td>QUILL key</td>
 <td>S</td>
-<td>Todo</td>
-<td>Docs and UI call it the QUILL key; it is remappable; default remains
-Ctrl+Shift+Grave.</td>
+<td>Done</td>
+<td>Docs and UI call it the QUILL key; the prefix chord is now read from
+<code>Settings.quill_key_binding</code> (default
+<code>Ctrl+Shift+Grave</code>) and matched by
+<code>_quill_key_prefix_matches</code>, which also understands the
+Grave/backtick key; remapping to another chord (for example
+<code>Alt+M</code>) works and the old default no longer triggers.</td>
 </tr>
 <tr>
 <td>QK-3</td>
 <td>QUILL key mode status indicator</td>
 <td>QUILL key</td>
 <td>S</td>
-<td>Todo</td>
-<td>Pending and active states announce and show in the status bar.</td>
+<td>Done</td>
+<td>A <code>quill_key_mode</code> status-bar cell reports Off / Prefix /
+Browse / Locked, appears automatically while the prefix is pending or a
+mode is active, and the prefix/enter/exit transitions announce.</td>
 </tr>
 <tr>
 <td>QK-4</td>
 <td>Configurable, announced QUILL key timeout</td>
 <td>QUILL key</td>
 <td>S</td>
-<td>Todo</td>
-<td>Timeout is configurable including no-timeout; entry and expiry
-announce.</td>
+<td>Done</td>
+<td><code>Settings.quill_key_timeout_seconds</code> (clamped 0..60)
+drives both the prefix and browse-mode expiry via
+<code>_quill_key_timeout</code>; a value of 0 means no timeout; entry
+announces and expiry announces “QUILL key timed out” / “QUILL browse
+mode timed out”.</td>
 </tr>
 <tr>
 <td>KEY-3</td>
@@ -1463,8 +1472,11 @@ bindings.</td>
 <td>Sticky QUILL browse mode</td>
 <td>QUILL key</td>
 <td>S</td>
-<td>Todo</td>
-<td>Double-press locks browse mode until Escape; state announces.</td>
+<td>Done</td>
+<td>A second press of the QUILL key while the prefix is pending locks a
+sticky browse mode (<code>_quill_key_mode_sticky</code>) that ignores
+the timeout until Escape; entry announces “QUILL browse mode locked” and
+the status cell shows Locked.</td>
 </tr>
 <tr>
 <td>KEY-1</td>
@@ -4880,10 +4892,10 @@ CQ-16) are counted once, in their primary tier.</p>
 <td>Tier 2</td>
 <td>Flagship experience</td>
 <td>38</td>
-<td>2</td>
-<td>36</td>
-<td>QK-1..5, QK-9, NAV-1, NAV-4, SEL-2, SEL-3, AGENT-1, AI-7, AI-1,
-AI-6, AI-13, AI-15, AI-17, AI-14, AI-16, SET-1..7, FEAT-19, WATCH-1..7,
+<td>6</td>
+<td>32</td>
+<td>QK-2, QK-9, NAV-1, NAV-4, SEL-2, SEL-3, AGENT-1, AI-7, AI-1, AI-6,
+AI-13, AI-15, AI-17, AI-14, AI-16, SET-1..7, FEAT-19, WATCH-1..7,
 FLAG-3, FLAG-4</td>
 </tr>
 <tr>

@@ -22,6 +22,7 @@ STATUS_BAR_ITEMS: tuple[str, ...] = (
     "autosave",
     "search_term",
     "file_path",
+    "quill_key_mode",
 )
 
 
@@ -41,6 +42,7 @@ def _default_status_bar_hidden() -> list[str]:
         "autosave",
         "search_term",
         "file_path",
+        "quill_key_mode",
     ]
 
 
@@ -88,6 +90,8 @@ class Settings:
     browse_mode_wrap: bool = True
     browse_mode_feedback: str = "speech"
     browse_mode_preload_cache: bool = True
+    quill_key_binding: str = "Ctrl+Shift+Grave"
+    quill_key_timeout_seconds: float = 1.5
     csv_open_mode: str = "prompt"
     word_open_mode: str = "prompt"
     indent_with_tabs: bool = False
@@ -177,6 +181,17 @@ class Settings:
                 data.get("browse_mode_prewarm_for_large_docs", True),
             )
         )
+        quill_key_binding = str(data.get("quill_key_binding", "Ctrl+Shift+Grave")).strip()
+        if not quill_key_binding:
+            quill_key_binding = "Ctrl+Shift+Grave"
+        try:
+            quill_key_timeout_seconds = float(data.get("quill_key_timeout_seconds", 1.5))
+        except (TypeError, ValueError):
+            quill_key_timeout_seconds = 1.5
+        if quill_key_timeout_seconds < 0:
+            quill_key_timeout_seconds = 0.0
+        if quill_key_timeout_seconds > 60:
+            quill_key_timeout_seconds = 60.0
         csv_open_mode = str(data.get("csv_open_mode", "prompt")).strip().lower()
         if csv_open_mode not in {"prompt", "text", "grid"}:
             csv_open_mode = "prompt"
@@ -371,6 +386,8 @@ class Settings:
             browse_mode_wrap=browse_mode_wrap,
             browse_mode_feedback=browse_mode_feedback,
             browse_mode_preload_cache=browse_mode_preload_cache,
+            quill_key_binding=quill_key_binding,
+            quill_key_timeout_seconds=quill_key_timeout_seconds,
             csv_open_mode=csv_open_mode,
             word_open_mode=word_open_mode,
             indent_with_tabs=indent_with_tabs,
