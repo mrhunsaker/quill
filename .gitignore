@@ -13,3 +13,6 @@ installer-smoke*/
 *.log
 .quill-reqs.sha256
 kokoro/_hf_cache/
+
+tmp/
+mypy_out.txt

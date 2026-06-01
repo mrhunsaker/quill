@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -333,12 +334,104 @@ def verify_assistant_connection(
     return False, error
 
 
+# Error categories used to give callers cause-specific, screen-reader-friendly
+# messages instead of scanning formatted strings for substrings like "401".
+# Retryable categories are transient and benefit from a brief warm-up retry
+# (cloud cold starts, a local server still booting, rate limiting). Auth and
+# permission failures are never retried.
+_RETRYABLE_CATEGORIES = frozenset({"warming_up", "not_running", "rate_limited", "timeout"})
+
+# Highest-priority first. When several endpoints fail in one attempt we surface
+# the most actionable cause (an auth/permission problem outranks a transient one).
+_CATEGORY_PRIORITY = (
+    "auth_invalid",
+    "forbidden",
+    "rate_limited",
+    "warming_up",
+    "not_running",
+    "timeout",
+    "http_error",
+    "bad_response",
+    "unreachable",
+)
+
+# 5xx and a few transient 4xx codes that typically clear once a provider has
+# finished warming up.
+_WARMING_UP_STATUS = frozenset({408, 425, 500, 502, 503, 504, 520, 522, 524})
+
+# Bounded warm-up backoff (seconds) between retry attempts.
+_RETRY_BACKOFF_SECONDS: tuple[float, ...] = (0.4, 1.0, 2.0)
+
+
+@dataclass(slots=True)
+class _FetchError:
+    category: str
+    message: str
+    status_code: int | None = None
+
+
+def _category_for_status(code: int) -> str:
+    if code == 401:
+        return "auth_invalid"
+    if code == 403:
+        return "forbidden"
+    if code == 429:
+        return "rate_limited"
+    if code in _WARMING_UP_STATUS:
+        return "warming_up"
+    return "http_error"
+
+
+def _message_for_category(
+    category: str,
+    *,
+    endpoint: str,
+    status_code: int | None = None,
+    reason: object | None = None,
+) -> str:
+    if category == "auth_invalid":
+        return "Authentication failed. Check your API key."
+    if category == "forbidden":
+        return (
+            "Access denied. Your API key is valid but lacks permission for this "
+            "model or region. Check the provider's model access, billing, or quota."
+        )
+    if category == "rate_limited":
+        return "Rate limited by the AI provider. Wait a moment and try again."
+    if category == "warming_up":
+        return "The AI provider is warming up. Try again in a moment."
+    if category == "not_running":
+        return "The local AI server is not running. Start Ollama and try again."
+    if category == "timeout":
+        return "Connection timed out. Check host URL and network connection."
+    if category == "bad_response":
+        return f"Received an invalid response from {endpoint}."
+    if category == "http_error" and status_code is not None:
+        return f"HTTP {status_code} from {endpoint}."
+    if reason is not None:
+        return f"Failed to reach {endpoint}: {reason}"
+    return f"Could not reach {endpoint}."
+
+
+def _most_significant_error(errors: list[_FetchError]) -> _FetchError | None:
+    if not errors:
+        return None
+    ranked = sorted(
+        errors,
+        key=lambda err: _CATEGORY_PRIORITY.index(err.category)
+        if err.category in _CATEGORY_PRIORITY
+        else len(_CATEGORY_PRIORITY),
+    )
+    return ranked[0]
+
+
 def list_assistant_models(
     settings: AssistantConnectionSettings,
     api_key: str,
     *,
     timeout_seconds: float = 8.0,
     max_models: int = 200,
+    max_attempts: int = 3,
 ) -> tuple[list[str], str | None]:
     provider = settings.provider.strip().lower()
     if provider == "off":
@@ -353,24 +446,32 @@ def list_assistant_models(
 
     headers = _build_auth_headers(provider, host, api_key)
     candidates = _model_endpoint_candidates(provider, host)
-    errors: list[str] = []
 
-    for endpoint in candidates:
-        models, error = _fetch_models_from_endpoint(
-            endpoint,
-            headers,
-            timeout_seconds=timeout_seconds,
-            max_models=max_models,
-        )
-        if error is None:
-            return models, None
-        errors.append(error)
+    last_error: _FetchError | None = None
+    attempts = max(1, max_attempts)
+    for attempt in range(attempts):
+        attempt_errors: list[_FetchError] = []
+        for endpoint in candidates:
+            models, error = _fetch_models_from_endpoint(
+                endpoint,
+                headers,
+                timeout_seconds=timeout_seconds,
+                max_models=max_models,
+            )
+            if error is None:
+                return models, None
+            attempt_errors.append(error)
 
-    if any("401" in item or "403" in item for item in errors):
-        return [], "Authentication failed. Check your API key."
-    if any("timed out" in item.lower() for item in errors):
-        return [], "Connection timed out. Check host URL and network connection."
-    return [], errors[-1] if errors else "Could not reach AI endpoint."
+        last_error = _most_significant_error(attempt_errors)
+        if last_error is None or last_error.category not in _RETRYABLE_CATEGORIES:
+            break
+        if attempt + 1 < attempts:
+            backoff = _RETRY_BACKOFF_SECONDS[min(attempt, len(_RETRY_BACKOFF_SECONDS) - 1)]
+            time.sleep(backoff)
+
+    if last_error is None:
+        return [], "Could not reach AI endpoint."
+    return [], last_error.message
 
 
 def _fetch_models_from_endpoint(
@@ -379,24 +480,51 @@ def _fetch_models_from_endpoint(
     *,
     timeout_seconds: float,
     max_models: int,
-) -> tuple[list[str], str | None]:
+) -> tuple[list[str], _FetchError | None]:
     request = Request(endpoint, headers=headers, method="GET")
     try:
         with urlopen(request, timeout=timeout_seconds) as response:
             payload = json.loads(response.read().decode("utf-8", errors="replace"))
     except HTTPError as exc:
-        return [], f"HTTP {exc.code} from {endpoint}"
+        category = _category_for_status(exc.code)
+        return [], _FetchError(
+            category,
+            _message_for_category(category, endpoint=endpoint, status_code=exc.code),
+            exc.code,
+        )
     except URLError as exc:
-        return [], f"Failed to reach {endpoint}: {exc.reason}"
+        category = _category_for_url_error(exc)
+        return [], _FetchError(
+            category,
+            _message_for_category(category, endpoint=endpoint, reason=exc.reason),
+        )
     except TimeoutError:
-        return [], f"Request timed out for {endpoint}"
+        return [], _FetchError(
+            "timeout", _message_for_category("timeout", endpoint=endpoint)
+        )
     except json.JSONDecodeError:
-        return [], f"Invalid JSON from {endpoint}"
+        return [], _FetchError(
+            "bad_response", _message_for_category("bad_response", endpoint=endpoint)
+        )
 
     models = _extract_model_names(payload)
     if not models:
         return [], None
     return models[:max_models], None
+
+
+def _category_for_url_error(exc: URLError) -> str:
+    reason = getattr(exc, "reason", None)
+    if isinstance(reason, ConnectionRefusedError):
+        return "not_running"
+    if isinstance(reason, TimeoutError):
+        return "timeout"
+    text = str(reason).lower()
+    if "refused" in text:
+        return "not_running"
+    if "timed out" in text:
+        return "timeout"
+    return "unreachable"
 
 
 def _extract_model_names(payload: object) -> list[str]:
@@ -581,6 +709,30 @@ def save_assistant_api_key(api_key: str) -> None:
             path.unlink()
         return
     write_json_atomic(path, {"protected_secret": protect_secret(secret)})
+
+
+def assistant_secret_unlock_failed() -> bool:
+    """Return True when a secret is saved on disk but cannot be unlocked here.
+
+    This happens when a DPAPI-protected secret travels to a different Windows
+    user or machine (for example a portable install moved on a USB drive): the
+    ciphertext is present but cannot be decrypted with the current user's keys.
+    Callers use this to tell the user to re-enter the key instead of showing a
+    misleading "authentication failed" message.
+    """
+    if _load_api_key_from_credential_manager():
+        return False
+    raw = read_json(assistant_secret_path(), default={})
+    if not isinstance(raw, dict):
+        return False
+    encrypted = str(raw.get("protected_secret", "")).strip()
+    if not encrypted:
+        return False
+    try:
+        decrypted = unprotect_secret(encrypted)
+    except Exception:  # noqa: BLE001 - any decrypt failure means "cannot unlock"
+        return True
+    return not decrypted
 
 
 def _load_api_key_from_credential_manager() -> str:

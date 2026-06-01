@@ -10,11 +10,14 @@ from __future__ import annotations
 import os
 import sys
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 from quill.core.paths import app_data_dir
 from quill.core.storage import read_json, write_json_atomic
+
+_ProgressCallback = Callable[[int, int], None]
 
 _CHOICE_FILE = "ai-model.json"
 _LOW_RAM_THRESHOLD_GB = 8.0
@@ -55,7 +58,9 @@ MODELS: dict[str, ModelSpec] = {
 
 def total_ram_gb() -> float:
     try:
-        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / (1024**3)
+        page_size = os.sysconf("SC_PAGE_SIZE")  # type: ignore[attr-defined]
+        phys_pages = os.sysconf("SC_PHYS_PAGES")  # type: ignore[attr-defined]
+        return float(page_size) * float(phys_pages) / (1024**3)
     except (ValueError, AttributeError, OSError):
         pass
     if sys.platform.startswith("win"):
@@ -77,7 +82,7 @@ def total_ram_gb() -> float:
         stat = _MEMORYSTATUSEX()
         stat.dwLength = ctypes.sizeof(_MEMORYSTATUSEX)
         ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
-        return stat.ullTotalPhys / (1024**3)
+        return float(stat.ullTotalPhys) / (1024**3)
     return _LOW_RAM_THRESHOLD_GB
 
 
@@ -151,7 +156,7 @@ def is_downloaded(spec: ModelSpec) -> bool:
     return model_path_for(spec).exists()
 
 
-def ensure_model(progress=None) -> str:
+def ensure_model(progress: _ProgressCallback | None = None) -> str:
     """Return a local GGUF path for the chosen model, downloading it if needed.
 
     ``progress`` is an optional callable(downloaded_bytes, total_bytes).
@@ -176,7 +181,7 @@ def existing_model() -> str | None:
     return str(target) if target.exists() else None
 
 
-def _download(url: str, target: Path, progress=None) -> None:
+def _download(url: str, target: Path, progress: _ProgressCallback | None = None) -> None:
     part = target.with_name(target.name + ".part")
     request = urllib.request.Request(url, headers={"User-Agent": "Quill"})
     with urllib.request.urlopen(request) as response, open(part, "wb") as out:

@@ -8,6 +8,7 @@ chooses to answer, insert, replace, or run a Quill command.
 from __future__ import annotations
 
 import asyncio
+from typing import Any, cast
 
 from quill.core.ai.agent import ACTIONS, AgentDecision
 from quill.core.ai.backend import AIBackend, ContextWindowExceeded
@@ -33,7 +34,7 @@ class FoundationModelsBackend(AIBackend):
         self._fm = None
         self._decision_types: dict[tuple[str, ...], object] = {}
 
-    def _sdk(self):
+    def _sdk(self) -> Any:
         if self._fm is None:
             import apple_fm_sdk as fm  # type: ignore[import-not-found]
 
@@ -62,7 +63,7 @@ class FoundationModelsBackend(AIBackend):
 
         async def _go() -> str:
             session = fm.LanguageModelSession()
-            return await session.respond(prompt)
+            return cast("str", await session.respond(prompt))
 
         try:
             return asyncio.run(_go())
@@ -73,7 +74,7 @@ class FoundationModelsBackend(AIBackend):
 
     # --- agentic decision (guided generation) ---------------------------------
 
-    def _decision_type(self, tool_ids: tuple[str, ...]):
+    def _decision_type(self, tool_ids: tuple[str, ...]) -> Any:
         cached = self._decision_types.get(tool_ids)
         if cached is not None:
             return cached
@@ -105,9 +106,9 @@ class FoundationModelsBackend(AIBackend):
         if style_preamble:
             instructions = f"{_DECIDE_INSTRUCTIONS}\n\n{style_preamble}"
 
-        def run(budget: int):
+        def run(budget: int) -> Any:
             context = document_text[:budget]
-            async def _go():
+            async def _go() -> Any:
                 session = fm.LanguageModelSession(instructions=instructions)
                 return await session.respond(
                     f"Request: {user_message}\n\nDocument:\n{context}",
@@ -127,6 +128,8 @@ class FoundationModelsBackend(AIBackend):
                     # Even with no document context it won't fit — answer plainly.
                     return AgentDecision(action="answer", text="")
                 raise
+        if raw is None:
+            return AgentDecision(action="answer", text="")
         action = raw.action if raw.action in ACTIONS else "answer"
         tool = raw.tool if action == "run" and raw.tool in tool_ids else ""
         if action == "run" and not tool:

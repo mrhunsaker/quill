@@ -1173,7 +1173,7 @@ class AssistantConnectionDialog:
 
         self.api_key_label = wx.StaticText(
             panel,
-            label="API key (optional; stored encrypted with DPAPI)",
+            label="API key (optional; stored in Windows Credential Manager)",
         )
         panel_sizer.Add(self.api_key_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
 

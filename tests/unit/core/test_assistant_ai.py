@@ -213,3 +213,142 @@ def test_recommended_model_guidance_returns_framing(
     guidance = assistant_ai.recommended_model_guidance("ollama")
     assert guidance
     assert guidance[0].framing != ""
+
+
+def _http_error(code: int, url: str = "https://api.openai.com/v1/models") -> Exception:
+    return assistant_ai.HTTPError(url=url, code=code, msg="x", hdrs=None, fp=None)
+
+
+def test_list_models_distinguishes_forbidden_from_unauthorized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _raise(*_args, **_kwargs):
+        raise _http_error(403)
+
+    monkeypatch.setattr(assistant_ai, "urlopen", _raise)
+    settings = assistant_ai.AssistantConnectionSettings(
+        provider="openai", host="https://api.openai.com"
+    )
+    models, error = assistant_ai.list_assistant_models(settings, api_key="valid-key")
+    assert models == []
+    assert error is not None
+    assert "Access denied" in error
+    assert "Authentication failed" not in error
+
+
+def test_list_models_unauthorized_still_reports_auth_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _raise(*_args, **_kwargs):
+        raise _http_error(401)
+
+    monkeypatch.setattr(assistant_ai, "urlopen", _raise)
+    settings = assistant_ai.AssistantConnectionSettings(
+        provider="openai", host="https://api.openai.com"
+    )
+    _models, error = assistant_ai.list_assistant_models(settings, api_key="bad-key")
+    assert error is not None
+    assert "Authentication failed" in error
+
+
+def test_list_models_does_not_false_positive_on_port_403(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A healthy local endpoint whose URL merely contains "403" must not be
+    # misread as an authentication failure.
+    monkeypatch.setattr(
+        assistant_ai,
+        "urlopen",
+        lambda *_a, **_k: _FakeResponse({"models": [{"name": "llama3.2:1b"}]}),
+    )
+    settings = assistant_ai.AssistantConnectionSettings(
+        provider="ollama", host="http://localhost:11403"
+    )
+    models, error = assistant_ai.list_assistant_models(settings, api_key="")
+    assert error is None
+    assert models == ["llama3.2:1b"]
+
+
+def test_list_models_reports_local_server_not_running(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(assistant_ai.time, "sleep", lambda *_a, **_k: None)
+
+    def _raise(*_args, **_kwargs):
+        raise assistant_ai.URLError(ConnectionRefusedError("refused"))
+
+    monkeypatch.setattr(assistant_ai, "urlopen", _raise)
+    settings = assistant_ai.AssistantConnectionSettings(
+        provider="ollama", host="http://localhost:11434"
+    )
+    _models, error = assistant_ai.list_assistant_models(settings, api_key="")
+    assert error is not None
+    assert "not running" in error.lower()
+
+
+def test_list_models_retries_while_warming_up_then_succeeds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(assistant_ai.time, "sleep", lambda *_a, **_k: None)
+    calls = {"n": 0}
+
+    def _maybe_warm(*_args, **_kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise _http_error(503)
+        return _FakeResponse({"data": [{"id": "gpt-4o-mini"}]})
+
+    monkeypatch.setattr(assistant_ai, "urlopen", _maybe_warm)
+    settings = assistant_ai.AssistantConnectionSettings(
+        provider="openai", host="https://api.openai.com"
+    )
+    models, error = assistant_ai.list_assistant_models(settings, api_key="k")
+    assert error is None
+    assert models == ["gpt-4o-mini"]
+    assert calls["n"] >= 2
+
+
+def test_list_models_does_not_retry_auth_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(assistant_ai.time, "sleep", lambda *_a, **_k: None)
+    calls = {"n": 0}
+
+    def _raise(*_args, **_kwargs):
+        calls["n"] += 1
+        raise _http_error(401)
+
+    monkeypatch.setattr(assistant_ai, "urlopen", _raise)
+    settings = assistant_ai.AssistantConnectionSettings(
+        provider="openai", host="https://api.openai.com"
+    )
+    _models, error = assistant_ai.list_assistant_models(settings, api_key="bad")
+    assert error is not None and "Authentication failed" in error
+    # Only the single candidate endpoint is tried; no warm-up retries.
+    assert calls["n"] == 1
+
+
+def test_assistant_secret_unlock_failed_detects_undecryptable_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(assistant_ai, "_load_api_key_from_credential_manager", lambda: "")
+    monkeypatch.setattr(assistant_ai, "protect_secret", lambda secret: f"enc:{secret}")
+    monkeypatch.setattr(assistant_ai, "_save_api_key_with_credential_manager", lambda *_a: False)
+    assistant_ai.save_assistant_api_key("secret-value")
+
+    # A secret that decrypts cleanly is not flagged.
+    monkeypatch.setattr(assistant_ai, "unprotect_secret", lambda s: s.removeprefix("enc:"))
+    assert assistant_ai.assistant_secret_unlock_failed() is False
+
+    # A secret that cannot be unlocked here (moved portable install) is flagged.
+    monkeypatch.setattr(assistant_ai, "unprotect_secret", lambda _s: "")
+    assert assistant_ai.assistant_secret_unlock_failed() is True
+
+
+def test_assistant_secret_unlock_failed_false_when_no_secret(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(assistant_ai, "_load_api_key_from_credential_manager", lambda: "")
+    assert assistant_ai.assistant_secret_unlock_failed() is False

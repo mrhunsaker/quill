@@ -142,3 +142,73 @@ def test_refresh_sessions_menu_defers_when_menu_is_open() -> None:
     frame._refresh_sessions_menu()
 
     assert frame._pending_menu_refresh is True
+
+
+class _StubEditor:
+    def __init__(self, text: str, selection: tuple[int, int], cursor: int) -> None:
+        self._text = text
+        self._selection = selection
+        self._cursor = cursor
+
+    def GetValue(self) -> str:
+        return self._text
+
+    def GetSelection(self) -> tuple[int, int]:
+        return self._selection
+
+    def GetInsertionPoint(self) -> int:
+        return self._cursor
+
+
+def _writing_action_frame(editor: _StubEditor) -> MainFrame:
+    frame = MainFrame.__new__(MainFrame)
+    frame.editor = editor
+    frame._status_messages = []
+    frame._set_status = frame._status_messages.append
+    frame._writing_prompts = []
+    frame.open_writing_assistant = frame._writing_prompts.append
+    return frame
+
+
+def test_writing_action_blocked_when_ai_disabled(monkeypatch) -> None:
+    import quill.core.ai.model_manager as model_manager
+
+    monkeypatch.setattr(model_manager, "load_ai_enabled", lambda: False)
+    editor = _StubEditor("Hello world.", selection=(0, 5), cursor=0)
+    frame = _writing_action_frame(editor)
+
+    frame.open_ai_rewrite_selection()
+
+    assert frame._writing_prompts == []
+    assert any("AI is turned off" in msg for msg in frame._status_messages)
+
+
+def test_writing_action_falls_back_to_paragraph_without_selection(monkeypatch) -> None:
+    import quill.core.ai.model_manager as model_manager
+
+    monkeypatch.setattr(model_manager, "load_ai_enabled", lambda: True)
+    text = "First paragraph.\n\nSecond paragraph here."
+    cursor = text.index("Second")
+    editor = _StubEditor(text, selection=(cursor, cursor), cursor=cursor)
+    frame = _writing_action_frame(editor)
+
+    frame.open_ai_rewrite_selection()
+
+    assert len(frame._writing_prompts) == 1
+    assert "Second paragraph here." in frame._writing_prompts[0]
+    assert any("paragraph" in msg for msg in frame._status_messages)
+
+
+def test_summarize_falls_back_to_whole_document_without_selection(monkeypatch) -> None:
+    import quill.core.ai.model_manager as model_manager
+
+    monkeypatch.setattr(model_manager, "load_ai_enabled", lambda: True)
+    text = "Alpha.\n\nBeta.\n\nGamma."
+    editor = _StubEditor(text, selection=(2, 2), cursor=2)
+    frame = _writing_action_frame(editor)
+
+    frame.open_ai_summarize_selection()
+
+    assert len(frame._writing_prompts) == 1
+    assert "Gamma." in frame._writing_prompts[0]
+    assert any("document" in msg for msg in frame._status_messages)

@@ -375,6 +375,15 @@ The palette also learns from usage. Commands you use more often rise naturally.
 
 The Writing Assistant shell ranks Quill commands from your prompt, offers preset prompts for rewrite/summarize/continue/grammar flows, and Run Python executes a sandboxed transform against the current document text and selection. Prompt Studio lets you build reusable custom prompts with template variables, and Agent Center generates guided task plans that you can review before sending to the Writing Assistant.
 
+The quick writing actions work with or without a selection:
+
+- **Rewrite Selection** and **Fix Grammar** act on your selection if you have one; otherwise they use the paragraph at the cursor.
+- **Summarize Selection** acts on your selection if you have one; otherwise it summarizes the whole document.
+- **Continue Writing** uses your selection as the lead-in if you have one; otherwise it continues from the full document.
+- Quill announces the scope it chose, for example "Rewrite paragraph (42 words)", so you always know what the action will change.
+- If there is nothing to act on, Quill says so (for example "Nothing to rewrite") instead of sending an empty request.
+- If AI is turned off, these actions announce "AI is turned off. Enable 'Use Artificial Intelligence' in the AI menu." and do nothing else.
+
 Use **AI -> AI Hub...** for a single control surface that links provider verification, model discovery, Prompt Studio, Agent Center, and Writing Assistant.
 
 Trust and privacy baseline:
@@ -396,7 +405,16 @@ AI connection flow:
 
 Most cloud providers are pre-configured with default host URLs so setup is key-first, not URL-first. For advanced OpenAI-compatible endpoints, use Custom and override host/model explicitly.
 
-Quill stores optional keys with Windows DPAPI and announces the verification result in plain language for immediate screen-reader feedback.
+Quill stores optional keys in the Windows Credential Manager, with a DPAPI-encrypted file as a fallback, and announces the verification result in plain language for immediate screen-reader feedback.
+
+Connection status messages tell you exactly what to do next:
+
+- "Authentication failed. Check your API key." means the key was rejected (HTTP 401). Re-enter the key.
+- "Access denied. Your API key is valid but lacks permission for this model or region." means the key works but is not allowed for that model, region, or billing tier (HTTP 403). Check the provider's model access, billing, or quota.
+- "The AI provider is warming up. Try again in a moment." means the model is still loading. Quill retries briefly on its own before reporting this.
+- "The local AI server is not running. Start Ollama and try again." means Quill could not reach your local endpoint.
+- "Rate limited by the AI provider. Wait a moment and try again." means you sent requests too quickly.
+- "Your saved API key could not be unlocked on this device. Open AI Connection and enter the key again." appears in the AI status line when a saved key cannot be decrypted, which can happen after moving a portable install to a different Windows account or machine. Open AI Connection and re-enter the key.
 
 For policy details, see the repository's `PRIVACY.md` and `RESPONSIBLE_AI_USE.md`.
 

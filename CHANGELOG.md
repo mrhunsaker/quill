@@ -14,6 +14,15 @@
 - **Train Writing Style** conditions the assistant on your own writing.
 - **Accessible WebView library.** The chat, preview, About box, and update/consent dialogs are built on the open-source `wx-accessible-webview` library (extracted from Quill).
 
+## AI reliability and clarity (highlights)
+
+- **Clearer AI connection messages.** Quill now tells the difference between a rejected API key ("Authentication failed. Check your API key.") and a valid key that lacks access to a model or region ("Access denied..."), and reports rate limiting, warm-up, and local-server-not-running states in plain language.
+- **Warm-up retry.** When a model is still loading, Quill briefly retries before reporting it as warming up, instead of failing the first attempt.
+- **No false 403s.** Connection status is matched on real HTTP status codes, so host ports like `localhost:11403` are never mistaken for an error.
+- **Smarter quick writing actions.** Rewrite, Summarize, Continue Writing, and Fix Grammar now work with or without a selection, fall back to a sensible scope (paragraph or whole document), and announce the scope and word count.
+- **AI-off guard everywhere.** The quick writing actions respect the AI-enabled setting from any entry point, including the command palette and keybindings.
+- **Portable key recovery.** If a saved API key cannot be unlocked on the current device, the AI status line prompts you to re-enter it instead of showing a confusing authentication error.
+
 ## Quill 0.1.5 Beta
 
 Quill 0.1.5 Beta focuses on safe rollout surfaces for BITS Whisperer, clearer preference parity, and more accessible status monitoring without changing core editor behavior.

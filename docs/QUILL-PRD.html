@@ -737,7 +737,8 @@ not power-user extras.</p>
 Find in Selection, and saved search recipes support plain text, whole
 word, regular expression, and wildcard modes.</li>
 <li><strong>Regex helper</strong>: a screen-reader-friendly helper
-surfaces common tokens, explanations, and try-on-document previews.</li>
+provides recipe presets, plain-language explanations, editable sample
+text, live match previews, and copy-pattern actions.</li>
 <li><strong>Plain-English errors</strong>: regex errors are reported in
 single-sentence form with character positions and no traceback.</li>
 <li><strong>Match review</strong>: users can review captured groups for
@@ -756,6 +757,13 @@ the cursor by name, code point, category, and common encodings.</li>
 inspection view that describes invisible characters textually.</li>
 <li><strong>Unicode cleanup</strong>: normalization and cleanup commands
 remove or rewrite common noisy characters with a preview first.</li>
+</ul>
+<p>Menu and window stability requirement:</p>
+<ul>
+<li><strong>Menu mutation guard</strong>: while native menus are open,
+Quill defers menu label/check/enable mutations and applies them on menu
+close. This avoids crash-prone churn during rapid keyboard menu
+navigation.</li>
 </ul>
 <h3 id="51e-feature-flags-and-profiles">5.1e Feature flags and
 profiles</h3>
@@ -3417,10 +3425,12 @@ user-facing platform, not a single settings dialog.</p>
 top-level <strong>AI</strong> menu.</li>
 <li>Add two downloadable local speech engines: <strong>Kokoro</strong>
 and <strong>Piper</strong>.</li>
+<li>Keep <strong>DECtalk</strong> and <strong>eSpeak NG</strong> as
+bundled local engines for immediate read-aloud availability.</li>
 <li>Provide voice lifecycle UX end to end: discover, download, preview,
 set preferred, configure, remove.</li>
-<li>Keep installer size lean by bundling <strong>no voices</strong> in
-core builds.</li>
+<li>Keep installer size lean by making heavier engines download-only
+while preserving bundled fallback voices.</li>
 <li>Preserve screen-reader-first behavior with predictable
 announcements, keyboard-first flows, and no surprise network
 actions.</li>
@@ -3446,17 +3456,22 @@ and no-bundle policy</h4>
 <p>Supported engines for this milestone:</p>
 <ul>
 <li><code>windows-native</code> (existing SAPI/OneCore path)</li>
+<li><code>dectalk-local</code> (bundled)</li>
+<li><code>espeak-local</code> (bundled)</li>
 <li><code>kokoro-local</code></li>
 <li><code>piper-local</code></li>
 </ul>
 <p>Policy:</p>
 <ul>
+<li>DECtalk and eSpeak NG ship with QUILL as local bundled engines.</li>
 <li>No Kokoro or Piper voices are bundled in installer or portable
 artifacts.</li>
 <li>Voice models are downloaded on demand into
 <code>%APPDATA%\Quill\speech\voices\...</code>.</li>
 <li>Downloads require explicit user action and clear size disclosure
 before start.</li>
+<li>Speech onboarding includes preview-first guidance and availability
+announcements before model download.</li>
 </ul>
 <h4 id="525a3-voice-library-and-download-ux">5.25a.3 Voice library and
 download UX</h4>
@@ -4280,8 +4295,9 @@ Cloud, OpenAI, Azure OpenAI, Anthropic/Claude, OpenRouter, Gemini, or a
 custom OpenAI-compatible endpoint. Providers include sensible default
 hosts where possible; advanced custom mode allows manual endpoint
 override. If a provider is picked, the API-key dialog opens when
-required; the key is stored via DPAPI (10.11). Network is never used
-without explicit per-action consent.</li>
+required; the key is stored via Windows Credential Manager with a
+DPAPI-encrypted fallback (10.11). Network is never used without explicit
+per-action consent.</li>
 <li><strong>Telemetry</strong>: confirms it stays off (default). A short
 plain-language sentence explains what telemetry would collect if turned
 on later.</li>
@@ -7376,8 +7392,16 @@ tool catalog, assistant onboarding, AI Hub entry point, Prompt Studio
 custom templates, Agent Center guided plans, AI connection preferences,
 connection verification/model discovery actions, searchable model
 selection, provider-aware guided recommendations, AI menu status-detail
-feedback, and sandboxed Python runner. Broader built-in model catalog
-lifecycle and background prefetch policy remain future work.</li>
+feedback, and sandboxed Python runner. Connection diagnostics use a
+structured error taxonomy that separates authentication failure (HTTP
+401) from permission/access denial (HTTP 403), rate limiting,
+warm-up/not-ready states, local-server-not-running, and unreachable
+endpoints, with a bounded warm-up retry/backoff so a model that is still
+loading is reported as warming up rather than failed. The status
+taxonomy is matched on numeric status codes rather than substring
+matching, so host ports such as <code>localhost:11403</code> cannot be
+misread as a 403. Broader built-in model catalog lifecycle and
+background prefetch policy remain future work.</li>
 </ul>
 <h3
 id="174-explicitly-out-of-scope-for-quill-any-version-unless-re-evaluated">17.4
@@ -7409,9 +7433,18 @@ prompt templates, Agent Center guided profiles, AI Hub launch surface,
 AI connection preferences (Ollama local/cloud, OpenAI, Claude,
 OpenRouter, Gemini, Azure OpenAI, custom OpenAI-compatible), provider
 verification/model discovery, searchable model filtering, status-detail
-accessibility announcements, and a sandboxed Python tool. Longer-horizon
-autocomplete policy tuning and richer model-catalog management remain
-future work.</li>
+accessibility announcements, and a sandboxed Python tool. The quick
+writing actions (Rewrite Selection, Summarize Selection, Continue
+Writing, Fix Grammar) each guard on the AI-enabled setting regardless of
+entry point (menu, command palette, or keybinding) and fall back to a
+sensible scope when there is no selection (paragraph at cursor for
+rewrite/grammar, whole document for summarize), announcing the chosen
+scope and word count. The AI status line also detects a saved key that
+cannot be decrypted on the current device (for example after a portable
+install is moved to another Windows account) and prompts the user to
+re-enter the key rather than reporting a generic authentication error.
+Longer-horizon autocomplete policy tuning and richer model-catalog
+management remain future work.</li>
 <li><strong>Project workspaces and Find in Folder.</strong> Deferred to
 v1.2 (see 17.2).</li>
 <li><strong>Embedded media playback inside documents.</strong> Out of

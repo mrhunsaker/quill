@@ -641,6 +641,23 @@ Run Python executes a sandboxed transform against the current document
 text and selection. Prompt Studio lets you build reusable custom prompts
 with template variables, and Agent Center generates guided task plans
 that you can review before sending to the Writing Assistant.</p>
+<p>The quick writing actions work with or without a selection:</p>
+<ul>
+<li><strong>Rewrite Selection</strong> and <strong>Fix Grammar</strong>
+act on your selection if you have one; otherwise they use the paragraph
+at the cursor.</li>
+<li><strong>Summarize Selection</strong> acts on your selection if you
+have one; otherwise it summarizes the whole document.</li>
+<li><strong>Continue Writing</strong> uses your selection as the lead-in
+if you have one; otherwise it continues from the full document.</li>
+<li>Quill announces the scope it chose, for example "Rewrite paragraph
+(42 words)", so you always know what the action will change.</li>
+<li>If there is nothing to act on, Quill says so (for example "Nothing
+to rewrite") instead of sending an empty request.</li>
+<li>If AI is turned off, these actions announce "AI is turned off.
+Enable 'Use Artificial Intelligence' in the AI menu." and do nothing
+else.</li>
+</ul>
 <p>Use <strong>AI -&gt; AI Hub...</strong> for a single control surface
 that links provider verification, model discovery, Prompt Studio, Agent
 Center, and Writing Assistant.</p>
@@ -675,9 +692,30 @@ status line in the AI menu.</li>
 <p>Most cloud providers are pre-configured with default host URLs so
 setup is key-first, not URL-first. For advanced OpenAI-compatible
 endpoints, use Custom and override host/model explicitly.</p>
-<p>Quill stores optional keys with Windows DPAPI and announces the
-verification result in plain language for immediate screen-reader
-feedback.</p>
+<p>Quill stores optional keys in the Windows Credential Manager, with a
+DPAPI-encrypted file as a fallback, and announces the verification
+result in plain language for immediate screen-reader feedback.</p>
+<p>Connection status messages tell you exactly what to do next:</p>
+<ul>
+<li>"Authentication failed. Check your API key." means the key was
+rejected (HTTP 401). Re-enter the key.</li>
+<li>"Access denied. Your API key is valid but lacks permission for this
+model or region." means the key works but is not allowed for that model,
+region, or billing tier (HTTP 403). Check the provider's model access,
+billing, or quota.</li>
+<li>"The AI provider is warming up. Try again in a moment." means the
+model is still loading. Quill retries briefly on its own before
+reporting this.</li>
+<li>"The local AI server is not running. Start Ollama and try again."
+means Quill could not reach your local endpoint.</li>
+<li>"Rate limited by the AI provider. Wait a moment and try again."
+means you sent requests too quickly.</li>
+<li>"Your saved API key could not be unlocked on this device. Open AI
+Connection and enter the key again." appears in the AI status line when
+a saved key cannot be decrypted, which can happen after moving a
+portable install to a different Windows account or machine. Open AI
+Connection and re-enter the key.</li>
+</ul>
 <p>For policy details, see the repository's <code>PRIVACY.md</code> and
 <code>RESPONSIBLE_AI_USE.md</code>.</p>
 <p>These help you stay inside the editor instead of breaking flow for
@@ -908,6 +946,17 @@ commands</li>
 </ul>
 <p>These are especially valuable in large cleanup jobs and repetitive
 editing workflows.</p>
+<p>Regex Helper now opens as a full accessible dialog rather than a
+short informational prompt. It includes:</p>
+<ul>
+<li>recipe presets for common patterns</li>
+<li>plain-language explanation for the selected pattern</li>
+<li>editable sample text for safe try-before-use checks</li>
+<li>preview results with match offsets and snippets</li>
+<li>one-step copy pattern action for Find and Replace workflows</li>
+</ul>
+<p>This keeps regex learning and validation in a keyboard-first,
+screen-reader-friendly surface.</p>
 <p>The new external-tools surface deserves a special note. Quill does
 not treat optional tools as hidden technical chores. <strong>External
 Tools and Format Support...</strong> explains what each supported helper
@@ -1001,6 +1050,10 @@ basics, the keyboard reference reflects your live bindings, the user
 guide gives the full map, diagnostics package the current state, and the
 bug-report action turns that state into a support-ready starting
 point.</p>
+<p>Menu stability note: Quill now defers internal menu-state updates
+while native menus are open, then applies them after menu close. This
+prevents rapid-arrow navigation churn and keeps Help menu navigation
+stable.</p>
 <h3 id="how-to-report-a-problem-from-inside-quill">How to report a
 problem from inside Quill</h3>
 <p>Use this path when Quill is behaving unexpectedly or when you want to
@@ -1195,9 +1248,12 @@ Review, and Inspection</h2>
 <p>Quill earns trust by making difficult files readable and
 inspectable.</p>
 <h3 id="read-aloud">Read Aloud</h3>
-<p>Read Aloud uses local voices when available. You can start, pause,
-stop, and choose a voice. It is useful for proofreading by ear,
-reviewing extracted text, and staying oriented in dense material.</p>
+<p>Read Aloud uses local voices with a deterministic support policy.
+DECtalk and eSpeak NG are bundled for immediate local playback. Piper
+and Kokoro are available as explicit downloads from Speech Center so
+base installs stay smaller. You can start, pause, stop, preview, and
+choose a voice. Speech onboarding announces current availability and
+recommended next actions before any download starts.</p>
 <h3 id="epub-navigator">EPUB Navigator</h3>
 <p>When you open an EPUB, the navigator gives you chapter-aware movement
 rather than forcing you to scroll blindly through one long
