@@ -1,13 +1,29 @@
 name: Feature request
-description: Propose an enhancement for QUILL.
+description: Suggest an improvement or new capability for QUILL.
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the idea — only the first field is required. The rest just help us understand it.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like QUILL to do?
+      description: Describe the problem you're trying to solve and the change you'd like to see.
+      placeholder: |
+        Today I have to ....
+        It would help if QUILL could ....
+    validations:
+      required: true
   - type: dropdown
     id: area
     attributes:
-      label: Feature area
+      label: Which area?
+      description: Optional.
       options:
+        - Not sure
         - Editor and writing workflow
         - Navigation and structure tools
         - Search and replace
@@ -23,68 +39,25 @@ body:
         - Profiles, keymap, customization
         - Installer, update, distribution
     validations:
-      required: true
-  - type: dropdown
-    id: user_group
-    attributes:
-      label: Primary user group
-      options:
-        - Screen reader users
-        - Keyboard-only users
-        - Low-vision users
-        - Technical writers/developers
-        - General writing/editing users
-        - Mixed users
-    validations:
-      required: true
-  - type: textarea
-    id: problem
-    attributes:
-      label: Problem statement
-      description: What problem are you trying to solve?
-    validations:
-      required: true
-  - type: textarea
-    id: proposal
-    attributes:
-      label: Proposed solution
-      description: Describe your suggested behavior or workflow.
-    validations:
-      required: true
-  - type: textarea
-    id: acceptance
-    attributes:
-      label: Suggested acceptance criteria
-      description: What should be true when this is done?
-      placeholder: |
-        - [ ] ...
-        - [ ] ...
+      required: false
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives considered
+      label: Alternatives or workarounds
+      description: Anything you're doing today to get by, or other approaches you considered.
+    validations:
+      required: false
   - type: textarea
     id: accessibility
     attributes:
       label: Accessibility considerations
-      description: Note keyboard, screen reader, focus, and discoverability impact.
+      description: Optional — note any keyboard, screen reader, focus, or discoverability impact.
     validations:
-      required: true
-  - type: textarea
-    id: risks
-    attributes:
-      label: Risks and trade-offs
-      description: Any behavior, migration, or compatibility concerns?
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional context
+      required: false
   - type: checkboxes
     id: checklist
     attributes:
-      label: Checklist
+      label: Before submitting
       options:
-        - label: I checked existing issues for similar requests.
-          required: true
-        - label: I described user impact, not just implementation details.
+        - label: I checked existing issues for a similar request.
           required: true

@@ -1,0 +1,71 @@
+name: Accessibility issue
+description: Report a screen reader, keyboard, focus, contrast, or announcement problem.
+title: "[A11y]: "
+labels: ["accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Accessibility issues are a priority. Tell us what's wrong — only the first field is required.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What's the accessibility problem?
+      description: Describe what's announced, focused, or rendered now, and what should happen instead.
+      placeholder: |
+        When I ..., my screen reader said/did ....
+        I expected it to ... instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce (keyboard-only is ideal)
+      placeholder: |
+        1. Open ...
+        2. Press ...
+        3. Listen / observe ...
+    validations:
+      required: false
+  - type: dropdown
+    id: a11y_area
+    attributes:
+      label: Which area?
+      description: Optional.
+      options:
+        - Not sure
+        - Screen reader announcement wording or timing
+        - Focus order or keyboard trap
+        - Region navigation (F6 / Shift+F6)
+        - Status bar accessibility
+        - Dialog labels / descriptions
+        - Contrast or theme behavior
+        - Command discoverability / keyboard flow
+    validations:
+      required: false
+  - type: dropdown
+    id: screen_reader
+    attributes:
+      label: Screen reader (if you use one)
+      options:
+        - Not using a screen reader
+        - NVDA
+        - JAWS
+        - Narrator
+        - Other
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: QUILL version and OS
+      placeholder: "Example: 0.1.2 on Windows 11 24H2"
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
