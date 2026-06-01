@@ -40,8 +40,29 @@ accessible defaults, and clear user control.
 Run these before opening a pull request:
 
 - Lint: `ruff check .`
+- Format check: `ruff format --check .`
+- Scoped strict type-check: `mypy quill\core quill\io`
 - Tests: `pytest -q`
 - Docs artifact parity (if docs changed): `python scripts/check_docs_artifacts.py`
+
+Type-checking is intentionally **scoped to `quill\core` and `quill\io`**. These
+layers are strict-typed and gated in CI. Do not run an unscoped whole-tree
+`mypy` scan: `quill\ui` is excluded (gradual typing) in `pyproject.toml`, so a
+whole-tree run is both slower and noisier without adding signal. Always use the
+scoped command above.
+
+### Optional: install pre-commit hooks
+
+To catch formatting, lint, and undefined-name problems on changed files before
+they reach CI, install the hooks once:
+
+```powershell
+pip install pre-commit
+pre-commit install
+```
+
+The hooks run `ruff format`, `ruff check`, and an undefined-name check on the
+files you are committing. Commits that fail are blocked locally.
 
 If your change updates `docs/*.md`, regenerate matching artifacts:
 

@@ -1,0 +1,25 @@
+# Pre-commit hooks for Quill (GATE-1).
+#
+# Install once with:
+#   pip install pre-commit
+#   pre-commit install
+#
+# These hooks block commits that fail formatting, lint, or undefined-name
+# checks on the files being committed. They run on changed files only, so they
+# are fast. CI remains the source of truth for the full suite.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: ruff format
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-check
+        name: ruff check (lint + undefined names)
+        entry: ruff check --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true

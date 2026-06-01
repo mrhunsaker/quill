@@ -993,9 +993,10 @@ command documented.</td>
 <td>Document and enforce scoped type-check command</td>
 <td>Performance</td>
 <td>S</td>
-<td>Todo</td>
-<td>Contributor docs specify the scoped command; no unscoped whole-tree
-scan is recommended anywhere.</td>
+<td>Done</td>
+<td>CONTRIBUTING specifies <code>mypy quill\core quill\io</code> as the
+only recommended type-check command and explains why the whole-tree scan
+is excluded; no unscoped scan is recommended anywhere.</td>
 </tr>
 <tr>
 <td>A11Y-1</td>
@@ -3360,9 +3361,11 @@ P1)</h5>
 <td>Pre-commit hooks for format, lint, and quick checks</td>
 <td>Gates</td>
 <td>S</td>
-<td>Todo</td>
-<td>Commits that fail format, lint, or undefined-name checks on changed
-files are blocked locally; documented for contributors.</td>
+<td>Done</td>
+<td><code>.pre-commit-config.yaml</code> runs <code>ruff format</code>
+and <code>ruff check</code> (which includes the F821 undefined-name
+rule) on changed files, blocking failing commits locally; CONTRIBUTING
+documents one-time install.</td>
 </tr>
 <tr>
 <td>GATE-2</td>

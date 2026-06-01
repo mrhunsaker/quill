@@ -395,7 +395,7 @@ This table is the execution source of truth. Update Status as work progresses. S
 | SEC-8 | Gate plugin loading behind off-by-default experimental flag | Security | S | Todo | No third-party plugin loads in a default build; flag is documented as experimental. |
 | SEC-9 | Resource limits for the Python sandbox | Security | M | Todo | A wall-clock and memory limit terminate runaway transforms; termination is announced; test included. |
 | CQ-7 | Scoped strict mypy in CI on every pull request | Code quality | S | Todo | CI runs mypy on quill/core and quill/io; failures block merge; local command documented. |
-| PERF-8 | Document and enforce scoped type-check command | Performance | S | Todo | Contributor docs specify the scoped command; no unscoped whole-tree scan is recommended anywhere. |
+| PERF-8 | Document and enforce scoped type-check command | Performance | S | Done | CONTRIBUTING specifies `mypy quill\core quill\io` as the only recommended type-check command and explains why the whole-tree scan is excluded; no unscoped scan is recommended anywhere. |
 | A11Y-1 | Announcement style guide and audit | Accessibility | M | Todo | A written grammar exists; top 50 announcements conform; a test verifies key phrases. |
 | A11Y-4 | Dialog escape and default audit | Accessibility | M | Todo | Every dialog has an Escape path and an explicit default; focus returns to the editor on close; tests or a contract check cover representative dialogs. |
 | QK-1 | Name and remappable QUILL key | QUILL key | S | Todo | Docs and UI call it the QUILL key; it is remappable; default remains Ctrl+Shift+Grave. |
@@ -849,7 +849,7 @@ These extend the section 14 tracker.
 
 | ID | Item | Area | Size | Status | Acceptance criteria |
 | --- | --- | --- | --- | --- | --- |
-| GATE-1 | Pre-commit hooks for format, lint, and quick checks | Gates | S | Todo | Commits that fail format, lint, or undefined-name checks on changed files are blocked locally; documented for contributors. |
+| GATE-1 | Pre-commit hooks for format, lint, and quick checks | Gates | S | Done | `.pre-commit-config.yaml` runs `ruff format` and `ruff check` (which includes the F821 undefined-name rule) on changed files, blocking failing commits locally; CONTRIBUTING documents one-time install. |
 | GATE-2 | Pull-request CI pipeline | Gates | M | Todo | A required pipeline runs lint, scoped typing, tests, accessibility, docs-artifact, and security jobs; merge is blocked unless green. |
 | GATE-3 | Strict typing gate (scoped) | Gates | S | Todo | mypy on `quill/core` and `quill/io` reports zero errors and is required for merge; the whole-tree scan is never used. |
 | GATE-4 | Banned-pattern gate | Gates | S | Todo | The build fails on bare `wx.` in main_frame, undefined names, duplicate imports, unhardened `ET.fromstring`, and `except Exception` without a logged cause; tests cover the checker. |
