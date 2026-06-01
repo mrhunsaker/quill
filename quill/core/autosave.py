@@ -15,12 +15,16 @@ def autosave_document(document: Document, session_id: str, max_snapshots: int = 
     autosave_root.mkdir(parents=True, exist_ok=True)
 
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
-    filename = f"{_document_key(document)}-{stamp}.snap"
-    target = autosave_root / filename
+    key = _document_key(document)
+    target = autosave_root / f"{key}-{stamp}.snap"
+    counter = 1
+    while target.exists():
+        target = autosave_root / f"{key}-{stamp}-{counter:03d}.snap"
+        counter += 1
     with target.open("w", encoding=document.encoding, newline="") as file_handle:
         file_handle.write(document.text)
 
-    snapshots = sorted(autosave_root.glob(f"{_document_key(document)}-*.snap"), reverse=True)
+    snapshots = sorted(autosave_root.glob(f"{key}-*.snap"), reverse=True)
     for stale in snapshots[max_snapshots:]:
         stale.unlink(missing_ok=True)
     return target

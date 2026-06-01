@@ -115,23 +115,23 @@ def test_replace_shortcut_is_available() -> None:
 
 def test_snippet_shortcuts_are_available() -> None:
     assert DEFAULT_KEYMAP["edit.word_prediction"] == "Ctrl+Space"
-    assert DEFAULT_KEYMAP["format.insert_snippet"] == "Ctrl+Alt+Space"
-    assert DEFAULT_KEYMAP["format.manage_snippets"] == "Ctrl+Alt+Shift+Space"
+    assert DEFAULT_KEYMAP["format.insert_snippet"] == "Ctrl+Shift+Grave, S"
+    assert DEFAULT_KEYMAP["format.manage_snippets"] == "Ctrl+Shift+Grave, Shift+S"
 
 
 def test_sticky_note_shortcut_is_available() -> None:
-    assert DEFAULT_KEYMAP["tools.sticky_note_capture"] == "Ctrl+Alt+Shift+N"
+    assert DEFAULT_KEYMAP["tools.sticky_note_capture"] == "Ctrl+Shift+Grave, N"
 
 
 def test_indent_shortcuts_are_available() -> None:
     assert DEFAULT_KEYMAP["format.indent"] == "Ctrl+]"
     assert DEFAULT_KEYMAP["format.outdent"] == "Ctrl+["
-    assert DEFAULT_KEYMAP["format.list_manager"] == "Ctrl+Alt+L"
+    assert DEFAULT_KEYMAP["format.list_manager"] == "Ctrl+Shift+Grave, L"
 
 
 def test_browser_preview_shortcut_is_available() -> None:
     assert DEFAULT_KEYMAP["view.preview"] == "Ctrl+Shift+V"
-    assert DEFAULT_KEYMAP["view.browser_preview"] == "Ctrl+Alt+Shift+V"
+    assert DEFAULT_KEYMAP["view.browser_preview"] == "Ctrl+Shift+Grave, V"
 
 
 def test_legacy_preview_conflict_migrates_to_in_app_preview() -> None:
@@ -142,7 +142,7 @@ def test_legacy_preview_conflict_migrates_to_in_app_preview() -> None:
         }
     )
     assert merged["view.preview"] == "Ctrl+Shift+V"
-    assert merged["view.browser_preview"] == "Ctrl+Alt+Shift+V"
+    assert merged["view.browser_preview"] == "Ctrl+Shift+Grave, V"
 
 
 def test_profile_picker_shortcut_is_available() -> None:

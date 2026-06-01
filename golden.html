@@ -562,9 +562,9 @@ announces each step, and export or import. See FEAT-7.</li>
 <li>Document Intake: make the intake report a calm, skimmable summary
 with confidence and a one-key path to cleanup recipes. See FEAT-8.</li>
 <li>Watch Folder: announce new arrivals with a non-interrupting
-notification and a one-key “open it.” See FEAT-9.</li>
-<li>Sticky Notes: make the vault searchable and screen-reader pageable,
-with quick capture confirmation. See FEAT-10.</li>
+notification and a one-key “open it.” See FEAT-9.- Sticky Notes: make
+the vault searchable and screen-reader pageable, with quick capture
+confirmation. See FEAT-10.</li>
 <li>Status bar: ensure every cell has a crisp spoken label and a context
 menu, and that layout changes persist and announce. See FEAT-11.</li>
 </ul>
@@ -591,6 +591,11 @@ FEAT-16.</li>
 announced results, building on Pandoc. See FEAT-17.</li>
 <li>Autosave and recovery transparency: a visible, spoken “last saved”
 and “recovered from” state. See FEAT-18.</li>
+<li>External file-change watch and safe reload: detect when the open
+document is changed (or deleted) by another program, reload in place
+without moving the cursor when the buffer is clean, and offer a clear,
+spoken reload-or-keep-mine choice on conflict; fully configurable and
+quiet by default. See FEAT-19.</li>
 </ul>
 <hr />
 <h2 id="code-quality-review">10. Code quality review</h2>
@@ -1375,6 +1380,25 @@ keybindings, readable top to bottom.</td>
 <td>Todo</td>
 <td>Add to document dictionary and ignore for session, with
 announcements.</td>
+</tr>
+<tr>
+<td>FEAT-19</td>
+<td>External file-change watch and safe reload</td>
+<td>Features</td>
+<td>M</td>
+<td>Todo</td>
+<td>QUILL watches the open document for external modification (and
+deletion). When the file changes on disk and the buffer is unmodified,
+it reloads in place without moving the cursor or scroll position and
+announces “Reloaded from disk.” When the buffer has unsaved edits (a
+conflict), it never overwrites silently: it announces the change and
+offers reload, keep-mine, or compare, with a clear spoken prompt.
+Behavior is configurable (auto-reload-when-clean on or off,
+prompt-on-conflict, watch on or off, debounce interval) in a Settings
+group, defaults are safe and quiet, and the watcher runs off the UI
+thread reusing the existing watch-folder and stability patterns. Cursor,
+selection, and scroll are preserved across reload; tests cover clean
+reload, conflict prompt, deletion, and cursor preservation.</td>
 </tr>
 <tr>
 <td>FEAT-16</td>
@@ -4111,6 +4135,12 @@ and AI hardening, so it sits here with the flagship.</li>
 <li>Deep, tunable settings: SET-1 through SET-7. Value: users shape
 QUILL precisely to their hands and ears. Outcome: the product meets
 people exactly where they are.</li>
+<li>Trustworthy external-change handling: FEAT-19. Value: a file edited
+by another program is never silently lost or silently overwritten; clean
+files reload in place without losing the cursor, and conflicts get a
+clear spoken choice. Outcome: QUILL feels safe and alive when documents
+change underneath it, which matters most to a screen-reader user who
+cannot see a flicker.</li>
 </ul>
 <p>Why second: this is where user love is won. It comes right after the
 protections so the flagship is built on a safe, gated base.</p>

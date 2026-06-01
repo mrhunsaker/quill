@@ -214,8 +214,7 @@ This section proposes targeted delight for existing features. Each maps to a bac
 - Compare documents: add a spoken summary ("12 changes: 5 additions, 4 deletions, 3 edits") and synchronized navigation announcements. See FEAT-6.
 - Macros: add named macros with descriptions, a safe replay that announces each step, and export or import. See FEAT-7.
 - Document Intake: make the intake report a calm, skimmable summary with confidence and a one-key path to cleanup recipes. See FEAT-8.
-- Watch Folder: announce new arrivals with a non-interrupting notification and a one-key "open it." See FEAT-9.
-- Sticky Notes: make the vault searchable and screen-reader pageable, with quick capture confirmation. See FEAT-10.
+- Watch Folder: announce new arrivals with a non-interrupting notification and a one-key "open it." See FEAT-9.- Sticky Notes: make the vault searchable and screen-reader pageable, with quick capture confirmation. See FEAT-10.
 - Status bar: ensure every cell has a crisp spoken label and a context menu, and that layout changes persist and announce. See FEAT-11.
 
 ---
@@ -232,6 +231,7 @@ Ideas that would expand the product, in priority order within the backlog.
 - Document health dashboard: one pane combining accessibility audit, contrast, link or alt-text inventory, and plain-language lint. See FEAT-16.
 - Export presets: one-key "export to clean HTML or Word or PDF" with announced results, building on Pandoc. See FEAT-17.
 - Autosave and recovery transparency: a visible, spoken "last saved" and "recovered from" state. See FEAT-18.
+- External file-change watch and safe reload: detect when the open document is changed (or deleted) by another program, reload in place without moving the cursor when the buffer is clean, and offer a clear, spoken reload-or-keep-mine choice on conflict; fully configurable and quiet by default. See FEAT-19.
 
 ---
 
@@ -441,6 +441,7 @@ This table is the execution source of truth. Update Status as work progresses. S
 | MENU-2 | Split the Tools menu and elevate Accessibility | Menus | M | Todo | Tools is smaller; Accessibility is easy to find; labels match announcement grammar. |
 | HELP-1 | Context-aware What Can I Do Here | Help | M | Todo | The help lists commands relevant to the cursor context with keybindings, readable top to bottom. |
 | FEAT-2 | Spell-check usability polish | Features | S | Todo | Add to document dictionary and ignore for session, with announcements. |
+| FEAT-19 | External file-change watch and safe reload | Features | M | Todo | QUILL watches the open document for external modification (and deletion). When the file changes on disk and the buffer is unmodified, it reloads in place without moving the cursor or scroll position and announces "Reloaded from disk." When the buffer has unsaved edits (a conflict), it never overwrites silently: it announces the change and offers reload, keep-mine, or compare, with a clear spoken prompt. Behavior is configurable (auto-reload-when-clean on or off, prompt-on-conflict, watch on or off, debounce interval) in a Settings group, defaults are safe and quiet, and the watcher runs off the UI thread reusing the existing watch-folder and stability patterns. Cursor, selection, and scroll are preserved across reload; tests cover clean reload, conflict prompt, deletion, and cursor preservation. |
 | FEAT-16 | Document health dashboard | Features | L | Todo | One pane combines audit, contrast, link or alt-text inventory, and plain-language lint. |
 | AI-5 | Reaffirm no-silent-network and scope honesty in code and tests | AI | S | Todo | A test asserts no network call without consent; provider, model, and scope are always shown. |
 | DOC-2 | Navigation and selection guide | Docs | M | Todo | Worked examples for Quick Nav and structural selection ship in all formats. |
@@ -1007,6 +1008,7 @@ The highest user-impact features: the reasons a blind writer would choose and re
 - The Accessibility agent and trustworthy AI editing: AGENT-1, AI-7 (diffs reviewable by ear), AI-1 (streaming), AI-6 (graceful degradation). Value: "make this document accessible," done step by step, reversibly, by keyboard and voice. Outcome: a category-defining capability that embodies the mission.
 - Make the configured AI providers actually work: AI-13 (the headline fix), AI-15 (provider correctness), AI-17 (chat-path error messages), then AI-14 (streaming) and AI-16 (contract tests). Value: when a user selects OpenAI, OpenRouter, Gemini, Azure, Ollama, or Claude, that provider is the one that responds, instead of silently falling back to the local model. Outcome: the provider boundary becomes trustworthy and the QUILL AI surface is honest end to end. This is both a QUILL feature and AI hardening, so it sits here with the flagship.
 - Deep, tunable settings: SET-1 through SET-7. Value: users shape QUILL precisely to their hands and ears. Outcome: the product meets people exactly where they are.
+- Trustworthy external-change handling: FEAT-19. Value: a file edited by another program is never silently lost or silently overwritten; clean files reload in place without losing the cursor, and conflicts get a clear spoken choice. Outcome: QUILL feels safe and alive when documents change underneath it, which matters most to a screen-reader user who cannot see a flicker.
 
 Why second: this is where user love is won. It comes right after the protections so the flagship is built on a safe, gated base.
 
