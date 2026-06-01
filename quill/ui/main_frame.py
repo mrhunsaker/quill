@@ -12500,7 +12500,7 @@ class MainFrame:
         self._read_aloud.stop()
         self._set_status("Read aloud stopped")
 
-    def _voice_is_english(self, engine: str, voice: VoiceOption) -> bool:
+    def _voice_is_english(self, engine: str, voice: ReadAloudVoiceOption) -> bool:
         engine_name = (engine or "").strip().lower()
         voice_id = (voice.id or "").strip().lower()
         voice_name = (voice.name or "").strip().lower()
@@ -12529,7 +12529,9 @@ class MainFrame:
 
         return True
 
-    def _english_only_voices(self, engine: str, voices: list[VoiceOption]) -> list[VoiceOption]:
+    def _english_only_voices(
+        self, engine: str, voices: list[ReadAloudVoiceOption]
+    ) -> list[ReadAloudVoiceOption]:
         return [voice for voice in voices if self._voice_is_english(engine, voice)]
 
     # ------------------------------------------------------------------

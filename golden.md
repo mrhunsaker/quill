@@ -672,7 +672,7 @@ These extend the section 14 tracker. Priorities follow the same scheme. The conf
 | --- | --- | --- | --- | --- | --- |
 | BUG-1 | Repair corrupted `_show_bw_onboarding` | UI correctness | S | Done | Method no longer references undefined names; the BITS Whisperer onboarding presents the intended profile choice; a test exercises the path so it cannot regress. |
 | BUG-2 | Fix four bare `wx.` calls in heading-style prompts | UI correctness | S | Done | Lines 16983, 17015, 17022, 17042 use `self._wx`; a test invokes the heading-style flow without `NameError`. |
-| BUG-3 | Fix undefined `VoiceOption` annotations | UI correctness | S | Todo | Lines 12503 and 12532 use the imported alias; ruff reports no F821 for these. |
+| BUG-3 | Fix undefined `VoiceOption` annotations | UI correctness | S | Done | Lines 12503 and 12532 use the imported alias; ruff reports no F821 for these. |
 | BUG-4 | Resolve `URLError` redefinition | UI correctness | S | Todo | A single import source for `URLError`; ruff F811 cleared. |
 | BUG-5 | Validate llama.cpp response shape | AI correctness | S | Todo | Malformed responses produce a friendly error, not `KeyError` or `IndexError`; test included. |
 | BUG-6 | Fix DOCX Element handling in structured reader | IO correctness | S | Todo | Lines 614 and 615 type-check and behave correctly on a fixture DOCX; mypy clean for that path. |
