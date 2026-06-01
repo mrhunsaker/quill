@@ -1,0 +1,203 @@
+"""Banned-pattern gate (GATE-4).
+
+Fails the build on a small set of high-value patterns that have previously
+caused real bugs in Quill:
+
+1. Bare ``wx.`` usage in ``quill/ui/main_frame.py``. The module never imports
+   ``wx`` at module scope; every method that needs wx must bind it locally with
+   ``wx = self._wx``. A bare ``wx.X`` where ``wx`` is not bound in the current or
+   any enclosing function scope is a ``NameError`` waiting to happen (this is
+   exactly the BUG-2 class).
+
+2. Unhardened XML parsing: a direct ``ET.fromstring`` / ``etree.fromstring`` /
+   ``ElementTree.fromstring`` call anywhere except ``quill/core/safe_xml.py``.
+   All untrusted XML must go through ``quill.core.safe_xml.fromstring`` so
+   entity-expansion attacks stay disabled (the SEC-10 class).
+
+3. Configuration guard: ruff's undefined-name (F) and redefinition (F811)
+   rules must stay enabled in ``pyproject.toml`` so undefined names and
+   duplicate imports (the BUG-1 / BUG-4 classes) keep failing lint.
+
+Run directly (``python -m quill.tools.check_banned_patterns``) or via pytest
+(``tests/unit/tools/test_check_banned_patterns.py``). Exit code is non-zero when
+any violation is found.
+"""
+
+from __future__ import annotations
+
+import ast
+import sys
+import tomllib
+from collections.abc import Iterable
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_MAIN_FRAME = _REPO_ROOT / "quill" / "ui" / "main_frame.py"
+_SAFE_XML = _REPO_ROOT / "quill" / "core" / "safe_xml.py"
+_PACKAGE_ROOT = _REPO_ROOT / "quill"
+
+# Names that, when called as ``<name>.fromstring(...)``, indicate a raw stdlib
+# ElementTree parse instead of the hardened wrapper.
+_RAW_XML_MODULE_NAMES = frozenset({"ET", "etree", "ElementTree"})
+
+
+class Violation:
+    __slots__ = ("path", "line", "message")
+
+    def __init__(self, path: Path, line: int, message: str) -> None:
+        self.path = path
+        self.line = line
+        self.message = message
+
+    def __str__(self) -> str:
+        rel = self.path.relative_to(_REPO_ROOT)
+        return f"{rel}:{self.line}: {self.message}"
+
+
+class _BareWxVisitor(ast.NodeVisitor):
+    """Flag ``wx.<attr>`` where ``wx`` is not bound in any enclosing scope."""
+
+    def __init__(self) -> None:
+        self.violations: list[tuple[int, str]] = []
+        # Each stack frame is the set of names bound in that function scope.
+        self._scopes: list[set[str]] = [set()]
+
+    def _bound(self, name: str) -> bool:
+        return any(name in scope for scope in self._scopes)
+
+    def _collect_bindings(self, node: ast.AST, scope: set[str]) -> None:
+        """Record names assigned, imported, or declared in this function body.
+
+        Walks the function body but does NOT descend into nested function or
+        class definitions (those get their own scope), so a name bound only in a
+        sibling nested function does not leak here.
+        """
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                scope.add(child.name)
+                continue
+            if isinstance(child, ast.Assign):
+                for target in child.targets:
+                    self._add_target(target, scope)
+            elif isinstance(child, (ast.AnnAssign, ast.AugAssign, ast.NamedExpr)):
+                self._add_target(child.target, scope)
+            elif isinstance(child, (ast.Import, ast.ImportFrom)):
+                for alias in child.names:
+                    scope.add((alias.asname or alias.name).split(".")[0])
+            elif isinstance(child, (ast.For, ast.AsyncFor)):
+                self._add_target(child.target, scope)
+            elif isinstance(child, (ast.With, ast.AsyncWith)):
+                for item in child.items:
+                    if item.optional_vars is not None:
+                        self._add_target(item.optional_vars, scope)
+            elif isinstance(child, (ast.Global, ast.Nonlocal)):
+                scope.update(child.names)
+            self._collect_bindings(child, scope)
+
+    def _add_target(self, target: ast.AST, scope: set[str]) -> None:
+        if isinstance(target, ast.Name):
+            scope.add(target.id)
+        elif isinstance(target, (ast.Tuple, ast.List)):
+            for element in target.elts:
+                self._add_target(element, scope)
+
+    def _enter_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        scope: set[str] = set()
+        args = node.args
+        for arg in (*args.posonlyargs, *args.args, *args.kwonlyargs):
+            scope.add(arg.arg)
+        if args.vararg:
+            scope.add(args.vararg.arg)
+        if args.kwarg:
+            scope.add(args.kwarg.arg)
+        self._collect_bindings(node, scope)
+        self._scopes.append(scope)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._enter_function(node)
+        for child in node.body:
+            self.visit(child)
+        self._scopes.pop()
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._enter_function(node)
+        for child in node.body:
+            self.visit(child)
+        self._scopes.pop()
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:
+        value = node.value
+        if isinstance(value, ast.Name) and value.id == "wx" and not self._bound("wx"):
+            self.violations.append(
+                (node.lineno, "bare 'wx.' usage; bind 'wx = self._wx' in this scope first")
+            )
+        self.generic_visit(node)
+
+
+def _check_bare_wx(path: Path) -> list[Violation]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    visitor = _BareWxVisitor()
+    visitor.visit(tree)
+    return [Violation(path, line, message) for line, message in visitor.violations]
+
+
+def _check_raw_xml(paths: Iterable[Path]) -> list[Violation]:
+    violations: list[Violation] = []
+    for path in paths:
+        if path == _SAFE_XML:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Attribute)
+                and node.attr == "fromstring"
+                and isinstance(node.value, ast.Name)
+                and node.value.id in _RAW_XML_MODULE_NAMES
+            ):
+                violations.append(
+                    Violation(
+                        path,
+                        node.lineno,
+                        f"raw '{node.value.id}.fromstring'; use quill.core.safe_xml.fromstring",
+                    )
+                )
+    return violations
+
+
+def _check_ruff_config() -> list[Violation]:
+    pyproject = _REPO_ROOT / "pyproject.toml"
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    select = data.get("tool", {}).get("ruff", {}).get("lint", {}).get("select", [])
+    if "F" not in select:
+        return [
+            Violation(
+                pyproject,
+                0,
+                "ruff lint.select must include 'F' (undefined names F821, "
+                "redefinition F811) so banned name patterns keep failing lint",
+            )
+        ]
+    return []
+
+
+def find_violations() -> list[Violation]:
+    violations: list[Violation] = []
+    violations.extend(_check_bare_wx(_MAIN_FRAME))
+    violations.extend(_check_raw_xml(sorted(_PACKAGE_ROOT.rglob("*.py"))))
+    violations.extend(_check_ruff_config())
+    return violations
+
+
+def main() -> int:
+    violations = find_violations()
+    if not violations:
+        print("Banned-pattern gate: no violations.")
+        return 0
+    print("Banned-pattern gate found violations:")
+    for violation in violations:
+        print(f"  {violation}")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

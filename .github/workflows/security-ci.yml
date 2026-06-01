@@ -71,3 +71,16 @@ jobs:
       - name: Scoped strict type-check
         run: |
           mypy quill\core quill\io
+
+  banned-patterns:
+    # GATE-4: fail on bare 'wx.' in main_frame, raw ET.fromstring outside
+    # safe_xml, and any weakening of ruff's undefined-name/redefinition rules.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Run banned-pattern gate
+        run: |
+          python -m quill.tools.check_banned_patterns

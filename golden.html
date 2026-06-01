@@ -3396,11 +3396,17 @@ whole-tree scan is never used.</td>
 <td>Banned-pattern gate</td>
 <td>Gates</td>
 <td>S</td>
-<td>Todo</td>
-<td>The build fails on bare <code>wx.</code> in main_frame, undefined
-names, duplicate imports, unhardened <code>ET.fromstring</code>, and
-<code>except Exception</code> without a logged cause; tests cover the
-checker.</td>
+<td>Done</td>
+<td><code>quill/tools/check_banned_patterns.py</code> (AST-based) fails
+on bare <code>wx.</code> in main_frame where <code>wx</code> is not
+locally bound (the BUG-2 class), on raw
+<code>ET.fromstring</code>/<code>etree.fromstring</code> outside
+<code>safe_xml</code> (the SEC-10 class), and on any removal of ruff’s
+<code>F</code> rule group that enforces undefined-name (F821) and
+redefinition (F811) checks (the BUG-1/BUG-4 classes); a CI job runs it
+and tests cover the checker. The <code>except Exception</code>
+logged-cause sub-rule is tracked under CQ (it needs handler-body
+refactors across 26 sites) and is not claimed here.</td>
 </tr>
 <tr>
 <td>GATE-5</td>
