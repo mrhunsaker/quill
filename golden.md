@@ -1069,6 +1069,35 @@ If every item in this plan were completed (Parts I through V: the delight progra
 
 This log is the single honest record of where the product actually stands as work completes. It is updated at the end of every major section so the team always meets at a truthful assessment, not an aspirational one. Newest entry first.
 
+#### Tier completion tracker (remaining backlog items per tier)
+
+This table tracks how many of the backlog IDs each tier names are still open. It is updated whenever an item closes, so the count of remaining work at every level is always visible at a glance. Counts cover the IDs explicitly listed in each tier's prose in section 23; a few infrastructure IDs that serve two tiers (for example GATE-6 and CQ-16) are counted once, in their primary tier.
+
+| Tier | Scope | Total items | Done | Remaining | Open item IDs |
+| --- | --- | --- | --- | --- | --- |
+| Tier 1 | Protect users and unlock the team | 20 | 15 | 5 | GATE-2, GATE-5, GATE-6, GATE-7, GATE-8 |
+| Tier 2 | Flagship experience | 29 | 0 | 29 | QK-1..5, QK-9, NAV-1, NAV-4, NAV-5, SEL-1..3, AGENT-1, AI-7, AI-1, AI-6, AI-13, AI-15, AI-17, AI-14, AI-16, SET-1..7, FEAT-19 |
+| Tier 3 | GLOW accessibility engine | 5 | 0 | 5 | GLOW-1..5 |
+| Tier 4 | Structural health and performance | 29 | 0 | 29 | CQ-16, CQ-1, GATE-11, TYPE-1..8, CQ-18, PERF-1..3, PERF-9..14, GATE-10, SEC-6, SEC-7, SEC-8, SEC-14..17 |
+| Tier 5 | Documentation and learning surface | 33 | 0 | 33 | DOC-14..17, DOC-11, DOC-12, DOC-1..8, POD-1..5, TUT-1..7, CQ-11..15, CQ-23, CQ-24 |
+| Tier 6 | BITS Whisperer and expansion | 26 | 0 | 26 | BW-1..10, NAV-10, AI-11, AI-12, AI-18, FEAT-12..18, LINUX-1, LINUX-2, ECO-1, L10N-1, COLLAB-1 |
+| **Total** | All tiers | **142** | **15** | **127** | |
+
+Completed outside the formal tier lists (cross-cutting protections and quality work that the tiers reference only by theme): SEC-3 (OCR language allowlist), SEC-5 (verified TLS everywhere), GATE-1 (pre-commit), GATE-3 and CQ-7 (scoped strict typing in CI), GATE-4 (banned-pattern gate), GATE-9 (no-silent-network gate), PERF-8 (documented scoped type-check), and A11Y-1 (announcement grammar). The GATE-3/CQ-7 cleanup also incidentally cleared the `quill/core` and `quill/io` portion of the TYPE-1..8 zone, though those formal rows stay open until each is individually verified and closed.
+
+#### 2026-06-01 (later): Gate ladder enforced in CI, scoped typing clean, and the announcement grammar landed
+
+What shipped and is committed to `main`, building directly on the morning's Tier 1 entry:
+
+- The quality-gate ladder is now real in CI, not just described. A required Security CI pipeline runs three new jobs that block merge: `scoped-strict-typing` (`mypy quill\core quill\io`, GATE-3 and CQ-7), `banned-patterns` (GATE-4), and `no-silent-network` (GATE-9). Pre-commit hooks (GATE-1) catch format, lint, and undefined-name problems before a commit, and CONTRIBUTING documents the scoped type-check command and why the whole-tree scan is never used (PERF-8).
+- The scoped strict-typing zone is genuinely clean: all 33 real type errors across `quill/core` and `quill/io` were fixed (missing annotations, `Any` returns, a wrong tuple annotation, typed file-lock handles, a type-safe snippet clone), and stub-less third-party imports are handled with explicit module overrides so the gate measures our own code. `mypy` reports zero errors across 96 source files.
+- The banned-pattern gate is an AST checker, not a brittle text grep: it fails on bare `wx.` in `main_frame` where `wx` is not locally bound (the BUG-2 class), on raw `ET.fromstring` outside `safe_xml` (the SEC-10 class), and on any weakening of ruff's undefined-name and redefinition rules (the BUG-1 and BUG-4 classes), with tests proving it catches each shape.
+- The no-silent-network gate inventories every outbound call site in the package and fails when a new one appears without a reviewed rationale tying it to a user action or explicit consent. All eight current egress points are documented.
+- Two more cheap protections landed: every HTTPS call now goes through a single verified TLS context (SEC-5), and OCR language codes are validated against a strict allowlist before Tesseract is invoked so a tampered setting cannot inject CLI options (SEC-3).
+- Accessibility gained a shared announcement grammar: a written style guide plus a UI-agnostic `quill/core/announcements.py` (`format_announcement`, `format_progress`, `pluralize`) that the AI writing-action announcer now uses, with tests verifying the key phrases (A11Y-1).
+
+Honest standing after this entry: Tier 1 is 15 of 20 items done; the five remaining are gate work that needs more infrastructure (the full PR pipeline GATE-2, coverage floor GATE-5, the characterization suite GATE-6, the accessibility-PR gate GATE-7, and the security-scan gate GATE-8). The accessibility-PR gate (GATE-7) now has a concrete grammar to check against, which de-risks it. Nothing user-facing and flagship has started yet (Tier 2 remains at 0 of 29). The safety floor and the team's velocity protections are now materially higher; the next strategic move is the flagship QUILL key and navigation work, not more gates.
+
 #### 2026-06-01: Tier 1 protections landed (latent-crash bugs, cheap security hardening, AI error taxonomy)
 
 What shipped and is committed to `main`:
