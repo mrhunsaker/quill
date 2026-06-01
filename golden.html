@@ -4283,6 +4283,103 @@ performance fixes, the documentation greatness work, the quality-gate
 ladder, the AI and agent program, the combined GLOW and BITS Whisperer
 suite, and the impact-ordered build sequence), here is the scale and
 standing the product would reach.</p>
+<h3
+id="live-progress-log-honest-updated-as-each-major-section-lands">Live
+progress log (honest, updated as each major section lands)</h3>
+<p>This log is the single honest record of where the product actually
+stands as work completes. It is updated at the end of every major
+section so the team always meets at a truthful assessment, not an
+aspirational one. Newest entry first.</p>
+<h4
+id="tier-1-protections-landed-latent-crash-bugs-cheap-security-hardening-ai-error-taxonomy">2026-06-01:
+Tier 1 protections landed (latent-crash bugs, cheap security hardening,
+AI error taxonomy)</h4>
+<p>What shipped and is committed to <code>main</code>:</p>
+<ul>
+<li>All seven verified latent-crash bugs are fixed with regression
+tests: the corrupted onboarding method and its three deleted helpers
+(BUG-1), the four bare <code>wx.</code> heading-style calls (BUG-2), the
+undefined <code>VoiceOption</code> annotations (BUG-3), the duplicate
+<code>URLError</code> import (BUG-4), the unchecked llama.cpp response
+shape (BUG-5), the DOCX or PPTX element name collision (BUG-6), and the
+non-positive chunk-split guard (BUG-7).</li>
+<li>The cheap, user-protecting security hardening is in: all untrusted
+XML now parses with entity expansion disabled against billion-laughs
+(SEC-10), ZIP-based formats enforce a cumulative decompression cap
+(SEC-11), diagnostics redaction covers token, password, and NAME_KEY
+patterns (SEC-13), and configured speech executable paths are validated
+against an allowlist so tampered settings cannot launch arbitrary
+programs (SEC-1).</li>
+<li>Two pre-existing test failures, unrelated to the above but found
+along the way, were fixed honestly rather than ignored: an autosave
+snapshot-collision bug where a coarse Windows clock overwrote snapshots,
+and four stale keymap tests that had not been updated after the
+deliberate QUILL key chord migration.</li>
+<li>The in-progress AI connection work was reviewed, judged safe and
+forward-aligned, and committed: a structured error taxonomy (auth 401,
+forbidden 403, rate-limited, warming-up, not-running, timeout,
+unreachable) matched on numeric status codes rather than substrings, a
+bounded warm-up retry, and portable-key unlock-failure recovery. This is
+the foundation the AI-13 provider wiring and AI-17 chat-path messages
+build on.</li>
+</ul>
+<p>Honest dimension movement since the 0.1.5 baseline:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Baseline (0.1.5)</th>
+<th>Now (2026-06-01)</th>
+<th>Why it moved</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Security and privacy</td>
+<td>Level 3</td>
+<td>Level 3 to 4</td>
+<td>Untrusted-input hardening (XML, zip, redaction) and executable-path
+validation close the worst input and supply-chain gaps; remaining items
+(network checksums, sandbox limits, gate enforcement) keep this short of
+Level 5.</td>
+</tr>
+<tr>
+<td>Code quality and architecture</td>
+<td>Level 3</td>
+<td>Level 3 (cleaner)</td>
+<td>Seven latent crashes removed and pre-existing test rot fixed; the UI
+monolith and lint/typing debt remain, so the level holds.</td>
+</tr>
+<tr>
+<td>AI and agents</td>
+<td>Level 2</td>
+<td>Level 2 to 3</td>
+<td>Connection diagnostics are now honest and screen-reader-friendly;
+the headline gap (configured providers still fall back to local
+generation, AI-13) is not yet closed.</td>
+</tr>
+<tr>
+<td>Test coverage</td>
+<td>Level 2 to 3</td>
+<td>Level 3</td>
+<td>New regression tests for every bug class and the AI taxonomy; the
+broad UI characterization and IO matrix work is still ahead.</td>
+</tr>
+</tbody>
+</table>
+<p>What is explicitly not done yet: the quality-gate ladder is not
+enforced in CI (GATE items), the configured AI providers still do not
+drive generation (AI-13), the UI monolith is intact (CQ-1), and the
+flagship QUILL key, navigation, selection, and settings work (Tier 2)
+has not started. Overall standing remains roughly Level 3, already Level
+4 on accessibility; this section moved the safety floor up without yet
+adding user-facing flagship value.</p>
 <h3 id="what-quill-would-be">What QUILL would be</h3>
 <p>QUILL would be a mature, 1.0-grade, screen-reader-first writing
 application: not a promising beta, but a dependable daily tool that a

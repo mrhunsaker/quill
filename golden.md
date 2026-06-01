@@ -1065,6 +1065,30 @@ Lead with cheap protections and gates, because they make everything after them s
 
 If every item in this plan were completed (Parts I through V: the delight program, the verified bug and security and typing and performance fixes, the documentation greatness work, the quality-gate ladder, the AI and agent program, the combined GLOW and BITS Whisperer suite, and the impact-ordered build sequence), here is the scale and standing the product would reach.
 
+### Live progress log (honest, updated as each major section lands)
+
+This log is the single honest record of where the product actually stands as work completes. It is updated at the end of every major section so the team always meets at a truthful assessment, not an aspirational one. Newest entry first.
+
+#### 2026-06-01: Tier 1 protections landed (latent-crash bugs, cheap security hardening, AI error taxonomy)
+
+What shipped and is committed to `main`:
+
+- All seven verified latent-crash bugs are fixed with regression tests: the corrupted onboarding method and its three deleted helpers (BUG-1), the four bare `wx.` heading-style calls (BUG-2), the undefined `VoiceOption` annotations (BUG-3), the duplicate `URLError` import (BUG-4), the unchecked llama.cpp response shape (BUG-5), the DOCX or PPTX element name collision (BUG-6), and the non-positive chunk-split guard (BUG-7).
+- The cheap, user-protecting security hardening is in: all untrusted XML now parses with entity expansion disabled against billion-laughs (SEC-10), ZIP-based formats enforce a cumulative decompression cap (SEC-11), diagnostics redaction covers token, password, and NAME_KEY patterns (SEC-13), and configured speech executable paths are validated against an allowlist so tampered settings cannot launch arbitrary programs (SEC-1).
+- Two pre-existing test failures, unrelated to the above but found along the way, were fixed honestly rather than ignored: an autosave snapshot-collision bug where a coarse Windows clock overwrote snapshots, and four stale keymap tests that had not been updated after the deliberate QUILL key chord migration.
+- The in-progress AI connection work was reviewed, judged safe and forward-aligned, and committed: a structured error taxonomy (auth 401, forbidden 403, rate-limited, warming-up, not-running, timeout, unreachable) matched on numeric status codes rather than substrings, a bounded warm-up retry, and portable-key unlock-failure recovery. This is the foundation the AI-13 provider wiring and AI-17 chat-path messages build on.
+
+Honest dimension movement since the 0.1.5 baseline:
+
+| Dimension | Baseline (0.1.5) | Now (2026-06-01) | Why it moved |
+| --- | --- | --- | --- |
+| Security and privacy | Level 3 | Level 3 to 4 | Untrusted-input hardening (XML, zip, redaction) and executable-path validation close the worst input and supply-chain gaps; remaining items (network checksums, sandbox limits, gate enforcement) keep this short of Level 5. |
+| Code quality and architecture | Level 3 | Level 3 (cleaner) | Seven latent crashes removed and pre-existing test rot fixed; the UI monolith and lint/typing debt remain, so the level holds. |
+| AI and agents | Level 2 | Level 2 to 3 | Connection diagnostics are now honest and screen-reader-friendly; the headline gap (configured providers still fall back to local generation, AI-13) is not yet closed. |
+| Test coverage | Level 2 to 3 | Level 3 | New regression tests for every bug class and the AI taxonomy; the broad UI characterization and IO matrix work is still ahead. |
+
+What is explicitly not done yet: the quality-gate ladder is not enforced in CI (GATE items), the configured AI providers still do not drive generation (AI-13), the UI monolith is intact (CQ-1), and the flagship QUILL key, navigation, selection, and settings work (Tier 2) has not started. Overall standing remains roughly Level 3, already Level 4 on accessibility; this section moved the safety floor up without yet adding user-facing flagship value.
+
 ### What QUILL would be
 
 QUILL would be a mature, 1.0-grade, screen-reader-first writing application: not a promising beta, but a dependable daily tool that a blind or low-vision writer could trust for real work, and that a sighted power user would also find fast and pleasant. The signature QUILL key would be a genuinely memorable interaction (discoverable with one question mark, tunable, consistent, and documented as the headline feature), and the accessibility agent would be a category-defining capability: tell the app to make a document accessible, and watch it do so, step by step, reversibly, entirely by keyboard and voice. The AI surface would also be honest end to end: when a user picks OpenAI, OpenRouter, Gemini, Azure, Ollama, or Claude, that provider is the one that responds, instead of the configuration being accepted while generation silently falls back to the local model (AI-13). GLOW would be folded in as the in-app accessibility engine, and transcription would arrive last as a unifying capability, in that deliberate order.
