@@ -1120,13 +1120,26 @@ follow-up.</td>
 </tr>
 <tr>
 <td>A11Y-4</td>
-<td>Dialog escape and default audit</td>
+<td>Dialog escape and default audit, enforced by a contract guard</td>
 <td>Accessibility</td>
 <td>M</td>
 <td>Todo</td>
-<td>Every dialog has an Escape path and an explicit default; focus
-returns to the editor on close; tests or a contract check cover
-representative dialogs.</td>
+<td>Every dialog has an Escape path and an explicit default, and focus
+returns to the editor on close. This is made un-regressable by a
+machine-enforced dialog-contract guard (a GATE-6-style conformance test)
+that fails when a <code>wx.Dialog</code> in the UI violates the
+construction contract that the find-in-files trap (#84) and the
+status-bar/misspelling layout bugs all shared: a
+<code>StdDialogButtonSizer</code> must be added with
+<code>wx.EXPAND</code> (never <code>wx.ALIGN_RIGHT</code>), the dialog
+must own an outer sizer wrapping its panel, an explicit default button
+and <code>apply_modal_ids</code> affirmative/escape id must be set, and
+the dialog must be <code>Destroy()</code>-ed. The guard steers new
+dialogs to the approved helpers
+(<code>quill/ui/dialog_contract.py</code>, the stock
+<code>wx.MessageDialog</code>/<code>SingleChoiceDialog</code>/<code>TextEntryDialog</code>,
+or the web <code>show_web_form</code>) so the bug class cannot recur.
+Pairs with the DLG cluster and GitHub issue #73.</td>
 </tr>
 <tr>
 <td>OPS-1</td>
@@ -1305,6 +1318,28 @@ change; characterization tests pass before and after.</td>
 QUILL key, selection, file lifecycle.</td>
 </tr>
 <tr>
+<td>DLG-1</td>
+<td>Migrate hand-rolled submit-once form dialogs to the shared
+accessible helper</td>
+<td>Code quality</td>
+<td>M</td>
+<td>Todo</td>
+<td>Executes the form wave of GitHub issue #73. The remaining
+hand-rolled multi-field <code>wx.Dialog</code> forms that are pure
+submit-once input (find-in-files / replace-in-files, Status Bar Layout,
+the read-aloud voice chooser, Watch Folder Settings, the YAML structure
+editor, and General Preferences) move onto the already-shipped
+<code>show_web_form</code> (<code>quill/ui/web_form.py</code>,
+accessible WebView with a native wx fallback) or, where a single field
+fits, a stock <code>wx.*</code> dialog. wxPython has no stock
+multi-field dialog, so this consolidates them on one tested,
+screen-reader-friendly surface rather than per-dialog focus/button code.
+Each migration keeps the existing inputs and outputs, lands behind a
+focused behavior test, and leaves the public surface unchanged (GATE-6).
+Until migrated, dialogs must still satisfy the A11Y-4 contract
+guard.</td>
+</tr>
+<tr>
 <td>CQ-8</td>
 <td>Degrade-and-log helper for broad excepts</td>
 <td>Code quality</td>
@@ -1312,6 +1347,25 @@ QUILL key, selection, file lifecycle.</td>
 <td>Todo</td>
 <td>A shared helper logs context; broad excepts in core use it; no
 silent failures remain in the listed files.</td>
+</tr>
+<tr>
+<td>DLG-2</td>
+<td>Convert interactive tool dialogs individually, screen-reader
+verified</td>
+<td>Code quality</td>
+<td>L</td>
+<td>Todo</td>
+<td>The remaining custom dialogs that are interactive tools rather than
+forms (Run Python, Prompt Studio, Agent Center, Writing Assistant, the
+model pickers, AI Hub, Assistant Connection, Train Style, the command
+palette) are converted to the web or native pattern of issue #73 one at
+a time, each verified with a screen reader. These are working,
+accessible-today features with live lists, generate/preview/verify
+buttons, async downloads, and background threads, so they are explicitly
+NOT batch-rewritten; conversion is prioritized by which read poorly
+today and gated by the A11Y-4 contract guard. This is the
+structural-breadth half of the dialog work and sequences after Tier 2,
+alongside CQ-1.</td>
 </tr>
 <tr>
 <td>CQ-11</td>
@@ -4743,6 +4797,18 @@ unifies QUILL’s distinctive engines behind one learnable model (a
 folder, an action, a queue), and a quiet differentiator no mainstream
 editor offers. The GLOW and transcription actions (WATCH-8, WATCH-9)
 plug into the same registry as their tiers land.</li>
+<li>Dialogs that never trap or go silent: DLG-1, enforced by the A11Y-4
+contract guard. Value: the safe submit-once forms (find-in-files, Status
+Bar Layout, the voice chooser, Watch Folder Settings, the YAML editor,
+General Preferences) move onto the one shared accessible
+<code>show_web_form</code> surface, and a machine-enforced guard makes
+the construction bug class behind the find-in-files Cancel trap (#84)
+and the bookmark dialogs (#85) un-regressable. Outcome: every dialog has
+a reliable Escape, an explicit default, and returns focus to the editor,
+and new dialogs are correct by construction. This executes the form wave
+of issue #73; the interactive AI-tool dialogs are converted individually
+and screen-reader-verified later (DLG-2, Tier 4), never
+batch-rewritten.</li>
 </ul>
 <p>Why second: this is where user love is won. It comes right after the
 protections so the flagship is built on a safe, gated base.</p>
@@ -4988,12 +5054,12 @@ CQ-16) are counted once, in their primary tier.</p>
 <tr>
 <td>Tier 2</td>
 <td>Flagship experience</td>
-<td>43</td>
+<td>44</td>
 <td>7</td>
-<td>36</td>
+<td>37</td>
 <td>QK-2, QK-9, NAV-1, NAV-4, SEL-3, OCR-1..5, AGENT-1, AI-7, AI-1,
 AI-6, AI-13, AI-15, AI-17, AI-14, AI-16, SET-1..7, FEAT-19, WATCH-1..7,
-FLAG-3, FLAG-4</td>
+FLAG-3, FLAG-4, DLG-1</td>
 </tr>
 <tr>
 <td>Tier 3</td>
@@ -5006,11 +5072,11 @@ FLAG-3, FLAG-4</td>
 <tr>
 <td>Tier 4</td>
 <td>Structural health and performance</td>
-<td>29</td>
+<td>30</td>
 <td>9</td>
-<td>20</td>
-<td>CQ-16, CQ-1, GATE-11, PERF-1..3, PERF-9..14, GATE-10, SEC-6, SEC-7,
-SEC-8, SEC-14..17</td>
+<td>21</td>
+<td>CQ-16, CQ-1, DLG-2, GATE-11, PERF-1..3, PERF-9..14, GATE-10, SEC-6,
+SEC-7, SEC-8, SEC-14..17</td>
 </tr>
 <tr>
 <td>Tier 5</td>
@@ -5033,9 +5099,9 @@ CQ-23, CQ-24, LINUX-2</td>
 <tr>
 <td><strong>Total</strong></td>
 <td>All tiers</td>
-<td><strong>164</strong></td>
+<td><strong>166</strong></td>
 <td><strong>30</strong></td>
-<td><strong>134</strong></td>
+<td><strong>136</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -5180,6 +5246,52 @@ it is the 18k-line shared surface, and the <code>MainFrame</code>
 decomposition must be serialized after the features land. Each agent
 regenerates <code>golden.html</code> with pandoc, updates this tracker,
 and commits per item.</p>
+<h4
+id="fixes-planning-two-reported-dialog-bugs-fixed-and-a-principled-dialog-standardization-decision">2026-06-01
+(fixes + planning): two reported dialog bugs fixed, and a principled
+dialog-standardization decision</h4>
+<p>Two GitHub issues reported by a beta tester were fixed on
+<code>main</code> and a design question about the many hand-rolled
+dialogs was settled.</p>
+<ul>
+<li>#84 (could not exit the find-within-files dialog):
+<code>_prompt_file_search</code> added its
+<code>StdDialogButtonSizer</code> with <code>wx.ALIGN_RIGHT</code>
+instead of <code>wx.EXPAND</code>, so on Windows the OK/Cancel buttons
+were left unrealized and Cancel could not be clicked, trapping the user.
+The fix mirrors the proven single-document search dialog
+(<code>_prompt_search</code>): the button sizer is added with
+<code>wx.EXPAND</code>, an explicit default button is set, Enter
+submits, and focus is deferred via <code>CallAfter</code>. The identical
+bug in the sibling Status Bar Layout dialog (which also never gave the
+dialog its own outer sizer) was fixed in the same change, and the
+misspelling-review dialog got its missing outer sizer too.</li>
+<li>#85 (Go To and List Bookmarks did nothing): both bookmark dialogs
+were hardened. <code>go_to_bookmark</code> now forces a default
+selection and wires affirmative/escape ids so it is reliably
+dismissible; <code>_show_tree_navigator</code> (List Bookmarks) now
+wires modal ids, focuses the tree via <code>CallAfter</code>, and
+guarantees <code>Destroy()</code> in a <code>finally</code>. Regression
+tests cover the jump, the modal-id wiring, and the empty-bookmarks
+announcement.</li>
+<li>Dialog-standardization decision (principled, no damage): a wholesale
+rewrite was deliberately rejected. The evidence is that the bug class is
+inconsistent construction, not custom dialogs per se — the
+near-identical <code>_prompt_search</code> worked while
+<code>_prompt_file_search</code> did not. wxPython also has no stock
+multi-field form dialog, and the interactive AI-tool dialogs are
+working, accessible-today features that the maintainer’s own assessment
+on issue #73 says must be converted individually with a screen reader,
+never batch-rewritten. So the plan adds a narrow, additive pair:
+<code>A11Y-4</code> is sharpened into a machine-enforced dialog-contract
+guard (a GATE-6-style conformance test for the exact
+<code>EXPAND</code>/outer-sizer/default-button/<code>Destroy</code>
+contract), <code>DLG-1</code> (Tier 2) migrates only the safe
+submit-once forms onto the already-shipped <code>show_web_form</code>
+helper, and <code>DLG-2</code> (Tier 4) defers the interactive tools to
+individual screen-reader-verified conversions. Backlog totals moved from
+164 to 166; Tier 2 grew to 44 and Tier 4 to 30.</li>
+</ul>
 <h4
 id="later-still-tier-1-complete-full-gate-ladder-enforced-tree-gate-clean">2026-06-01
 (later still): Tier 1 complete — full gate ladder enforced, tree
