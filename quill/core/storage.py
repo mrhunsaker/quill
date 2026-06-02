@@ -1,8 +1,16 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
+
+# On Windows os.replace can transiently fail with PermissionError when another
+# process (an antivirus scanner, a backup agent, or a screen reader's file hook)
+# briefly holds the destination open. Retry a few times with a short backoff
+# before giving up so a normal save is not lost to a momentary lock.
+_REPLACE_MAX_ATTEMPTS = 5
+_REPLACE_RETRY_DELAY = 0.05
 
 
 class PathEscapeError(ValueError):
@@ -25,6 +33,22 @@ def resolve_within(base: Path, candidate: Path) -> Path:
     return candidate_resolved
 
 
+def _atomic_replace(temp_path: Path, path: Path) -> None:
+    """Replace ``path`` with ``temp_path``, retrying transient Windows locks."""
+
+    last_error: PermissionError | None = None
+    for attempt in range(_REPLACE_MAX_ATTEMPTS):
+        try:
+            temp_path.replace(path)
+            return
+        except PermissionError as error:
+            last_error = error
+            if attempt + 1 < _REPLACE_MAX_ATTEMPTS:
+                time.sleep(_REPLACE_RETRY_DELAY)
+    assert last_error is not None
+    raise last_error
+
+
 def read_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -40,4 +64,4 @@ def write_json_atomic(path: Path, data: Any, *, base: Path | None = None) -> Non
     with temp_path.open("w", encoding="utf-8", newline="\n") as file_handle:
         json.dump(data, file_handle, indent=2, sort_keys=True, ensure_ascii=False)
         file_handle.write("\n")
-    temp_path.replace(path)
+    _atomic_replace(temp_path, path)

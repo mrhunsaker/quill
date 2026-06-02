@@ -55,3 +55,44 @@ def test_write_json_atomic_guard_allows_in_base(tmp_path: Path) -> None:
     target = base / "nested" / "state.json"
     write_json_atomic(target, {"k": "v"}, base=base)
     assert read_json(target, default={}) == {"k": "v"}
+
+
+def test_write_json_atomic_retries_transient_permission_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import quill.core.storage as storage_module
+
+    target = tmp_path / "state.json"
+    attempts = {"count": 0}
+    real_replace = Path.replace
+
+    def flaky_replace(self: Path, dest: Path) -> None:
+        attempts["count"] += 1
+        if attempts["count"] < 3:
+            raise PermissionError("file is busy")
+        real_replace(self, dest)
+
+    monkeypatch.setattr(storage_module, "_REPLACE_RETRY_DELAY", 0)
+    monkeypatch.setattr(Path, "replace", flaky_replace)
+
+    write_json_atomic(target, {"k": "v"})
+
+    assert attempts["count"] == 3
+    assert read_json(target, default={}) == {"k": "v"}
+
+
+def test_write_json_atomic_reraises_persistent_permission_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import quill.core.storage as storage_module
+
+    target = tmp_path / "state.json"
+
+    def always_busy(self: Path, dest: Path) -> None:
+        raise PermissionError("file is busy")
+
+    monkeypatch.setattr(storage_module, "_REPLACE_RETRY_DELAY", 0)
+    monkeypatch.setattr(Path, "replace", always_busy)
+
+    with pytest.raises(PermissionError):
+        write_json_atomic(target, {"k": "v"})

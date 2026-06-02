@@ -2254,7 +2254,7 @@ diagnostics.</td>
 <td>Path-safety tests</td>
 <td>Code quality</td>
 <td>S</td>
-<td>Todo</td>
+<td>Done</td>
 <td>Writes cannot escape app data; tests included. (Pairs with
 SEC-2.)</td>
 </tr>
@@ -3440,7 +3440,7 @@ scoped mypy are clean; full suite 739 passed.</td>
 <td>Verify and harden atomic write on Windows</td>
 <td>Code quality</td>
 <td>S</td>
-<td>Todo</td>
+<td>Done</td>
 <td>Writes use <code>os.replace</code> with retry on transient
 <code>PermissionError</code>; a test simulates contention.</td>
 </tr>
@@ -5523,6 +5523,16 @@ stay unguarded because they target user-chosen locations. Four new unit
 tests prove traversal is blocked and in-base writes still succeed. Being
 a cross-cutting protection rather than a tier-listed ID, it does not
 move the tier counts.</li>
+<li>CQ-14 and CQ-19 closed in the same <code>storage.py</code> pass:
+CQ-14 (path-safety tests) is satisfied by the SEC-2 traversal tests, and
+CQ-19 hardens the atomic write itself — <code>os.replace</code> now runs
+through a small <code>_atomic_replace</code> retry loop (five attempts,
+50 ms backoff) that absorbs the transient <code>PermissionError</code>
+Windows raises when an antivirus scanner, backup agent, or screen-reader
+hook briefly holds the destination open, then re-raises if the lock
+persists. Two new tests simulate transient contention (succeeds after
+retries) and permanent contention (re-raises). Both are cross-cutting
+code-quality rows and do not move the tier counts.</li>
 </ul>
 <h4
 id="planning-watch-profiles-scoped-and-feature-flag-respect-made-fundamental">2026-06-01
