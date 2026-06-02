@@ -821,7 +821,9 @@ class MainFrame:
         self.session_id = str(uuid4())
         self._recovery_offers = [] if safe_mode else begin_session(self.session_id)
         self._last_autosave_at: datetime | None = None
-        self._autosave_interval = timedelta(seconds=30)
+        self._autosave_interval = timedelta(
+            seconds=int(getattr(self.settings, "autosave_interval_seconds", 30))
+        )
         self._last_find_query = ""
         self._last_search_options = SearchOptions()
         self._last_match: tuple[int, int] | None = None
@@ -8267,6 +8269,8 @@ class MainFrame:
 
     def _confirm_discard_changes(self) -> bool:
         wx = self._wx
+        if not getattr(self.settings, "confirm_destructive_actions", True):
+            return True
         result = self._prompt_unsaved_changes_action(
             "Unsaved changes",
             "You have unsaved changes. Reload and discard them?",
@@ -9586,6 +9590,9 @@ class MainFrame:
         save_settings(self.settings)
         self.set_theme(self.settings.theme)
         self._set_spellcheck_mode(self.settings.spellcheck_as_you_type)
+        self._autosave_interval = timedelta(
+            seconds=int(getattr(self.settings, "autosave_interval_seconds", 30))
+        )
         self._apply_ai_menu_enabled()
         self._refresh_ai_status()
         self._apply_soft_wrap_setting()
@@ -17140,7 +17147,9 @@ class MainFrame:
         self.editor.SetSelection(start, replaced_end)
         self.editor.SetInsertionPoint(replaced_end)
         self._last_match = (start, replaced_end)
-        wrap_suffix = " (wrapped)" if wrapped else ""
+        wrap_suffix = (
+            " (wrapped)" if wrapped and getattr(self.settings, "announce_wrap", True) else ""
+        )
         self._set_status(f"Replaced at position {start + 1}{wrap_suffix}")
 
     def find_next(self) -> None:
@@ -17203,7 +17212,9 @@ class MainFrame:
             self.editor.SetInsertionPoint(end)
         self._last_match = chosen
         direction = "previous" if reverse else "next"
-        wrap_suffix = " (wrapped)" if wrapped else ""
+        wrap_suffix = (
+            " (wrapped)" if wrapped and getattr(self.settings, "announce_wrap", True) else ""
+        )
         self._set_status(f"Found {direction} at position {start + 1}{wrap_suffix}")
 
     def _ensure_extend_selection_anchor(self) -> None:
