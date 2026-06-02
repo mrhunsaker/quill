@@ -1152,12 +1152,12 @@ This table tracks how many of the backlog IDs each tier names are still open. It
 | Tier | Scope | Total items | Done | Remaining | Open item IDs |
 | --- | --- | --- | --- | --- | --- |
 | Tier 1 | Protect users and unlock the team | 23 | 23 | 0 | (complete) |
-| Tier 2 | Flagship experience | 58 | 18 | 40 | OCR-1..5, AGENT-1, AI-7, AI-1, AI-6, AI-14, AI-19..24, SET-1..7, SHARE-1..3, CTX-1, DICT-2, DICT-3, FEAT-19, WATCH-1..7, FLAG-3, FLAG-4, DLG-1 |
+| Tier 2 | Flagship experience | 58 | 19 | 39 | OCR-1..5, AGENT-1, AI-7, AI-1, AI-6, AI-14, AI-19..24, SET-1..7, SHARE-1..3, CTX-1, DICT-2, FEAT-19, WATCH-1..7, FLAG-3, FLAG-4, DLG-1 |
 | Tier 3 | GLOW accessibility engine | 8 | 0 | 8 | GLOW-1..7, WATCH-8 |
 | Tier 4 | Structural health and performance | 30 | 9 | 21 | CQ-16, CQ-1, DLG-2, GATE-11, PERF-1..3, PERF-9..14, GATE-10, SEC-6, SEC-7, SEC-8, SEC-14..17 |
 | Tier 5 | BITS Whisperer transcription | 28 | 0 | 28 | BW-1..10, WATCH-9, NAV-10, AI-11, AI-12, AI-18, FEAT-12..18, LINUX-1, ECO-1, L10N-1, COLLAB-1 |
 | Tier 6 | Documentation and learning surface | 33 | 0 | 33 | DOC-14..17, DOC-11, DOC-12, DOC-1..8, POD-1..5, TUT-1..7, CQ-11..15, CQ-23, CQ-24, LINUX-2 |
-| **Total** | All tiers | **180** | **41** | **139** | |
+| **Total** | All tiers | **180** | **42** | **138** | |
 
 Completed outside the formal tier lists (cross-cutting protections and quality work that the tiers reference only by theme): SEC-3 (OCR language allowlist), SEC-5 (verified TLS everywhere), GATE-1 (pre-commit), PERF-8 (documented scoped type-check), and A11Y-1 (announcement grammar). The GATE-3/CQ-7 cleanup also incidentally cleared the `quill/core` and `quill/io` portion of the TYPE-1..8 zone, though those formal rows stay open until each is individually verified and closed.
 

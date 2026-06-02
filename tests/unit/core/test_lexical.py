@@ -6,15 +6,22 @@ import pytest
 
 import quill.core.lexical as lexical
 from quill.core.lexical import (
+    SOURCE_BOTH,
+    SOURCE_OFFLINE,
+    SOURCE_ONLINE,
     DatamuseProvider,
     Definition,
     FreeDictionaryProvider,
     LexicalProvider,
     LexicalResult,
     LexicalService,
+    MergedTerm,
     OfflineLexicalProvider,
+    merge_terms,
+    merged_terms_for_mode,
     normalize_datamuse,
     normalize_free_dictionary,
+    normalize_source_mode,
 )
 
 
@@ -197,3 +204,66 @@ def test_datamuse_provider_queries_all_relations(monkeypatch: pytest.MonkeyPatch
     assert any("rel_ant" in u for u in urls)
     assert any("rel_rhy" in u for u in urls)
     assert any("ml=" in u for u in urls)
+
+
+def test_normalize_source_mode_defaults_to_offline() -> None:
+    assert normalize_source_mode("ONLINE") == SOURCE_ONLINE
+    assert normalize_source_mode("both") == SOURCE_BOTH
+    assert normalize_source_mode("nonsense") == SOURCE_OFFLINE
+    assert normalize_source_mode(None) == SOURCE_OFFLINE
+
+
+def test_merge_terms_ranks_agreement_first() -> None:
+    merged = merge_terms([
+        ("offline", ["glad", "content"]),
+        ("Datamuse", ["joyful", "glad"]),
+    ])
+    # "glad" appears in both sources, so it ranks first.
+    assert merged[0].value == "glad"
+    assert merged[0].sources == ("offline", "Datamuse")
+    assert merged[0].provenance == SOURCE_BOTH
+
+
+def test_merge_terms_dedupes_case_insensitively_keeping_first_spelling() -> None:
+    merged = merge_terms([("offline", ["Glad"]), ("Datamuse", ["glad"])])
+    assert len(merged) == 1
+    assert merged[0].value == "Glad"
+    assert merged[0].provenance == SOURCE_BOTH
+
+
+def test_merge_terms_single_source_keeps_order() -> None:
+    merged = merge_terms([("offline", ["b", "a", "c"])])
+    assert [item.value for item in merged] == ["b", "a", "c"]
+    assert all(item.provenance == "offline" for item in merged)
+
+
+def test_merge_terms_ignores_non_sequence() -> None:
+    merged = merge_terms([("offline", None), ("Datamuse", ["x"])])
+    assert [item.value for item in merged] == ["x"]
+
+
+def test_merged_terms_for_mode_offline_only() -> None:
+    merged = merged_terms_for_mode(["a"], [("Datamuse", ["b"])], mode=SOURCE_OFFLINE)
+    assert [item.value for item in merged] == ["a"]
+    assert merged[0].provenance == "offline"
+
+
+def test_merged_terms_for_mode_online_only() -> None:
+    merged = merged_terms_for_mode(["a"], [("Datamuse", ["b"])], mode=SOURCE_ONLINE)
+    assert [item.value for item in merged] == ["b"]
+    assert merged[0].provenance == "Datamuse"
+
+
+def test_merged_terms_for_mode_both_combines() -> None:
+    merged = merged_terms_for_mode(
+        ["a", "shared"],
+        [("Free Dictionary", ["shared", "c"])],
+        mode=SOURCE_BOTH,
+    )
+    values = [item.value for item in merged]
+    assert values[0] == "shared"  # agreement ranks first
+    assert set(values) == {"a", "shared", "c"}
+
+
+def test_merged_term_provenance_empty_when_no_sources() -> None:
+    assert MergedTerm("x", ()).provenance == ""

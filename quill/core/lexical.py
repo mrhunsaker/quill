@@ -295,3 +295,89 @@ def default_service(*, include_online: bool = True) -> LexicalService:
     if include_online:
         online = [FreeDictionaryProvider(), DatamuseProvider()]
     return LexicalService(online=online)
+
+
+# --- Source mode and merge-and-compare (DICT-3) ----------------------------
+#
+# Per lexical kind the user chooses which source to trust: offline only (fast,
+# always available), online only (richer, consent-gated), or both combined. In
+# combined mode the offline and online term lists are merged into one
+# de-duplicated, provenance-tagged, agreement-ranked set: a term both sources
+# agree on ranks first, and each entry records where it came from.
+
+SOURCE_OFFLINE = "offline"
+SOURCE_ONLINE = "online"
+SOURCE_BOTH = "both"
+SOURCE_MODES = (SOURCE_OFFLINE, SOURCE_ONLINE, SOURCE_BOTH)
+
+
+def normalize_source_mode(mode: object) -> str:
+    """Coerce an arbitrary value to a valid source mode (default: offline)."""
+    text = str(mode).strip().lower()
+    return text if text in SOURCE_MODES else SOURCE_OFFLINE
+
+
+@dataclass(frozen=True, slots=True)
+class MergedTerm:
+    """A merged term with the source labels that supplied it."""
+
+    value: str
+    sources: tuple[str, ...]
+
+    @property
+    def provenance(self) -> str:
+        """A short label: a single source name, or "both" when more than one."""
+        if len(self.sources) > 1:
+            return SOURCE_BOTH
+        return self.sources[0] if self.sources else ""
+
+
+def merge_terms(sourced: list[tuple[str, object]]) -> tuple[MergedTerm, ...]:
+    """Merge per-source term lists into one ranked, provenance-tagged set (pure).
+
+    ``sourced`` is an ordered list of ``(source_label, terms)`` pairs. Terms are
+    case-folded for de-duplication but the first-seen spelling is kept. The
+    result is ordered so terms more sources agree on rank first (agreement
+    weight), with ties broken by first-seen order, so the union degrades to the
+    leading source's order when only one source supplies a term.
+    """
+    order: list[str] = []
+    canonical: dict[str, str] = {}
+    sources_for: dict[str, list[str]] = {}
+    for label, terms in sourced:
+        if not isinstance(terms, (list, tuple)):
+            continue
+        for term in terms:
+            text = str(term).strip()
+            if not text:
+                continue
+            key = text.lower()
+            if key not in canonical:
+                canonical[key] = text
+                sources_for[key] = []
+                order.append(key)
+            if label not in sources_for[key]:
+                sources_for[key].append(label)
+    ranked = sorted(order, key=lambda key: (-len(sources_for[key]), order.index(key)))
+    return tuple(MergedTerm(canonical[key], tuple(sources_for[key])) for key in ranked)
+
+
+def merged_terms_for_mode(
+    offline_terms: object,
+    online_sources: list[tuple[str, object]],
+    *,
+    mode: str,
+) -> tuple[MergedTerm, ...]:
+    """Apply the user's source mode to offline and online term lists (pure).
+
+    ``offline_terms`` is the offline list; ``online_sources`` is an ordered list
+    of ``(provider_name, terms)`` pairs. ``mode`` is one of :data:`SOURCE_MODES`.
+    Offline-only and online-only return just that side; combined merges both.
+    """
+    normalized = normalize_source_mode(mode)
+    offline_pair = (SOURCE_OFFLINE, offline_terms)
+    if normalized == SOURCE_OFFLINE:
+        return merge_terms([offline_pair])
+    if normalized == SOURCE_ONLINE:
+        return merge_terms(online_sources)
+    return merge_terms([offline_pair, *online_sources])
