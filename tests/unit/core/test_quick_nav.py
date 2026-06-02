@@ -6,6 +6,7 @@ from quill.core.quick_nav import (
     NavItem,
     build_nav_index,
     filter_nav_items,
+    include_nav_items,
     nav_category,
     nav_item_display,
     nav_type_summary,
@@ -85,3 +86,44 @@ def test_filter_by_category() -> None:
 
 def test_nav_item_display_is_kind_and_label() -> None:
     assert nav_item_display(NavItem("Link", "Home", 3)) == "Link: Home"
+
+
+def _inclusion_items() -> list[NavItem]:
+    return [
+        NavItem("Heading 1", "Title", 0),
+        NavItem("Link", "Home", 5),
+        NavItem("List", "Items", 10),
+        NavItem("List item", "First", 12),
+        NavItem("Table", "Grid", 20),
+        NavItem("Bookmark", "mark", 25),
+    ]
+
+
+def test_include_nav_items_keeps_everything_by_default() -> None:
+    items = _inclusion_items()
+    assert include_nav_items(items) == items
+
+
+def test_include_nav_items_drops_headings_when_off() -> None:
+    items = _inclusion_items()
+    kept = include_nav_items(items, headings=False)
+    assert all(nav_category(item.kind) != "Heading" for item in kept)
+    assert len(kept) == len(items) - 1
+
+
+def test_include_nav_items_drops_links_when_off() -> None:
+    items = _inclusion_items()
+    kept = include_nav_items(items, links=False)
+    assert all(item.kind != "Link" for item in kept)
+
+
+def test_include_nav_items_drops_lists_and_list_items_when_off() -> None:
+    items = _inclusion_items()
+    kept = include_nav_items(items, lists=False)
+    kinds = {item.kind for item in kept}
+    assert "List" not in kinds
+    assert "List item" not in kinds
+    # Tables and bookmarks have no toggle and are always kept.
+    assert "Table" in kinds
+    assert "Bookmark" in kinds
+

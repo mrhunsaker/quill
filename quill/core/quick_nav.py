@@ -110,3 +110,29 @@ def filter_nav_items(
 def nav_item_display(item: NavItem) -> str:
     """Return a one-line display string for an index entry."""
     return f"{item.kind}: {item.label}"
+
+
+def include_nav_items(
+    items: Sequence[NavItem],
+    *,
+    headings: bool = True,
+    links: bool = True,
+    lists: bool = True,
+) -> list[NavItem]:
+    """Drop element categories the user has switched off in Settings (SET-4).
+
+    ``lists`` covers both ``List`` and ``List item`` entries. Categories without
+    a dedicated toggle (tables, block quotes, bookmarks, code blocks) are always
+    kept.
+    """
+    result: list[NavItem] = []
+    for item in items:
+        category = nav_category(item.kind)
+        if not headings and category == "Heading":
+            continue
+        if not links and category == "Link":
+            continue
+        if not lists and category in {"List", "List item"}:
+            continue
+        result.append(item)
+    return result

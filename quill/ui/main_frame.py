@@ -35,6 +35,7 @@ from quill.core.a11y_regions import (
 from quill.core.ai import Assistant
 from quill.core.ai.agent import allowed_tools
 from quill.core.assistant import render_assistant_prompt
+from quill.core.autoformat import EM_DASH, is_dash_merge, smart_quote_for
 from quill.core.autosave import autosave_document
 from quill.core.backups import backup_document, list_backups
 from quill.core.bookmarks import bookmark_names, bookmark_position, set_bookmark
@@ -247,6 +248,7 @@ from quill.core.quick_nav import (
     NavItem,
     build_nav_index,
     filter_nav_items,
+    include_nav_items,
     nav_category,
     nav_item_display,
     nav_type_summary,
@@ -5176,7 +5178,43 @@ class MainFrame:
         if event.GetKeyCode() == wx.WXK_ESCAPE and self._extend_selection_mode:
             event.Skip()
             return
+        if self._maybe_autoformat_char(event):
+            return
         event.Skip()
+
+    def _maybe_autoformat_char(self, event: object) -> bool:
+        """Apply SET-4 typography autoformat to a typed character.
+
+        Returns ``True`` when the keystroke was consumed (the replacement was
+        inserted directly), ``False`` to let the editor handle it normally.
+        """
+        if event.ControlDown() or event.AltDown():
+            return False
+        try:
+            typed = chr(event.GetUnicodeKey())
+        except (ValueError, OverflowError):
+            return False
+        editor = self.editor
+        if editor is None:
+            return False
+        smart_quotes = bool(getattr(self.settings, "autoformat_smart_quotes", False))
+        dashes = bool(getattr(self.settings, "autoformat_dashes", False))
+        if typed in {'"', "'"} and smart_quotes:
+            position = editor.GetInsertionPoint()
+            preceding = editor.GetRange(position - 1, position) if position > 0 else ""
+            replacement = smart_quote_for(preceding, typed)
+            if replacement != typed:
+                editor.WriteText(replacement)
+                return True
+            return False
+        if typed == "-" and dashes:
+            position = editor.GetInsertionPoint()
+            preceding = editor.GetRange(position - 1, position) if position > 0 else ""
+            if is_dash_merge(preceding):
+                editor.Replace(position - 1, position, EM_DASH)
+                editor.SetInsertionPoint(position - 1 + len(EM_DASH))
+                return True
+        return False
 
     def _create_document_tab(self, document: Document, select: bool = True) -> int:
         wx = self._wx
@@ -5746,7 +5784,8 @@ class MainFrame:
     ) -> None:
         mode = str(getattr(self.settings, "browse_mode_feedback", "speech")).strip().lower()
         status = status_message or message
-        if mode in {"speech", "both"}:
+        announce_modes = bool(getattr(self.settings, "announce_mode_changes", True))
+        if mode in {"speech", "both"} and announce_modes:
             self._announce(message)
         else:
             self._set_status_quiet(status)
@@ -7756,6 +7795,13 @@ class MainFrame:
     def _set_status(self, message: str) -> None:
         self._status_message = message
         self._refresh_statusbar()
+        throttle_ms = int(getattr(self.settings, "announcement_throttle_ms", 0) or 0)
+        if throttle_ms > 0:
+            now = time.monotonic()
+            last = getattr(self, "_last_status_announce_at", 0.0)
+            if (now - last) * 1000.0 < throttle_ms:
+                return
+            self._last_status_announce_at = now
         announce(message)
 
     def _set_status_quiet(self, message: str) -> None:
@@ -9352,6 +9398,12 @@ class MainFrame:
             ),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         ) as dialog:
+            if self.document.path is None:
+                default_format = getattr(self.settings, "default_new_document_format", "markdown")
+                filter_index = {"text": 0, "markdown": 1, "html": 2}.get(default_format, 1)
+                set_filter_index = getattr(dialog, "SetFilterIndex", None)
+                if callable(set_filter_index):
+                    set_filter_index(filter_index)
             if self._show_modal_dialog(dialog, "Save file as") != wx.ID_OK:
                 return
             target = Path(dialog.GetPath())
@@ -11054,7 +11106,12 @@ class MainFrame:
                 "Plain text (.txt)",
             ],
         )
-        format_choice.SetSelection(0)
+        # SET-4: pre-select the user's default export preset where the wizard
+        # offers it; pdf/docx/epub have no wizard output, so fall back to Markdown.
+        _preset_to_index = {"markdown": 0, "html": 1, "text": 2}
+        format_choice.SetSelection(
+            _preset_to_index.get(getattr(self.settings, "default_export_preset", "html"), 0)
+        )
         format_row.Add(format_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         format_row.Add(format_choice, 1, wx.EXPAND)
         root.Add(format_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 8)
@@ -11796,6 +11853,12 @@ class MainFrame:
         text = self.editor.GetValue()
         context = self._browse_navigation_context()
         items = build_nav_index(text, context)
+        items = include_nav_items(
+            items,
+            headings=getattr(self.settings, "quick_nav_include_headings", True),
+            links=getattr(self.settings, "quick_nav_include_links", True),
+            lists=getattr(self.settings, "quick_nav_include_lists", True),
+        )
         if not items:
             self._set_status("No navigable elements found")
             return
@@ -12795,7 +12858,11 @@ class MainFrame:
         stats = compute_document_stats(self.editor.GetValue())
         message = f"Words: {stats.words}\nLines: {stats.lines}\nCharacters: {stats.characters}"
         self._show_message_box(message, "Word Count", wx.ICON_INFORMATION | wx.OK)
-        self._set_status(f"Word count: {stats.words} words")
+        summary = f"Word count: {stats.words} words"
+        if getattr(self.settings, "announce_counts", True):
+            self._set_status(summary)
+        else:
+            self._set_status_quiet(summary)
 
     def show_dictionary_status(self) -> None:
         wx = self._wx
@@ -13251,6 +13318,9 @@ class MainFrame:
             clipboard.Close()
 
     def _announce_spellcheck_hint(self) -> None:
+        if not getattr(self.settings, "announce_spelling", True):
+            self._last_live_misspelling_feedback = None
+            return
         dictionary = self._spell_dictionary()
         cursor = self.editor.GetInsertionPoint()
         item = find_next_misspelling(self.editor.GetValue(), cursor - 1, dictionary)

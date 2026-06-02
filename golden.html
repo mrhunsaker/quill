@@ -1714,10 +1714,12 @@ interval, announcement throttle, Read Aloud rate, pitch, and sentence
 pause, and dictation sensitivity are now registry-backed
 <code>Settings</code> fields (clamped in <code>from_dict</code>) and
 auto-render in the tabbed dialog with per-setting reset. Read Aloud
-rate/pitch already drive the engine live; the <strong>autosave
-interval</strong> field is now consumed on startup and re-applied when
-the Settings dialog closes. Remaining consumers (announcement throttle,
-Quick Nav debounce/threshold) still need to read their new fields.</td>
+rate/pitch drive the engine live; the <strong>autosave interval</strong>
+field is consumed on startup and re-applied when the Settings dialog
+closes; the <strong>announcement throttle</strong> is now enforced in
+<code>_set_status</code>, which suppresses repeat status speech within
+the configured window. Remaining consumers (Quick Nav
+debounce/threshold) still need to read their new fields.</td>
 </tr>
 <tr>
 <td>SET-3</td>
@@ -1730,9 +1732,17 @@ Quick Nav debounce/threshold) still need to read their new fields.</td>
 (<code>announce_wrap</code>, <code>announce_counts</code>,
 <code>announce_mode_changes</code>, <code>announce_spelling</code>,
 <code>announce_punctuation_level</code>) are registry-backed and surface
-in the Accessibility tab. <code>announce_wrap</code> now gates the ”
-(wrapped)” suffix on Find/Replace; the remaining toggles still need the
-announcement layer to consult them before speaking each event.</td>
+in the Accessibility tab. Live consumers now wired:
+<code>announce_wrap</code> gates the ” (wrapped)” suffix on
+Find/Replace; <code>announce_counts</code> decides whether the
+word-count summary is spoken or set quietly;
+<code>announce_mode_changes</code> gates QUILL key/browse mode
+enter/exit speech in <code>_quill_feedback</code> (sound still plays);
+<code>announce_spelling</code> short-circuits the passive
+live-misspelling hint. <strong>Deferred (honest):</strong>
+<code>announce_punctuation_level</code> is stored/surfaced but has no
+consumer yet — the Read Aloud engine takes no punctuation parameter — so
+this row stays In progress.</td>
 </tr>
 <tr>
 <td>SET-4</td>
@@ -1745,9 +1755,20 @@ new-document format, autoformat (smart quotes, dashes), and Quick Nav
 element inclusion (headings/links/lists) are registry-backed
 <code>Settings</code> fields and surface in the
 General/Editing/Navigation tabs; wrap navigation was already
-configurable. <code>confirm_destructive_actions</code> now gates the
-discard-changes prompt; behavior consumers for the remaining new toggles
-still need wiring.</td>
+configurable. Live consumers now wired:
+<code>confirm_destructive_actions</code> gates the discard-changes
+prompt; <code>default_new_document_format</code> sets the Save-As
+file-type filter for new/pathless documents;
+<code>default_export_preset</code> preselects the Pandoc Conversion
+Wizard output format;
+<code>autoformat_smart_quotes</code>/<code>autoformat_dashes</code>
+drive inline typography in the editor CHAR_HOOK via the new wx-free
+<code>quill/core/autoformat.py</code>;
+<code>quick_nav_include_headings/links/lists</code> filter the Quick Nav
+index through <code>include_nav_items</code>. <strong>Remaining
+(honest):</strong> <code>browse_mode_sticky</code> is stored/surfaced
+but not yet consumed (the QK-5 second-press sticky lock is independent),
+so this row stays In progress.</td>
 </tr>
 <tr>
 <td>SET-5</td>
