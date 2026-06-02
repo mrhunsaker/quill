@@ -11918,17 +11918,44 @@ class MainFrame:
             dialog.SetSizer(outer)
 
             filtered: list[NavItem] = []
+            # SET-2: only start matching once the query reaches the configured
+            # minimum length; shorter queries fall back to showing the whole
+            # (category-filtered) list rather than an empty result set.
+            min_chars = max(1, int(getattr(self.settings, "quick_nav_min_chars", 1) or 1))
+            # SET-2: debounce type-ahead filtering so large documents do not
+            # re-filter on every keystroke.
+            debounce_ms = int(getattr(self.settings, "quick_nav_debounce_ms", 250) or 0)
+            debounce_timer: dict[str, object] = {"handle": None}
 
             def refresh() -> None:
                 nonlocal filtered
                 index = category_box.GetSelection()
                 category = category_values[index] if 0 <= index < len(category_values) else None
-                filtered = filter_nav_items(items, search.GetValue(), category)
+                raw_query = search.GetValue()
+                query = raw_query if len(raw_query.strip()) >= min_chars else ""
+                filtered = filter_nav_items(items, query, category)
                 results.Set([nav_item_display(item) for item in filtered])
                 if filtered:
                     results.SetSelection(0)
 
-            def on_change(_event: object) -> None:
+            def schedule_refresh() -> None:
+                if debounce_ms <= 0:
+                    refresh()
+                    return
+                handle = debounce_timer.get("handle")
+                stop = getattr(handle, "Stop", None)
+                if callable(stop):
+                    stop()
+                call_later = getattr(wx, "CallLater", None)
+                if callable(call_later):
+                    debounce_timer["handle"] = call_later(debounce_ms, refresh)
+                else:
+                    refresh()
+
+            def on_text(_event: object) -> None:
+                schedule_refresh()
+
+            def on_category(_event: object) -> None:
                 refresh()
 
             def on_activate(_event: object) -> None:
@@ -11937,8 +11964,8 @@ class MainFrame:
                     chosen["item"] = filtered[index]
                     dialog.EndModal(wx.ID_OK)
 
-            search.Bind(wx.EVT_TEXT, on_change)
-            category_box.Bind(wx.EVT_LISTBOX, on_change)
+            search.Bind(wx.EVT_TEXT, on_text)
+            category_box.Bind(wx.EVT_LISTBOX, on_category)
             results.Bind(wx.EVT_LISTBOX_DCLICK, on_activate)
             go_button.SetDefault()
             dialog.SetEscapeId(wx.ID_CANCEL)
@@ -11956,6 +11983,10 @@ class MainFrame:
                 return chosen["item"]
             return None
         finally:
+            handle = debounce_timer.get("handle")
+            stop = getattr(handle, "Stop", None)
+            if callable(stop):
+                stop()
             dialog.Destroy()
             self.editor.SetFocus()
 

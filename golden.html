@@ -1713,13 +1713,21 @@ specs.</td>
 interval, announcement throttle, Read Aloud rate, pitch, and sentence
 pause, and dictation sensitivity are now registry-backed
 <code>Settings</code> fields (clamped in <code>from_dict</code>) and
-auto-render in the tabbed dialog with per-setting reset. Read Aloud
-rate/pitch drive the engine live; the <strong>autosave interval</strong>
-field is consumed on startup and re-applied when the Settings dialog
-closes; the <strong>announcement throttle</strong> is now enforced in
-<code>_set_status</code>, which suppresses repeat status speech within
-the configured window. Remaining consumers (Quick Nav
-debounce/threshold) still need to read their new fields.</td>
+auto-render in the tabbed dialog with per-setting reset. Live consumers
+now wired: Read Aloud rate/pitch drive the engine live; the
+<strong>autosave interval</strong> is consumed on startup and re-applied
+when the Settings dialog closes; the <strong>announcement
+throttle</strong> is enforced in <code>_set_status</code> (suppresses
+repeat status speech within the window); <strong>Quick Nav
+debounce</strong> (<code>quick_nav_debounce_ms</code>) defers type-ahead
+filtering via <code>wx.CallLater</code> and <strong>Quick Nav minimum
+characters</strong> (<code>quick_nav_min_chars</code>) hold off query
+matching until the field reaches the configured length; the
+<strong>QUILL key timeout</strong> is read by
+<code>_quill_key_timeout</code>. <strong>Remaining (honest):</strong>
+the Read Aloud sentence pause and dictation sensitivity fields are
+surfaced/stored but still need their engine consumers to read the new
+values.</td>
 </tr>
 <tr>
 <td>SET-3</td>
