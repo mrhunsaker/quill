@@ -1451,6 +1451,73 @@ and stack-based shrink.</td>
 actions.</td>
 </tr>
 <tr>
+<td>OCR-1</td>
+<td>Native Windows OCR backend (zero-install)</td>
+<td>Image to text</td>
+<td>M</td>
+<td>Todo</td>
+<td>Add a <code>Windows.Media.Ocr</code> (WinRT) backend behind
+<code>core.ocr</code> so text can be pulled from images fully offline
+with no external install. <code>quill/io/ocr.py</code> becomes
+backend-pluggable (<code>windows</code>, <code>tesseract</code>) with a
+shared <code>OcrResult</code>; the Windows backend runs in the OCR
+worker process, returns text plus per-line confidence, and never touches
+the network. Core stays UI-agnostic; tests cover backend selection, the
+unavailable path on non-Windows, and result shaping.</td>
+</tr>
+<tr>
+<td>OCR-2</td>
+<td>Tesseract opt-in backend via onboarding</td>
+<td>Image to text</td>
+<td>S</td>
+<td>Todo</td>
+<td>Keep the existing Tesseract path as a selectable backend the user
+turns on during a short OCR onboarding (engine choice
+auto/windows/tesseract, language pack note, install hint). A new
+<code>ocr_engine</code> setting drives selection; <code>auto</code>
+prefers the native Windows backend and falls back to Tesseract when
+present. When the chosen backend is unavailable the announced message
+points back to onboarding rather than failing silently. Tests cover
+engine resolution, the onboarding gate, and the fall-back order.</td>
+</tr>
+<tr>
+<td>OCR-3</td>
+<td>Capture sources: file, clipboard, screen region</td>
+<td>Image to text</td>
+<td>M</td>
+<td>Todo</td>
+<td>OCR from an image file, a clipboard image, or a keyboard-driven
+screen-region capture, each bound under the QUILL key and the Tools
+menu, each announcing progress and outcome through the shared grammar
+(A11Y-1) and inserting text at the cursor. Fully keyboard operable with
+no mouse requirement; tests cover each capture path and the cancel
+path.</td>
+</tr>
+<tr>
+<td>OCR-4</td>
+<td>Accessible OCR review and insert surface</td>
+<td>Image to text</td>
+<td>M</td>
+<td>Todo</td>
+<td>OCR output lands in a screen-reader-pageable review surface (engine,
+language, low-confidence note) before insertion, with insert, copy, and
+discard. Reuses the stock read-only control pattern; low-confidence
+lines are flagged for review. Gated by <code>core.ocr</code> (FLAG-1);
+tests cover rendering, the action keys, and the feature-off path.</td>
+</tr>
+<tr>
+<td>OCR-5</td>
+<td>OCR as a Watch Profile action</td>
+<td>Image to text</td>
+<td>S</td>
+<td>Todo</td>
+<td>Register an “OCR to text” action in the WATCH-2 action registry so a
+watched folder of images becomes accessible text documents
+automatically, honoring <code>core.ocr</code> plus per-profile consent
+(WATCH-6) and the offline-by-default promise. Tests cover registration,
+the disabled-feature path, and a happy-path conversion.</td>
+</tr>
+<tr>
 <td>QK-2</td>
 <td>QUILL key guided panel or overlay</td>
 <td>QUILL key</td>
@@ -4613,6 +4680,14 @@ Outcome: a memorable identity no competitor has.</li>
 (go-to-anything), NAV-5, SEL-1 through SEL-3. Value: moving and
 selecting by meaning, not by guesswork. Outcome: real documents become
 navigable by ear at speed.</li>
+<li>Bring visuals into text with OCR: OCR-1 through OCR-5. Value: a
+blind writer pulls text out of an image, a screenshot, a clipboard grab,
+or a screen region and hears it land in the document, working offline by
+default through the built-in Windows OCR engine with no install, and
+through Tesseract when the user opts in during onboarding. Outcome:
+inaccessible images stop being dead ends, and the same engine plugs into
+Watch Profiles so whole folders of images become readable documents
+automatically.</li>
 <li>The Accessibility agent and trustworthy AI editing: AGENT-1, AI-7
 (diffs reviewable by ear), AI-1 (streaming), AI-6 (graceful
 degradation). Value: “make this document accessible,” done step by step,
@@ -4897,12 +4972,12 @@ CQ-16) are counted once, in their primary tier.</p>
 <tr>
 <td>Tier 2</td>
 <td>Flagship experience</td>
-<td>38</td>
+<td>43</td>
 <td>7</td>
-<td>31</td>
-<td>QK-2, QK-9, NAV-1, NAV-4, SEL-3, AGENT-1, AI-7, AI-1, AI-6, AI-13,
-AI-15, AI-17, AI-14, AI-16, SET-1..7, FEAT-19, WATCH-1..7, FLAG-3,
-FLAG-4</td>
+<td>36</td>
+<td>QK-2, QK-9, NAV-1, NAV-4, SEL-3, OCR-1..5, AGENT-1, AI-7, AI-1,
+AI-6, AI-13, AI-15, AI-17, AI-14, AI-16, SET-1..7, FEAT-19, WATCH-1..7,
+FLAG-3, FLAG-4</td>
 </tr>
 <tr>
 <td>Tier 3</td>
@@ -4942,9 +5017,9 @@ CQ-23, CQ-24, LINUX-2</td>
 <tr>
 <td><strong>Total</strong></td>
 <td>All tiers</td>
-<td><strong>159</strong></td>
+<td><strong>164</strong></td>
 <td><strong>21</strong></td>
-<td><strong>138</strong></td>
+<td><strong>143</strong></td>
 <td></td>
 </tr>
 </tbody>
