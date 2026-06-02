@@ -377,6 +377,68 @@ def _preview(text: str, limit: int = 60) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Branch-browser view model (consumed by the accessible UI surface)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class BranchRow:
+    """One selectable row in the accessible branch browser."""
+
+    turn_id: str
+    label: str
+    depth: int
+    is_current: bool
+
+
+def branch_rows(session: WritingSession) -> tuple[BranchRow, ...]:
+    """Selectable rows — one per branch tip — for the branch-browser list.
+
+    Each row carries the tip ``turn_id`` (for one-key jump/resume), a spoken
+    ``label`` that marks the current branch, the branch ``depth``, and an
+    ``is_current`` flag so the UI can pre-select and announce the active branch.
+    """
+
+    rows: list[BranchRow] = []
+    for index, tip in enumerate(branch_tips(session), start=1):
+        depth = len(path_to(session, tip.turn_id))
+        name = tip.label or _preview(tip.text)
+        is_current = tip.turn_id == session.current_turn_id
+        suffix = " (current)" if is_current else ""
+        rows.append(
+            BranchRow(
+                turn_id=tip.turn_id,
+                label=f"Branch {index}: {name} — {depth} turns{suffix}",
+                depth=depth,
+                is_current=is_current,
+            )
+        )
+    return tuple(rows)
+
+
+def format_comparison(session: WritingSession, left_turn_id: str, right_turn_id: str) -> str:
+    """A screen-reader-pageable comparison of two branches for the compare view."""
+
+    comparison = compare_branches(session, left_turn_id, right_turn_id)
+    lines: list[str] = []
+    if comparison.common_ancestor_id is None:
+        lines.append("These branches share no common point.")
+    else:
+        ancestor = session.turn(comparison.common_ancestor_id)
+        where = _preview(ancestor.text) if ancestor is not None else "the start"
+        lines.append(f"Branches diverge after: {where}")
+    lines.append("")
+    lines.append(f"Only on the first branch ({len(comparison.left_only)} turns):")
+    for turn in comparison.left_only:
+        lines.append(f"  {turn.role}: {_preview(turn.text)}")
+    lines.append("")
+    lines.append(f"Only on the second branch ({len(comparison.right_only)} turns):")
+    for turn in comparison.right_only:
+        lines.append(f"  {turn.role}: {_preview(turn.text)}")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # Persistence
 # ---------------------------------------------------------------------------
 

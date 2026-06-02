@@ -469,6 +469,7 @@ from quill.ui.assistant_tools import (
 from quill.ui.csv_grid import CsvGridSurface
 from quill.ui.dialog_contract import apply_modal_ids, show_modal_dialog
 from quill.ui.palette import CommandPaletteDialog
+from quill.ui.session_browser import SessionBrowserDialog
 from quill.ui.share_dialogs import (
     apply_import,
     build_export_document,
@@ -1360,6 +1361,12 @@ class MainFrame:
             "tools.ai_model",
             "AI Model",
             self.open_ai_model_settings,
+            None,
+        )
+        self.commands.register(
+            "tools.ai_session_browser",
+            "AI Session Branches",
+            self.open_ai_session_browser,
             None,
         )
         self.commands.register(
@@ -3259,6 +3266,7 @@ class MainFrame:
         self._id_ai_status_badge = wx.NewIdRef()
         self._id_ai_status_detail = wx.NewIdRef()
         self._id_ai_model = wx.NewIdRef()
+        self._id_ai_session_browser = wx.NewIdRef()
         self._id_ai_connection = wx.NewIdRef()
         self._id_ai_rewrite_selection = wx.NewIdRef()
         self._id_ai_summarize_selection = wx.NewIdRef()
@@ -3509,6 +3517,10 @@ class MainFrame:
         ai_menu.Append(
             self._id_ai_model,
             self._menu_label("AI &Model && Connection...", "tools.ai_model"),
+        )
+        ai_menu.Append(
+            self._id_ai_session_browser,
+            self._menu_label("Session &Branches...", "tools.ai_session_browser"),
         )
         ai_menu.Append(
             self._id_ai_assistant,
@@ -4036,6 +4048,11 @@ class MainFrame:
             wx.EVT_MENU,
             lambda _e: self.open_ai_model_settings(),
             id=self._id_ai_model,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self.open_ai_session_browser(),
+            id=self._id_ai_session_browser,
         )
         self.frame.Bind(
             wx.EVT_MENU,
@@ -4981,6 +4998,7 @@ class MainFrame:
             "tools.ai_accessibility_agent": self._id_ai_accessibility_agent,
             "tools.ask_quill_chat": self._id_ask_quill_chat,
             "tools.ai_model": self._id_ai_model,
+            "tools.ai_session_browser": self._id_ai_session_browser,
             "tools.ai_connection": self._id_ai_connection,
             "tools.ai_rewrite_selection": self._id_ai_rewrite_selection,
             "tools.ai_summarize_selection": self._id_ai_summarize_selection,
@@ -18710,6 +18728,7 @@ class MainFrame:
             self._id_ai_hub,
             self._id_ask_quill_chat,
             self._id_ai_model,
+            self._id_ai_session_browser,
             self._id_ai_assistant,
             self._id_ai_prompt_studio,
             self._id_ai_agent_center,
@@ -18790,6 +18809,22 @@ class MainFrame:
             self.frame,
             announce=self._set_status,
             open_connection=self.open_ai_preferences,
+        ).show()
+
+    def open_ai_session_browser(self) -> None:
+        # Browse the branch tree of the most recent writing session and jump
+        # between branches or compare them — fully keyboard- and screen-reader
+        # driven via the wx-free session-tree engine.
+        from quill.core.ai.sessions import most_recent_session
+
+        session = most_recent_session()
+        if session is None:
+            self._set_status("No saved writing sessions yet. Start an AI session first.")
+            return
+        SessionBrowserDialog(
+            self.frame,
+            session,
+            announce=self._set_status,
         ).show()
 
     def open_ai_hub(self) -> None:

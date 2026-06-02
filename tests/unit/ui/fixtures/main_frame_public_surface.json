@@ -105,6 +105,7 @@
   "open_ai_model_settings",
   "open_ai_preferences",
   "open_ai_rewrite_selection",
+  "open_ai_session_browser",
   "open_ai_summarize_selection",
   "open_ask_quill_chat",
   "open_bw_model_manager",

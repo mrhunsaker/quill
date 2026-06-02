@@ -166,3 +166,29 @@ def test_unsafe_session_id_rejected() -> None:
     bad = new_session("bad", id_factory=lambda: "../escape")
     with pytest.raises(ValueError):
         save_session(bad)
+
+
+def test_branch_rows_marks_current_branch() -> None:
+    session = _build_branched()
+    rows = sessions.branch_rows(session)
+
+    assert len(rows) == 2
+    # The active branch tip is flagged current and labelled accordingly.
+    current_rows = [row for row in rows if row.is_current]
+    assert len(current_rows) == 1
+    assert "(current)" in current_rows[0].label
+    assert all(row.depth == 2 for row in rows)
+    # Every row carries a tip turn id usable for one-key jump.
+    tip_ids = {tip.turn_id for tip in branch_tips(session)}
+    assert {row.turn_id for row in rows} == tip_ids
+
+
+def test_format_comparison_is_pageable_text() -> None:
+    session = _build_branched()
+    tips = sorted(branch_tips(session), key=lambda t: t.text)
+    text = sessions.format_comparison(session, tips[0].turn_id, tips[1].turn_id)
+
+    assert "Branches diverge after: Write an intro" in text
+    assert "Only on the first branch (1 turns):" in text
+    assert "Intro version A" in text
+    assert "Intro version B" in text
