@@ -88,6 +88,18 @@ def test_prefix_then_n_enters_browse_mode() -> None:
     assert frame._quill_key_mode_sticky is False
 
 
+def test_prefix_then_n_honors_sticky_browse_default() -> None:
+    # SET-4: when browse_mode_sticky is configured, N enters locked browse mode.
+    frame = _build_frame()
+    frame.settings.browse_mode_sticky = True
+    frame._handle_quill_key_mode_event(_Event(_BACKTICK, ctrl=True, shift=True))
+    handled = frame._handle_quill_key_mode_event(_Event(ord("N")))
+    assert handled is True
+    assert frame._quill_key_mode_active is True
+    assert frame._quill_key_mode_sticky is True
+    assert any("locked" in message.lower() for message in frame._feedback)
+
+
 def test_double_press_prefix_enters_sticky_locked_mode() -> None:
     frame = _build_frame()
     frame._handle_quill_key_mode_event(_Event(_BACKTICK, ctrl=True, shift=True))

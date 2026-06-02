@@ -5470,7 +5470,11 @@ class MainFrame:
                 ):
                     self._quill_key_prefix_pending = False
                     self._quill_key_prefix_started_at = 0.0
-                    self._enter_quill_key_mode()
+                    # SET-4: when sticky browse is the configured default,
+                    # entering browse mode with N stays locked until Escape
+                    # instead of expiring on the QUILL key timeout.
+                    sticky_default = bool(getattr(self.settings, "browse_mode_sticky", False))
+                    self._enter_quill_key_mode(sticky=sticky_default)
                     return True
                 # SEL-3: with text selected, the QUILL key offers scope-aware
                 # actions. Pressing A after the prefix opens the actions surface.
@@ -18782,7 +18786,7 @@ class MainFrame:
         self,
         original: str,
         revised: str,
-        on_apply: "Callable[[str], None]",
+        on_apply: Callable[[str], None],
         *,
         title: str = "Review AI Changes",
     ) -> None:

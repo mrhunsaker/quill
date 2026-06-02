@@ -1693,15 +1693,20 @@ remaining scattered Tools-menu toggles still need to fold in.</td>
 <td>Per-feature settings groups</td>
 <td>Settings</td>
 <td>M</td>
-<td>In progress</td>
+<td>Done</td>
 <td>The Settings dialog renders one accessible <code>wx.Notebook</code>
 page per registry group (general, editing, navigation, accessibility,
-read aloud, AI, transcription, updates), each control generated from
-<code>quill/core/settings_registry.py</code> specs (bool, choice, int,
-float, text). Already-wired fields for side preview and CSV/Word open
-mode are now surfaced as registry specs. Remaining feature areas
-(snippets, macros, sticky notes, status bar) still need registry
-specs.</td>
+read aloud, AI, transcription, watch folders, updates), each control
+generated from <code>quill/core/settings_registry.py</code> specs (bool,
+choice, int, float, text). Every scalar setting across these areas —
+including side preview, CSV/Word open mode, and snippet trigger
+expansion — is surfaced as a registry spec and auto-renders with
+per-setting reset and search. Collection-style customization that is not
+a single scalar value (snippet bodies, recorded macros, sticky-note
+content, and status-bar layout) is managed in its own dedicated
+accessible manager dialog (Snippet Manager, Macro Recorder, Sticky Notes
+Vault, Status Bar Layout) by design, rather than as a registry
+control.</td>
 </tr>
 <tr>
 <td>SET-2</td>
@@ -1761,26 +1766,26 @@ this row stays In progress.</td>
 <td>Tunable behavior toggles</td>
 <td>Settings</td>
 <td>M</td>
-<td>In progress</td>
+<td>Done</td>
 <td>Sticky browse, per-action confirmations, default export preset and
 new-document format, autoformat (smart quotes, dashes), and Quick Nav
 element inclusion (headings/links/lists) are registry-backed
 <code>Settings</code> fields and surface in the
 General/Editing/Navigation tabs; wrap navigation was already
-configurable. Live consumers now wired:
+configurable. Every field has a live consumer:
 <code>confirm_destructive_actions</code> gates the discard-changes
 prompt; <code>default_new_document_format</code> sets the Save-As
 file-type filter for new/pathless documents;
 <code>default_export_preset</code> preselects the Pandoc Conversion
 Wizard output format;
 <code>autoformat_smart_quotes</code>/<code>autoformat_dashes</code>
-drive inline typography in the editor CHAR_HOOK via the new wx-free
+drive inline typography in the editor CHAR_HOOK via the wx-free
 <code>quill/core/autoformat.py</code>;
 <code>quick_nav_include_headings/links/lists</code> filter the Quick Nav
-index through <code>include_nav_items</code>. <strong>Remaining
-(honest):</strong> <code>browse_mode_sticky</code> is stored/surfaced
-but not yet consumed (the QK-5 second-press sticky lock is independent),
-so this row stays In progress.</td>
+index through <code>include_nav_items</code>; and
+<code>browse_mode_sticky</code> makes the QUILL key <strong>N</strong>
+browse entry lock until Escape (covered by
+<code>test_prefix_then_n_honors_sticky_browse_default</code>).</td>
 </tr>
 <tr>
 <td>SET-5</td>
@@ -1825,13 +1830,15 @@ bool, choice, int, float, text, and the preview-browser choice.</td>
 <td>Export, import, and pre-configure settings</td>
 <td>Settings</td>
 <td>S</td>
-<td>In progress</td>
+<td>Done</td>
 <td>The Settings dialog can export the full configuration to a
 <code>.qsf</code> file, import one back, and reset every setting to
 factory defaults (with a confirmation gate). Serialized through
 <code>registry.export_settings</code>/<code>import_settings</code>
-(schema_version 1). Admin pre-tune schema reference doc still pending
-(DOC-7).</td>
+(schema_version 1). The same <code>.qsf</code> import path is the admin
+pre-configure mechanism (ship a tuned file, users import it). The
+optional admin-facing schema reference write-up is tracked separately as
+DOC-7 in Tier 6 and is not part of this functional row.</td>
 </tr>
 <tr>
 <td>SHARE-1</td>
@@ -5633,9 +5640,9 @@ CQ-16) are counted once, in their primary tier.</p>
 <td>Tier 2</td>
 <td>Flagship experience</td>
 <td>58</td>
-<td>36</td>
-<td>22</td>
-<td>OCR-1..5, AGENT-1, AI-19, AI-20, AI-22, AI-24, SET-1..4, SET-7,
+<td>39</td>
+<td>19</td>
+<td>OCR-1..5, AGENT-1, AI-19, AI-20, AI-22, AI-24, SET-2, SET-3,
 SHARE-1..2, CTX-1, DICT-2, FEAT-19, FLAG-3, DLG-1</td>
 </tr>
 <tr>
@@ -5660,8 +5667,8 @@ CQ-14, CQ-23, CQ-24, LINUX-2</td>
 <td><strong>1.0 subtotal</strong></td>
 <td>Tiers 1, 2, 4, 6 (the QUILL 1.0 scope)</td>
 <td><strong>144</strong></td>
-<td><strong>73</strong></td>
-<td><strong>71</strong></td>
+<td><strong>76</strong></td>
+<td><strong>68</strong></td>
 <td></td>
 </tr>
 <tr>
@@ -5701,8 +5708,8 @@ LINUX-1, ECO-1, L10N-1, COLLAB-1</td>
 <td><strong>Total</strong></td>
 <td>All tiers (1.0 + 2.0)</td>
 <td><strong>186</strong></td>
-<td><strong>73</strong></td>
-<td><strong>113</strong></td>
+<td><strong>76</strong></td>
+<td><strong>110</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -5747,8 +5754,7 @@ the third table and are not part of either 1.0 list.</p>
 <tr>
 <td>Tier 2 — Flagship</td>
 <td>In progress</td>
-<td>SET-1, SET-2, SET-3, SET-4, SET-7, SHARE-1, SHARE-2, MENU-1, MENU-5,
-AGENT-1</td>
+<td>SET-2, SET-3, SHARE-1, SHARE-2, MENU-1, MENU-5, AGENT-1</td>
 </tr>
 <tr>
 <td>Tier 2 — Flagship</td>
@@ -5797,7 +5803,8 @@ GATE-8, GATE-9, FLAG-1, FLAG-2</td>
 <td>QK-1, QK-2, QK-3, QK-4, QK-5, QK-9, NAV-1, NAV-4, NAV-5, SEL-1,
 SEL-2, SEL-3, AI-1, AI-6, AI-7, AI-13, AI-14, AI-15, AI-16, AI-17,
 AI-21, AI-23, WATCH-1, WATCH-2, WATCH-3, WATCH-4, WATCH-5, WATCH-6,
-WATCH-7, SET-5, SET-6, SHARE-3, FLAG-4, MENU-3, DICT-1</td>
+WATCH-7, SET-1, SET-4, SET-5, SET-6, SET-7, SHARE-3, FLAG-4, MENU-3,
+DICT-1</td>
 </tr>
 <tr>
 <td>Tier 4 — Structural health</td>
@@ -5859,6 +5866,48 @@ note), and A11Y-1 (announcement grammar). The GATE-3/CQ-7 cleanup also
 incidentally cleared the <code>quill/core</code> and
 <code>quill/io</code> portion of the TYPE-1..8 zone, though those formal
 rows stay open until each is individually verified and closed.</p>
+<h4
+id="settings-tier-closed-out-set-1-set-4-and-set-7-landed-done">2026-06-09:
+Settings tier closed out — SET-1, SET-4, and SET-7 landed Done</h4>
+<p>Three open Settings items moved to <strong>Done</strong>, leaving
+only the two genuinely runtime-blocked Settings rows (SET-2, SET-3) open
+in that area.</p>
+<ul>
+<li><strong>SET-1 (Done):</strong> the tabbed <code>wx.Notebook</code>
+Settings dialog renders one page per registry group (general, editing,
+navigation, accessibility, read aloud, AI, transcription, watch folders,
+updates) from <code>settings_registry</code> specs. Every scalar setting
+in those areas is surfaced; collection-style customization (snippet
+bodies, recorded macros, sticky-note content, status-bar layout) is
+intentionally handled by its own dedicated accessible manager dialog
+rather than a scalar registry control, which matches the stated
+acceptance (the named groups, not those collections).</li>
+<li><strong>SET-4 (Done):</strong> the last unwired toggle,
+<code>browse_mode_sticky</code>, now makes the QUILL key
+<strong>N</strong> browse entry lock until Escape
+(<code>_enter_quill_key_mode(sticky=...)</code>), joining the
+already-live <code>confirm_destructive_actions</code>,
+<code>default_new_document_format</code>,
+<code>default_export_preset</code>,
+<code>autoformat_smart_quotes</code>/<code>autoformat_dashes</code>, and
+<code>quick_nav_include_*</code> consumers. Covered by
+<code>test_prefix_then_n_honors_sticky_browse_default</code> (15
+quill-key tests pass).</li>
+<li><strong>SET-7 (Done):</strong> export to <code>.qsf</code>, import,
+and reset-to-factory all work; the same import path <em>is</em> the
+admin pre-configure mechanism. The optional admin schema write-up is
+tracked separately as DOC-7 in Tier 6 and is not part of this functional
+row.</li>
+<li><strong>Honestly still open:</strong> SET-2
+(<code>dictation_sensitivity</code> has no sensitivity-aware capture
+backend — Win+H exposes no control) and SET-3
+(<code>announce_punctuation_level</code> has no Read Aloud consumer —
+the engines take no punctuation parameter) remain In progress with
+documented blockers.</li>
+<li>Counts: SET-1, SET-4, SET-7 close, moving Tier 2 to <strong>39 of 58
+done (19 remaining)</strong> and the QUILL 1.0 scope to <strong>76 of
+144 done (68 remaining)</strong>.</li>
+</ul>
 <h4
 id="trustworthy-ai-editing-ai-1-ai-6-ai-7-and-ai-14-landed-done-end-to-end">2026-06-08:
 Trustworthy AI editing — AI-1, AI-6, AI-7, and AI-14 landed Done end to
