@@ -81,6 +81,18 @@ def _normalize_status_bar_hidden(raw: object, order: list[str]) -> list[str]:
     return hidden
 
 
+def _clamp_int(raw: object, fallback: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        value = fallback
+    if value < minimum:
+        value = minimum
+    if value > maximum:
+        value = maximum
+    return value
+
+
 @dataclass(slots=True)
 class Settings:
     theme: str = "system"
@@ -164,6 +176,30 @@ class Settings:
     watch_folder_process_existing: bool = False
     watch_folder_auto_start: bool = False
     watch_folder_poll_interval_seconds: int = 5
+    # SET-2: tunable timing and pacing
+    autosave_interval_seconds: int = 30
+    quick_nav_debounce_ms: int = 250
+    quick_nav_min_chars: int = 1
+    announcement_throttle_ms: int = 0
+    read_aloud_sentence_pause_ms: int = 0
+    dictation_sensitivity: int = 50
+    # SET-3: tunable verbosity and announcements
+    announcement_verbosity: str = "normal"
+    announce_wrap: bool = True
+    announce_counts: bool = True
+    announce_mode_changes: bool = True
+    announce_spelling: bool = True
+    announce_punctuation_level: str = "some"
+    # SET-4: tunable behavior toggles
+    browse_mode_sticky: bool = False
+    confirm_destructive_actions: bool = True
+    default_export_preset: str = "html"
+    default_new_document_format: str = "markdown"
+    autoformat_smart_quotes: bool = False
+    autoformat_dashes: bool = False
+    quick_nav_include_headings: bool = True
+    quick_nav_include_links: bool = True
+    quick_nav_include_lists: bool = True
     status_bar_order: list[str] = field(default_factory=_default_status_bar_order)
     status_bar_hidden: list[str] = field(default_factory=_default_status_bar_hidden)
 
@@ -370,6 +406,46 @@ class Settings:
             watch_folder_poll_interval_seconds = 2
         if watch_folder_poll_interval_seconds > 300:
             watch_folder_poll_interval_seconds = 300
+        # SET-2: timing and pacing
+        autosave_interval_seconds = _clamp_int(
+            data.get("autosave_interval_seconds", 30), 30, 5, 600
+        )
+        quick_nav_debounce_ms = _clamp_int(data.get("quick_nav_debounce_ms", 250), 250, 0, 2000)
+        quick_nav_min_chars = _clamp_int(data.get("quick_nav_min_chars", 1), 1, 1, 5)
+        announcement_throttle_ms = _clamp_int(data.get("announcement_throttle_ms", 0), 0, 0, 2000)
+        read_aloud_sentence_pause_ms = _clamp_int(
+            data.get("read_aloud_sentence_pause_ms", 0), 0, 0, 2000
+        )
+        dictation_sensitivity = _clamp_int(data.get("dictation_sensitivity", 50), 50, 0, 100)
+        # SET-3: verbosity and announcements
+        announcement_verbosity = str(data.get("announcement_verbosity", "normal")).strip().lower()
+        if announcement_verbosity not in {"minimal", "normal", "verbose"}:
+            announcement_verbosity = "normal"
+        announce_wrap = bool(data.get("announce_wrap", True))
+        announce_counts = bool(data.get("announce_counts", True))
+        announce_mode_changes = bool(data.get("announce_mode_changes", True))
+        announce_spelling = bool(data.get("announce_spelling", True))
+        announce_punctuation_level = (
+            str(data.get("announce_punctuation_level", "some")).strip().lower()
+        )
+        if announce_punctuation_level not in {"none", "some", "most", "all"}:
+            announce_punctuation_level = "some"
+        # SET-4: behavior toggles
+        browse_mode_sticky = bool(data.get("browse_mode_sticky", False))
+        confirm_destructive_actions = bool(data.get("confirm_destructive_actions", True))
+        default_export_preset = str(data.get("default_export_preset", "html")).strip().lower()
+        if default_export_preset not in {"html", "markdown", "pdf", "docx", "epub", "text"}:
+            default_export_preset = "html"
+        default_new_document_format = (
+            str(data.get("default_new_document_format", "markdown")).strip().lower()
+        )
+        if default_new_document_format not in {"markdown", "text", "html"}:
+            default_new_document_format = "markdown"
+        autoformat_smart_quotes = bool(data.get("autoformat_smart_quotes", False))
+        autoformat_dashes = bool(data.get("autoformat_dashes", False))
+        quick_nav_include_headings = bool(data.get("quick_nav_include_headings", True))
+        quick_nav_include_links = bool(data.get("quick_nav_include_links", True))
+        quick_nav_include_lists = bool(data.get("quick_nav_include_lists", True))
         status_bar_order = _normalize_status_bar_order(data.get("status_bar_order"))
         status_bar_hidden = _normalize_status_bar_hidden(
             data.get("status_bar_hidden"), status_bar_order
@@ -464,6 +540,27 @@ class Settings:
             watch_folder_process_existing=watch_folder_process_existing,
             watch_folder_auto_start=watch_folder_auto_start,
             watch_folder_poll_interval_seconds=watch_folder_poll_interval_seconds,
+            autosave_interval_seconds=autosave_interval_seconds,
+            quick_nav_debounce_ms=quick_nav_debounce_ms,
+            quick_nav_min_chars=quick_nav_min_chars,
+            announcement_throttle_ms=announcement_throttle_ms,
+            read_aloud_sentence_pause_ms=read_aloud_sentence_pause_ms,
+            dictation_sensitivity=dictation_sensitivity,
+            announcement_verbosity=announcement_verbosity,
+            announce_wrap=announce_wrap,
+            announce_counts=announce_counts,
+            announce_mode_changes=announce_mode_changes,
+            announce_spelling=announce_spelling,
+            announce_punctuation_level=announce_punctuation_level,
+            browse_mode_sticky=browse_mode_sticky,
+            confirm_destructive_actions=confirm_destructive_actions,
+            default_export_preset=default_export_preset,
+            default_new_document_format=default_new_document_format,
+            autoformat_smart_quotes=autoformat_smart_quotes,
+            autoformat_dashes=autoformat_dashes,
+            quick_nav_include_headings=quick_nav_include_headings,
+            quick_nav_include_links=quick_nav_include_links,
+            quick_nav_include_lists=quick_nav_include_lists,
             status_bar_order=status_bar_order,
             status_bar_hidden=status_bar_hidden,
         )

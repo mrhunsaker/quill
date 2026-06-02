@@ -42,6 +42,37 @@ def test_previously_unsurfaced_fields_are_registered() -> None:
         assert key in keys, f"{key} should be surfaced in the Settings registry"
 
 
+def test_set2_set3_set4_fields_are_registered() -> None:
+    keys = {spec.key for spec in SETTING_SPECS}
+    for key in (
+        # SET-2 timing and pacing
+        "autosave_interval_seconds",
+        "quick_nav_debounce_ms",
+        "quick_nav_min_chars",
+        "announcement_throttle_ms",
+        "read_aloud_sentence_pause_ms",
+        "dictation_sensitivity",
+        # SET-3 verbosity and announcements
+        "announcement_verbosity",
+        "announce_wrap",
+        "announce_counts",
+        "announce_mode_changes",
+        "announce_spelling",
+        "announce_punctuation_level",
+        # SET-4 behavior toggles
+        "browse_mode_sticky",
+        "confirm_destructive_actions",
+        "default_export_preset",
+        "default_new_document_format",
+        "autoformat_smart_quotes",
+        "autoformat_dashes",
+        "quick_nav_include_headings",
+        "quick_nav_include_links",
+        "quick_nav_include_lists",
+    ):
+        assert key in keys, f"{key} should be surfaced in the Settings registry"
+
+
 def test_specs_for_group_filters() -> None:
     for group in groups():
         for spec in specs_for_group(group.id):

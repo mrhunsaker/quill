@@ -1708,31 +1708,43 @@ specs.</td>
 <td>Tunable timing and pacing</td>
 <td>Settings</td>
 <td>M</td>
-<td>Todo</td>
+<td>In progress</td>
 <td>QUILL key timeout, Quick Nav debounce and threshold, autosave
-interval, announcement throttle, Read Aloud rate, pitch, and pause, and
-dictation sensitivity are user-adjustable with live preview where
-possible.</td>
+interval, announcement throttle, Read Aloud rate, pitch, and sentence
+pause, and dictation sensitivity are now registry-backed
+<code>Settings</code> fields (clamped in <code>from_dict</code>) and
+auto-render in the tabbed dialog with per-setting reset. Read Aloud
+rate/pitch already drive the engine live; remaining consumers (autosave
+timer, announcement throttle, Quick Nav debounce/threshold) still need
+to read their new fields.</td>
 </tr>
 <tr>
 <td>SET-3</td>
 <td>Tunable verbosity and announcements</td>
 <td>Settings</td>
 <td>M</td>
-<td>Todo</td>
-<td>A global verbosity level plus per-event overrides (wrap, counts,
-mode entry and expiry, spelling, punctuation level) let users decide
-exactly how chatty QUILL is.</td>
+<td>In progress</td>
+<td>A global <code>announcement_verbosity</code> level
+(minimal/normal/verbose) plus per-event overrides
+(<code>announce_wrap</code>, <code>announce_counts</code>,
+<code>announce_mode_changes</code>, <code>announce_spelling</code>,
+<code>announce_punctuation_level</code>) are registry-backed and surface
+in the Accessibility tab. The announcement layer still needs to consult
+these toggles before speaking each event.</td>
 </tr>
 <tr>
 <td>SET-4</td>
 <td>Tunable behavior toggles</td>
 <td>Settings</td>
 <td>M</td>
-<td>Todo</td>
-<td>Wrap navigation, sticky browse, per-action confirmations, default
-export preset and new-document format, autoformat toggles, and Quick Nav
-element inclusion are all configurable.</td>
+<td>In progress</td>
+<td>Sticky browse, per-action confirmations, default export preset and
+new-document format, autoformat (smart quotes, dashes), and Quick Nav
+element inclusion (headings/links/lists) are registry-backed
+<code>Settings</code> fields and surface in the
+General/Editing/Navigation tabs; wrap navigation was already
+configurable. Behavior consumers for the new toggles still need
+wiring.</td>
 </tr>
 <tr>
 <td>SET-5</td>
@@ -5573,14 +5585,15 @@ the third table and are not part of either 1.0 list.</p>
 <tr>
 <td>Tier 2 — Flagship</td>
 <td>In progress</td>
-<td>SET-1, SET-7, WATCH-5, WATCH-7, MENU-1, MENU-5</td>
+<td>SET-1, SET-2, SET-3, SET-4, SET-7, WATCH-5, WATCH-7, MENU-1,
+MENU-5</td>
 </tr>
 <tr>
 <td>Tier 2 — Flagship</td>
 <td>Todo</td>
 <td>AGENT-1, AI-1, AI-6, AI-7, AI-14, AI-19, AI-20, AI-22, AI-24, OCR-1,
-OCR-2, OCR-3, OCR-4, OCR-5, SET-2, SET-3, SET-4, SET-5, SHARE-1,
-SHARE-2, SHARE-3, CTX-1, DICT-2, FEAT-19, WATCH-6, FLAG-3, DLG-1</td>
+OCR-2, OCR-3, OCR-4, OCR-5, SET-5, SHARE-1, SHARE-2, SHARE-3, CTX-1,
+DICT-2, FEAT-19, WATCH-6, FLAG-3, DLG-1</td>
 </tr>
 <tr>
 <td>Tier 4 — Structural health</td>
