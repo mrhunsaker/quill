@@ -1949,7 +1949,7 @@ reload, conflict prompt, deletion, and cursor preservation.</td>
 <td>Multi-profile watch engine</td>
 <td>Features</td>
 <td>L</td>
-<td>Todo</td>
+<td>Done</td>
 <td>Replace the single
 <code>WatchFolderConfig</code>/<code>WatchFolderService</code> with a
 list of named, independently enabled <code>WatchProfile</code>s, each
@@ -1972,7 +1972,7 @@ persistence round-trip, and the feature-off path.</td>
 <td>Pluggable watch action registry</td>
 <td>Features</td>
 <td>M</td>
-<td>Todo</td>
+<td>Done</td>
 <td>A typed action registry binds each profile to exactly one action via
 a stable action id. Actions implement a small contract
 (<code>describe</code>, <code>validate(options)</code>,
@@ -1990,7 +1990,7 @@ unavailable-action path.</td>
 <td>Durable, monitorable processing queue</td>
 <td>Features</td>
 <td>L</td>
-<td>Todo</td>
+<td>Done</td>
 <td>Every detected file becomes a queue item with an explicit lifecycle
 (queued, processing, done, failed, skipped), stable ordering, retry with
 bounded backoff, and per-profile and global pause/resume. The queue is
@@ -2005,7 +2005,7 @@ restart recovery.</td>
 <td>Watch Queue Monitor (accessible status surface)</td>
 <td>Features</td>
 <td>M</td>
-<td>Todo</td>
+<td>Done</td>
 <td>A screen-reader-pageable monitor, reachable from Help (next to the
 status page) and the Tools menu, lists queue items with state, action,
 profile, source, outcome, and timing, and offers one-key pause, resume,
@@ -2024,7 +2024,7 @@ and extends FEAT-9.</td>
 <td>Per-profile configuration and Settings group</td>
 <td>Features</td>
 <td>L</td>
-<td>Todo</td>
+<td>In progress</td>
 <td>An accessible manager creates, edits, duplicates, enables, and
 deletes profiles. Each profile configures its folder, filters (suffix
 set, name patterns, min size and age, include-subfolders), action plus
@@ -2056,7 +2056,7 @@ dry-run, and the claim.</td>
 <td>Built-in watch actions</td>
 <td>Features</td>
 <td>M</td>
-<td>Todo</td>
+<td>In progress</td>
 <td>Ship the core action set on top of WATCH-2: Open, Convert or export
 to a chosen format (via the existing IO and Pandoc paths),
 Move/copy/archive to a destination, Run a named macro (FEAT-7), Run a
@@ -2462,8 +2462,14 @@ landed in <code>quill/core/menu_customization.py</code> (delta-only,
 self-healing <code>reconcile</code>, versioned persistence) and covers
 the menu bar and the editor context menu through one shared
 <code>CONTEXT_MENU_KEY</code> model, with full unit coverage. The
-menu-build transform pass and the Menu Editor dialog are the next,
-UI-side steps.</td>
+<strong>top-level</strong> Menu Editor now ships: Edit &gt; Customize
+Menus… (<code>app.menu_editor</code>) opens a stock-control dialog (list
++ Move Up/Down, Rename, Show/Hide, Reset to Factory Defaults) that edits
+a working copy and persists only on Save, and a post-build transform
+pass applies the saved order/labels/visibility to the menu bar (bailing
+out untouched if any menu label is unrecognised). Remaining: the
+per-item and editor context-menu UI (the model already supports
+both).</td>
 </tr>
 <tr>
 <td>FEAT-1</td>
@@ -5433,10 +5439,10 @@ CQ-16) are counted once, in their primary tier.</p>
 <td>Tier 2</td>
 <td>Flagship experience</td>
 <td>58</td>
-<td>22</td>
-<td>36</td>
+<td>26</td>
+<td>32</td>
 <td>OCR-1..5, AGENT-1, AI-7, AI-1, AI-6, AI-14, AI-19, AI-20, AI-22,
-AI-24, SET-1..7, SHARE-1..3, CTX-1, DICT-2, FEAT-19, WATCH-1..7, FLAG-3,
+AI-24, SET-1..7, SHARE-1..3, CTX-1, DICT-2, FEAT-19, WATCH-5..7, FLAG-3,
 DLG-1</td>
 </tr>
 <tr>
@@ -5478,8 +5484,8 @@ CQ-14, CQ-23, CQ-24, LINUX-2</td>
 <td><strong>Total</strong></td>
 <td>All tiers</td>
 <td><strong>180</strong></td>
-<td><strong>50</strong></td>
-<td><strong>130</strong></td>
+<td><strong>54</strong></td>
+<td><strong>126</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -5494,6 +5500,52 @@ note), and A11Y-1 (announcement grammar). The GATE-3/CQ-7 cleanup also
 incidentally cleared the <code>quill/core</code> and
 <code>quill/io</code> portion of the TYPE-1..8 zone, though those formal
 rows stay open until each is individually verified and closed.</p>
+<h4
+id="watch-profiles-shipped-end-to-end-and-the-top-level-menu-editor-landed">2026-06-03:
+Watch Profiles shipped end to end, and the top-level Menu Editor
+landed</h4>
+<p>Code shipped across two flagship surfaces. The single legacy
+watch-folder was replaced by the full multi-profile Watch Profiles
+automation hub, and the first slice of the user-customizable Menu Editor
+(MENU-5) went live.</p>
+<ul>
+<li>The Watch family advanced from planning to shipping. The
+<code>wx</code>-free engine now lives in <code>quill/core</code>
+(multi-profile <code>WatchProfile</code>s with isolated failure and
+shared de-duplication, a typed <code>WatchActionRegistry</code>, and a
+durable, restart-safe processing queue), fronted by a
+<code>WatchService</code> facade and consumed by a rebuilt UI. WATCH-1
+(multi-profile engine), WATCH-2 (pluggable action registry), WATCH-3
+(durable queue), and WATCH-4 (the accessible <strong>Watch Queue
+Monitor</strong>, reachable from Help and Tools, with one-key
+pause/resume/retry/open-result/clear and announced arrivals and
+completions) are <strong>Done</strong>. WATCH-5 (the <strong>Watch
+Folder Profiles</strong> manager dialog — create, edit, duplicate,
+enable, delete, with folder, filters, action, and post-action handling)
+is In progress pending its dedicated global Settings-defaults group.
+WATCH-7 is In progress: the Open and Move/archive built-in actions ship
+through the registry, while Convert, Run macro, Run sandboxed Python,
+and consented AI actions remain registered as
+<code>UnavailableAction</code> placeholders that advertise themselves
+with an announced reason until their tiers land. WATCH-6 (consent gate,
+dry-run preview, resource caps) stays Todo. This moves Tier 2 to 26 of
+58 done (32 remaining) and the total to 54 of 180.</li>
+<li>MENU-5 delivered its top-level slice. Edit &gt; Customize Menus…
+(<code>app.menu_editor</code>) opens a stock-control dialog — a list of
+top-level menus with Move Up/Down, Rename…, Show/Hide, and one Reset to
+Factory Defaults — that edits a working copy and persists only on Save.
+A post-build transform pass then applies the saved order, labels, and
+visibility to the menu bar, bailing out untouched if any menu label is
+unrecognised so bad customization data can never corrupt the menu bar.
+Five transform tests plus the existing model tests cover it. The
+per-item and editor context-menu UI remain the next step; the shared
+<code>MenuCustomization</code> model (with
+<code>CONTEXT_MENU_KEY</code>) already supports both, so MENU-5 stays In
+progress. (Commit 5b05ab5.)</li>
+<li>The update checker was also hardened in this window (versioned feed
+parsing with correct pre-release ordering per CQ-20), keeping the
+no-silent-network promise intact.</li>
+</ul>
 <h4
 id="settings-became-a-single-registry-driven-tabbed-front-door">2026-06-02:
 Settings became a single registry-driven tabbed front door</h4>
