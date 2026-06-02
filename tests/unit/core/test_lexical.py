@@ -15,13 +15,16 @@ from quill.core.lexical import (
     LexicalProvider,
     LexicalResult,
     LexicalService,
+    LookupItem,
     MergedTerm,
     OfflineLexicalProvider,
+    build_lookup_items,
     merge_terms,
     merged_terms_for_mode,
     normalize_datamuse,
     normalize_free_dictionary,
     normalize_source_mode,
+    render_lookup,
 )
 
 
@@ -267,3 +270,67 @@ def test_merged_terms_for_mode_both_combines() -> None:
 
 def test_merged_term_provenance_empty_when_no_sources() -> None:
     assert MergedTerm("x", ()).provenance == ""
+
+
+# --- Accessible Look Up surface (DICT-2) -----------------------------------
+
+
+def _sample_result() -> LexicalResult:
+    return LexicalResult(
+        word="happy",
+        definitions=(
+            Definition("adjective", "feeling pleasure", example="a happy child"),
+            Definition("adjective", "willing"),
+        ),
+        synonyms=("glad", "joyful"),
+        antonyms=("sad",),
+        related=("cheer",),
+        rhymes=("snappy",),
+        sources=("Free Dictionary", "Datamuse"),
+    )
+
+
+def test_render_lookup_includes_word_sources_and_sections() -> None:
+    text = render_lookup(_sample_result())
+    assert text.startswith("Look up: happy — Free Dictionary, Datamuse")
+    assert "Definitions:" in text
+    assert "1. (adjective) feeling pleasure" in text
+    assert "   Example: a happy child" in text
+    assert "Synonyms: glad, joyful" in text
+    assert "Antonyms: sad" in text
+    assert "Related: cheer" in text
+    assert "Rhymes: snappy" in text
+
+
+def test_render_lookup_empty_result_is_not_silently_blank() -> None:
+    text = render_lookup(LexicalResult(word="zzz"))
+    assert "Look up: zzz" in text
+    assert "No entries found." in text
+
+
+def test_build_lookup_items_makes_words_insertable_and_definitions_context() -> None:
+    items = build_lookup_items(_sample_result())
+    definitions = [item for item in items if item.kind == "definition"]
+    assert definitions and all(item.action == "" for item in definitions)
+    synonyms = [item for item in items if item.kind == "synonym"]
+    assert [item.value for item in synonyms] == ["glad", "joyful"]
+    assert all(item.action == "insert" for item in synonyms)
+    # Every word kind is represented and insertable.
+    actionable = [item for item in items if item.action == "insert"]
+    assert {item.kind for item in actionable} == {
+        "synonym",
+        "antonym",
+        "related",
+        "rhyme",
+    }
+
+
+def test_build_lookup_items_definition_label_carries_part_of_speech() -> None:
+    items = build_lookup_items(_sample_result())
+    first = items[0]
+    assert isinstance(first, LookupItem)
+    assert first.label == "adjective: feeling pleasure"
+
+
+def test_build_lookup_items_empty_result_has_no_items() -> None:
+    assert build_lookup_items(LexicalResult(word="zzz")) == ()

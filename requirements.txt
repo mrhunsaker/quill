@@ -42,11 +42,12 @@ llama-cpp-python>=0.3.23
 # Dictation / voice input (mic permission required).
 SpeechRecognition>=3.16.1
 
-# Native Windows OCR (OCR-1) — thin pip wheel projecting the Windows.Media.Ocr
-# WinRT APIs built into Windows 10/11. The OCR engine is a built-in OS
-# component, so end users install nothing extra. Tesseract stays a separate
-# opt-in install handled by Quill's tool onboarding.
-winsdk>=1.0.0b10; sys_platform == "win32"
+# Native Windows OCR (OCR-1) lives in pyproject's [ocr] extra, not here. It is
+# bundled into packaged Windows builds (scripts/build_windows_distribution.py),
+# but the winsdk wheel only ships for stable CPython releases, so listing it in
+# this catch-all requirements file would break `pip install` / tooling envs on
+# newer/older interpreters. Install it explicitly with: pip install winsdk
+# (or `pip install .[ocr]`) on a supported Windows Python.
 
 # Structured document import (Word/PowerPoint/Excel/Pages/PDF fallback).
 keynote-parser>=1.0

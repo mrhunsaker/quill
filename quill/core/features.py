@@ -81,6 +81,14 @@ FEATURE_DEFINITIONS: dict[str, FeatureDefinition] = {
     "core.spellcheck": FeatureDefinition(
         "core.spellcheck", "Spell Check", category="core", dependencies=("core.editor",)
     ),
+    "core.dictionary": FeatureDefinition(
+        "core.dictionary",
+        "Dictionary and Thesaurus",
+        aliases=("dictionary", "thesaurus", "look up", "lexical"),
+        description="Definitions, synonyms, and the Look Up surface (DICT-1/DICT-2).",
+        category="core",
+        dependencies=("core.editor",),
+    ),
     "core.intellisense": FeatureDefinition(
         "core.intellisense",
         "Word Prediction",

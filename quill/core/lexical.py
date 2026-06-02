@@ -381,3 +381,95 @@ def merged_terms_for_mode(
     if normalized == SOURCE_ONLINE:
         return merge_terms(online_sources)
     return merge_terms([offline_pair, *online_sources])
+
+
+# --- Accessible Look Up surface (DICT-2) -----------------------------------
+#
+# A screen-reader-pageable view of a LexicalResult plus a flat list of
+# selectable items. Each item is either an "insert" (replace the looked-up word
+# with this term) or a "pivot" (run a fresh lookup on this term). The view text
+# and the item list are pure functions of the result, so the UI dialog is a thin
+# presenter over them and the behavior is fully testable in core.
+
+ACTION_INSERT = "insert"
+ACTION_PIVOT = "pivot"
+
+# Section kinds, in the order they are presented.
+KIND_DEFINITION = "definition"
+KIND_SYNONYM = "synonym"
+KIND_ANTONYM = "antonym"
+KIND_RHYME = "rhyme"
+KIND_RELATED = "related"
+
+
+@dataclass(frozen=True, slots=True)
+class LookupItem:
+    """One selectable entry in the Look Up surface."""
+
+    kind: str
+    label: str
+    value: str
+    action: str
+
+
+def build_lookup_items(result: LexicalResult) -> tuple[LookupItem, ...]:
+    """Flatten a result into selectable items (pure).
+
+    Definitions are read-only context (no action); the word lists are pivotable
+    *and* insertable — selecting a synonym replaces the word, which is the most
+    common writer action, so synonyms/antonyms/related/rhymes use ``insert`` and
+    definition example words are not actionable. Every item is reachable.
+    """
+    items: list[LookupItem] = []
+    for definition in result.definitions:
+        pos = f"{definition.part_of_speech}: " if definition.part_of_speech else ""
+        items.append(LookupItem(KIND_DEFINITION, f"{pos}{definition.text}", definition.text, ""))
+    for kind, values in (
+        (KIND_SYNONYM, result.synonyms),
+        (KIND_ANTONYM, result.antonyms),
+        (KIND_RELATED, result.related),
+        (KIND_RHYME, result.rhymes),
+    ):
+        for value in values:
+            items.append(LookupItem(kind, value, value, ACTION_INSERT))
+    return tuple(items)
+
+
+def render_lookup(result: LexicalResult) -> str:
+    """Render a result as screen-reader-pageable text (pure).
+
+    Leads with the word and its sources, then one labelled section per kind that
+    has entries (Definitions, Synonyms, Antonyms, Related, Rhymes). Definitions
+    show part of speech and any example sentence. An empty result reads as a
+    single clear "no entries" line so the surface is never silently blank.
+    """
+    word = result.word or ""
+    header = f"Look up: {word}" if word else "Look up"
+    if result.sources:
+        header += f" — {', '.join(result.sources)}"
+    lines: list[str] = [header]
+
+    if result.is_empty:
+        lines.append("No entries found.")
+        return "\n".join(lines)
+
+    if result.definitions:
+        lines.append("")
+        lines.append("Definitions:")
+        for index, definition in enumerate(result.definitions, start=1):
+            pos = f"({definition.part_of_speech}) " if definition.part_of_speech else ""
+            lines.append(f"{index}. {pos}{definition.text}")
+            if definition.example:
+                lines.append(f"   Example: {definition.example}")
+
+    for title, values in (
+        ("Synonyms", result.synonyms),
+        ("Antonyms", result.antonyms),
+        ("Related", result.related),
+        ("Rhymes", result.rhymes),
+    ):
+        if values:
+            lines.append("")
+            lines.append(f"{title}: {', '.join(values)}")
+
+    return "\n".join(lines)

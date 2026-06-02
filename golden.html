@@ -1965,7 +1965,7 @@ announcements.</td>
 <td>Rich context and Application-key menu</td>
 <td>Features</td>
 <td>M</td>
-<td>Todo</td>
+<td>In progress</td>
 <td>Right-click and the Application/Menu key open one rich, fully
 keyboard- and screen-reader-operable context menu built from the word
 and selection under the cursor, turning a plain editor menu into a
@@ -1981,7 +1981,17 @@ usual cut/copy/paste. The menu is rebuilt live from the cursor context,
 every item is reachable and announced, and it honors
 <code>FeatureManager</code> so entries for disabled features do not
 appear. Tests cover the misspelled-word menu shape, the
-add-to-dictionary path, and feature-off filtering.</td>
+add-to-dictionary path, and feature-off filtering. Delivered: the pure,
+<code>wx</code>-free menu model lives in
+<code>quill/core/context_menu.py</code> (<code>CursorContext</code> →
+<code>build_context_menu</code> → ordered, feature-gated
+<code>MenuItem</code>s with single separators between non-empty groups)
+with a new <code>core.dictionary</code> feature gating Look
+Up/Thesaurus; tests cover the suggestion-led shape, add/ignore, lookup,
+selection clipboard, feature-off filtering, and separator placement. In
+progress: the live <code>wx.Menu</code> construction and
+Application/Menu-key binding in <code>main_frame</code> are not yet
+wired.</td>
 </tr>
 <tr>
 <td>DICT-1</td>
@@ -2010,7 +2020,7 @@ error fallback.</td>
 <td>Accessible Look Up and definitions surface</td>
 <td>Features</td>
 <td>S</td>
-<td>Todo</td>
+<td>In progress</td>
 <td>A screen-reader-pageable Look Up surface presents a word’s part of
 speech, definitions, and example sentences (Free Dictionary via DICT-1)
 alongside synonyms, antonyms, rhymes, and related words (Datamuse via
@@ -2020,14 +2030,22 @@ key, replaces the bare <code>SingleChoiceDialog</code> thesaurus with a
 richer but equally keyboard-first surface, and announces results through
 the shared grammar (A11Y-1). Gated by the DICT-1 feature; tests cover
 rendering from a normalized <code>LexicalResult</code>, the insert/pivot
-actions, and the offline-only shape.</td>
+actions, and the offline-only shape. Delivered: the pure,
+<code>wx</code>-free surface lives in <code>quill/core/lexical.py</code>
+— <code>render_lookup</code> pages the word, sources, definitions (with
+part of speech and examples), synonyms, antonyms, related, and rhymes,
+and <code>build_lookup_items</code> flattens the result into selectable
+insert/context <code>LookupItem</code>s; tests cover the section
+rendering, the non-blank empty-result shape, and item insertability. In
+progress: the live <code>wx</code> Look Up dialog and its Tools-menu /
+QUILL-key entry points are not yet wired.</td>
 </tr>
 <tr>
 <td>FEAT-19</td>
 <td>External file-change watch and safe reload</td>
 <td>Features</td>
 <td>M</td>
-<td>Todo</td>
+<td>In progress</td>
 <td>QUILL watches the open document for external modification (and
 deletion). When the file changes on disk and the buffer is unmodified,
 it reloads in place without moving the cursor or scroll position and
@@ -2039,7 +2057,18 @@ prompt-on-conflict, watch on or off, debounce interval) in a Settings
 group, defaults are safe and quiet, and the watcher runs off the UI
 thread reusing the existing watch-folder and stability patterns. Cursor,
 selection, and scroll are preserved across reload; tests cover clean
-reload, conflict prompt, deletion, and cursor preservation.</td>
+reload, conflict prompt, deletion, and cursor preservation. Delivered:
+the pure, <code>wx</code>-free engine lives in
+<code>quill/core/external_change.py</code> — <code>FileSnapshot</code>
+(existence, size, mtime, content hash),
+<code>ExternalChangeWatcher</code> (poll → modified/deleted/none,
+reporting each change once), and <code>decide_reload</code>
+(clean→reload, dirty→conflict prompt, deleted→keep-mine prompt, quiet
+when disabled), plus four FEAT-19 Settings fields surfaced in the
+registry; tests cover snapshotting, change/deletion classification,
+watcher settling, and every decide-reload branch. In progress: the
+off-UI-thread poller and the cursor/scroll-preserving reload + conflict
+dialog are not yet wired into <code>main_frame</code>.</td>
 </tr>
 <tr>
 <td>WATCH-1</td>
@@ -5772,13 +5801,13 @@ the third table and are not part of either 1.0 list.</p>
 <tr>
 <td>Tier 2 — Flagship</td>
 <td>In progress</td>
-<td>SET-2, SET-3, MENU-1, MENU-5, AGENT-1, OCR-1, OCR-3, OCR-4</td>
+<td>SET-2, SET-3, MENU-1, MENU-5, AGENT-1, OCR-1, OCR-3, OCR-4, CTX-1,
+DICT-2, FEAT-19</td>
 </tr>
 <tr>
 <td>Tier 2 — Flagship</td>
 <td>Todo</td>
-<td>AI-19, AI-20, AI-22, AI-24, CTX-1, DICT-2, FEAT-19, FLAG-3,
-DLG-1</td>
+<td>AI-19, AI-20, AI-22, AI-24, FLAG-3, DLG-1</td>
 </tr>
 <tr>
 <td>Tier 4 — Structural health</td>

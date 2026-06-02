@@ -73,6 +73,17 @@ def test_set2_set3_set4_fields_are_registered() -> None:
         assert key in keys, f"{key} should be surfaced in the Settings registry"
 
 
+def test_feat19_external_change_fields_are_registered() -> None:
+    keys = {spec.key for spec in SETTING_SPECS}
+    for key in (
+        "external_change_watch_enabled",
+        "external_change_auto_reload_when_clean",
+        "external_change_prompt_on_conflict",
+        "external_change_debounce_ms",
+    ):
+        assert key in keys, f"{key} should be surfaced in the Settings registry"
+
+
 def test_specs_for_group_filters() -> None:
     for group in groups():
         for spec in specs_for_group(group.id):

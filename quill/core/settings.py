@@ -188,6 +188,11 @@ class Settings:
     dictation_sensitivity: int = 50
     # OCR-2: image-to-text engine selection
     ocr_engine: str = "auto"
+    # FEAT-19: external file-change watch and safe reload
+    external_change_watch_enabled: bool = True
+    external_change_auto_reload_when_clean: bool = True
+    external_change_prompt_on_conflict: bool = True
+    external_change_debounce_ms: int = 750
     # SET-3: tunable verbosity and announcements
     announcement_verbosity: str = "normal"
     announce_wrap: bool = True
@@ -426,6 +431,17 @@ class Settings:
         ocr_engine = str(data.get("ocr_engine", "auto")).strip().lower()
         if ocr_engine not in {"auto", "windows", "tesseract"}:
             ocr_engine = "auto"
+        # FEAT-19: external file-change watch and safe reload
+        external_change_watch_enabled = bool(data.get("external_change_watch_enabled", True))
+        external_change_auto_reload_when_clean = bool(
+            data.get("external_change_auto_reload_when_clean", True)
+        )
+        external_change_prompt_on_conflict = bool(
+            data.get("external_change_prompt_on_conflict", True)
+        )
+        external_change_debounce_ms = _clamp_int(
+            data.get("external_change_debounce_ms", 750), 750, 0, 10000
+        )
         # SET-3: verbosity and announcements
         announcement_verbosity = str(data.get("announcement_verbosity", "normal")).strip().lower()
         if announcement_verbosity not in {"minimal", "normal", "verbose"}:
@@ -556,6 +572,10 @@ class Settings:
             read_aloud_sentence_pause_ms=read_aloud_sentence_pause_ms,
             dictation_sensitivity=dictation_sensitivity,
             ocr_engine=ocr_engine,
+            external_change_watch_enabled=external_change_watch_enabled,
+            external_change_auto_reload_when_clean=external_change_auto_reload_when_clean,
+            external_change_prompt_on_conflict=external_change_prompt_on_conflict,
+            external_change_debounce_ms=external_change_debounce_ms,
             announcement_verbosity=announcement_verbosity,
             announce_wrap=announce_wrap,
             announce_counts=announce_counts,

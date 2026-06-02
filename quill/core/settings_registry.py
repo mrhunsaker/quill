@@ -381,6 +381,45 @@ SETTING_SPECS: tuple[SettingSpec, ...] = (
         feature_id="core.ocr",
         keywords=("ocr", "image", "text", "tesseract", "windows", "recognition"),
     ),
+    # --- External file-change watch and safe reload (FEAT-19) --------------
+    SettingSpec(
+        "external_change_watch_enabled",
+        "Watch the open file for external changes",
+        "general",
+        "bool",
+        "Notice when another program changes or deletes the file you are editing "
+        "and react safely instead of silently losing or overwriting your work.",
+        keywords=("watch", "external", "reload", "file change", "conflict"),
+    ),
+    SettingSpec(
+        "external_change_auto_reload_when_clean",
+        "Reload automatically when you have no unsaved edits",
+        "general",
+        "bool",
+        "When the file changes on disk and your buffer is unmodified, reload in "
+        "place without moving the cursor. Turn off to be prompted instead.",
+        keywords=("reload", "auto", "external", "clean"),
+    ),
+    SettingSpec(
+        "external_change_prompt_on_conflict",
+        "Ask before discarding unsaved edits on a conflict",
+        "general",
+        "bool",
+        "When the file changes on disk while you have unsaved edits, offer reload, "
+        "keep-mine, or compare. Your text is never overwritten silently.",
+        keywords=("conflict", "prompt", "unsaved", "external", "reload"),
+    ),
+    SettingSpec(
+        "external_change_debounce_ms",
+        "External-change debounce (milliseconds)",
+        "general",
+        "int",
+        "How long to wait after a change is seen before reacting, so a program "
+        "writing a file in several steps is handled once (0 to 10000).",
+        minimum=0,
+        maximum=10000,
+        keywords=("debounce", "external", "timing", "watch"),
+    ),
     SettingSpec(
         "quick_nav_debounce_ms",
         "Quick Nav debounce (milliseconds)",
