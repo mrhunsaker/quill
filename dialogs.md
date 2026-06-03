@@ -164,6 +164,7 @@ or the command palette (`Ctrl+Shift+P`).
 
 - [ ] AI Model and Connection: via Tools menu
 - [ ] AI Connection Settings: via Tools menu
+- [ ] Forget API Key (confirmation): via AI menu
 - [ ] Ask Quill Chat: via Tools menu
 - [ ] Train Writing Style: via Tools menu
 - [ ] Writing Assistant: via Tools menu

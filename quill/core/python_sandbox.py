@@ -44,12 +44,110 @@ _SANDBOX_BOOTSTRAP = textwrap.dedent(
     import sys
     import traceback
 
-    payload = json.loads(base64.b64decode(os.environ["QUILL_SANDBOX_PAYLOAD"]).decode("utf-8"))
+    # SEC-14: the payload arrives on stdin (never the environment) so the
+    # sandboxed program cannot read it back out of os.environ, and resource
+    # limits are applied to *this* child process before any user code runs.
+    payload = json.loads(base64.b64decode(sys.stdin.buffer.read()).decode("utf-8"))
     code = base64.b64decode(payload["code_b64"]).decode("utf-8")
     document_text = payload.get("document_text", "")
     selection_text = payload.get("selection_text", "")
     input_text = payload.get("input_text", "")
     outline = payload.get("outline")
+
+
+    def _apply_windows_memory_limit(limit_bytes):
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+        # Declare signatures so 64-bit HANDLEs are not truncated to c_int.
+        kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+        kernel32.CreateJobObjectW.argtypes = [wintypes.LPVOID, wintypes.LPCWSTR]
+        kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+        kernel32.GetCurrentProcess.argtypes = []
+        kernel32.SetInformationJobObject.restype = wintypes.BOOL
+        kernel32.SetInformationJobObject.argtypes = [
+            wintypes.HANDLE,
+            ctypes.c_int,
+            wintypes.LPVOID,
+            wintypes.DWORD,
+        ]
+        kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
+        kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+
+        class _BASIC(ctypes.Structure):
+            _fields_ = [
+                ("PerProcessUserTimeLimit", wintypes.LARGE_INTEGER),
+                ("PerJobUserTimeLimit", wintypes.LARGE_INTEGER),
+                ("LimitFlags", wintypes.DWORD),
+                ("MinimumWorkingSetSize", ctypes.c_size_t),
+                ("MaximumWorkingSetSize", ctypes.c_size_t),
+                ("ActiveProcessLimit", wintypes.DWORD),
+                ("Affinity", ctypes.c_size_t),
+                ("PriorityClass", wintypes.DWORD),
+                ("SchedulingClass", wintypes.DWORD),
+            ]
+
+        class _IO(ctypes.Structure):
+            _fields_ = [
+                ("ReadOperationCount", ctypes.c_ulonglong),
+                ("WriteOperationCount", ctypes.c_ulonglong),
+                ("OtherOperationCount", ctypes.c_ulonglong),
+                ("ReadTransferCount", ctypes.c_ulonglong),
+                ("WriteTransferCount", ctypes.c_ulonglong),
+                ("OtherTransferCount", ctypes.c_ulonglong),
+            ]
+
+        class _EXT(ctypes.Structure):
+            _fields_ = [
+                ("BasicLimitInformation", _BASIC),
+                ("IoInfo", _IO),
+                ("ProcessMemoryLimit", ctypes.c_size_t),
+                ("JobMemoryLimit", ctypes.c_size_t),
+                ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                ("PeakJobMemoryUsed", ctypes.c_size_t),
+            ]
+
+        JOB_OBJECT_LIMIT_PROCESS_MEMORY = 0x00000100
+        JobObjectExtendedLimitInformation = 9
+        job = kernel32.CreateJobObjectW(None, None)
+        if not job:
+            return
+        info = _EXT()
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_PROCESS_MEMORY
+        info.ProcessMemoryLimit = limit_bytes
+        kernel32.SetInformationJobObject(
+            job, JobObjectExtendedLimitInformation, ctypes.byref(info), ctypes.sizeof(info)
+        )
+        kernel32.AssignProcessToJobObject(job, kernel32.GetCurrentProcess())
+
+
+    def _apply_resource_limits(payload):
+        memory_limit_bytes = int(payload.get("memory_limit_bytes") or 0)
+        cpu_limit_seconds = int(payload.get("cpu_limit_seconds") or 0)
+        if sys.platform == "win32":
+            if memory_limit_bytes > 0:
+                with contextlib.suppress(Exception):
+                    _apply_windows_memory_limit(memory_limit_bytes)
+            return
+        try:
+            import resource
+        except Exception:
+            return
+        if memory_limit_bytes > 0:
+            with contextlib.suppress(Exception):
+                resource.setrlimit(
+                    resource.RLIMIT_AS, (memory_limit_bytes, memory_limit_bytes)
+                )
+        if cpu_limit_seconds > 0:
+            with contextlib.suppress(Exception):
+                resource.setrlimit(
+                    resource.RLIMIT_CPU, (cpu_limit_seconds, cpu_limit_seconds)
+                )
+
+
+    _apply_resource_limits(payload)
 
     allowed_modules = set(payload.get("allowed_imports", ()))
     original_import = builtins.__import__
@@ -171,11 +269,17 @@ def run_python_sandbox(
     input_text: str = "",
     outline: list[dict[str, Any]] | None = None,
     timeout_seconds: float = 5.0,
+    memory_limit_mb: int = 512,
 ) -> PythonSandboxResult:
     try:
         _validate_code_policy(code)
     except (SyntaxError, ValueError) as error:
         return PythonSandboxResult("", "", "", str(error), False, 1, 0.0)
+    # SEC-14: cap address space (POSIX) / process memory (Windows job object) and
+    # CPU time so a runaway snippet cannot exhaust the host. Wall-clock time is
+    # bounded separately by ``timeout_seconds`` below.
+    memory_limit_bytes = max(0, int(memory_limit_mb)) * 1024 * 1024
+    cpu_limit_seconds = max(1, int(timeout_seconds) + 1)
     payload = {
         "code_b64": base64.b64encode(code.encode("utf-8")).decode("ascii"),
         "document_text": document_text,
@@ -183,19 +287,22 @@ def run_python_sandbox(
         "input_text": input_text,
         "outline": outline,
         "allowed_imports": sorted(ALLOWED_IMPORTS),
+        "memory_limit_bytes": memory_limit_bytes,
+        "cpu_limit_seconds": cpu_limit_seconds,
     }
+    # SEC-14: the payload is delivered on stdin, never via the environment, so
+    # the sandboxed program cannot recover it from os.environ. Only the minimal
+    # OS variables needed to launch the interpreter are forwarded.
     env = {
         key: value
         for key, value in os.environ.items()
         if key in {"SystemRoot", "WINDIR", "PATH", "TEMP", "TMP", "COMSPEC", "PATHEXT"}
     }
     env.update({
-        "QUILL_SANDBOX_PAYLOAD": base64.b64encode(json.dumps(payload).encode("utf-8")).decode(
-            "ascii"
-        ),
         "PYTHONIOENCODING": "utf-8",
         "PYTHONDONTWRITEBYTECODE": "1",
     })
+    stdin_payload = base64.b64encode(json.dumps(payload).encode("utf-8")).decode("ascii")
     start = time.perf_counter()
     completed: subprocess.CompletedProcess[str] | None = None
     timed_out = False
@@ -207,6 +314,7 @@ def run_python_sandbox(
             timeout=timeout_seconds,
             env=env,
             cwd=tempfile.gettempdir(),
+            input=stdin_payload,
         )
     except subprocess.TimeoutExpired:
         timed_out = True

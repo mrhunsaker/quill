@@ -244,6 +244,23 @@ FEATURE_DEFINITIONS: dict[str, FeatureDefinition] = {
         privacy="network after confirmation",
         category="future",
     ),
+    "core.third_party_plugins": FeatureDefinition(
+        "core.third_party_plugins",
+        "Third-Party Plugins",
+        aliases=("plugins", "third party plugins", "plugin loader"),
+        description=(
+            "SEC-8: experimental loader for third-party plugins. Disabled for "
+            "QUILL 1.0 — a default build never loads third-party plugin code. "
+            "Locked off until the plugin sandbox, signing, and review process "
+            "ship; gating this off keeps untrusted plugin code out of the "
+            "process entirely."
+        ),
+        maturity="experimental",
+        privacy="local only",
+        category="future",
+        dependencies=("core.app",),
+        locked_off=True,
+    ),
 }
 
 

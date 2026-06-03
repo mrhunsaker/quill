@@ -520,6 +520,33 @@ def save_assistant_api_key(api_key: str) -> None:
     write_json_atomic(path, {"protected_secret": protect_secret(secret)})
 
 
+def clear_assistant_api_key() -> bool:
+    """Forget the stored assistant API key (SEC-7).
+
+    Removes the key from *both* persistence layers: the Windows Credential
+    Manager entry and the DPAPI-protected ``assistant-secret.json`` fallback.
+    Returns ``True`` when a stored key was actually present and removed, so the
+    caller can announce "key forgotten" versus "no key was stored".
+
+    Note (shared-account limitation): the Credential Manager entry is scoped to
+    the current Windows user account. On a shared Windows account, anyone using
+    that account shares the same credential store, so forgetting the key removes
+    it for every person who signs in as that user — and a key saved by one of
+    them is visible to the others. Use separate Windows user accounts to keep
+    assistant keys private.
+    """
+
+    had_credential = bool(_load_api_key_from_credential_manager())
+    _delete_api_key_from_credential_manager()
+
+    path = assistant_secret_path()
+    had_file = path.exists()
+    if had_file:
+        path.unlink(missing_ok=True)
+
+    return had_credential or had_file
+
+
 def assistant_secret_unlock_failed() -> bool:
     """Return True when a secret is saved on disk but cannot be unlocked here.
 

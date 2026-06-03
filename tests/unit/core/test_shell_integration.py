@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from quill.core.shell_verbs import default_shell_verbs
 from quill.platform.windows.shell_integration import (
     APPLICATION_KEY,
@@ -36,6 +38,22 @@ def test_verb_launcher_command_carries_action() -> None:
     command = verb_launcher_command("ocr")
     assert "--action ocr" in command
     assert command.rstrip().endswith('"%1"')
+
+
+def test_verb_launcher_command_rejects_unknown_action() -> None:
+    # SEC-17: the command is written to the registry; only allowlisted shell
+    # verb actions may reach it. A free-form/injected action must be refused.
+    with pytest.raises(ValueError):
+        verb_launcher_command('open" & del /q "%1')
+    with pytest.raises(ValueError):
+        verb_launcher_command("not-a-real-verb")
+
+
+def test_verb_launcher_command_normalizes_case_and_whitespace() -> None:
+    # Known actions are accepted regardless of surrounding case/whitespace,
+    # proving normalization happens before the allowlist check.
+    command = verb_launcher_command("  OCR  ")
+    assert "--action ocr" in command
 
 
 def test_context_menu_plan_registers_each_verb_extension() -> None:

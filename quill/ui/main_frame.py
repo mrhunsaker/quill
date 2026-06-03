@@ -3317,6 +3317,7 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
         self._id_ai_model = wx.NewIdRef()
         self._id_ai_session_browser = wx.NewIdRef()
         self._id_ai_connection = wx.NewIdRef()
+        self._id_ai_forget_key = wx.NewIdRef()
         self._id_ai_rewrite_selection = wx.NewIdRef()
         self._id_ai_summarize_selection = wx.NewIdRef()
         self._id_ai_continue_writing = wx.NewIdRef()
@@ -3567,6 +3568,10 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
         ai_menu.Append(
             self._id_ai_model,
             self._menu_label("AI &Model && Connection...", "tools.ai_model"),
+        )
+        ai_menu.Append(
+            self._id_ai_forget_key,
+            "&Forget API Key",
         )
         ai_menu.Append(
             self._id_ai_session_browser,
@@ -4108,6 +4113,11 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
             wx.EVT_MENU,
             lambda _e: self.open_ai_model_settings(),
             id=self._id_ai_model,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self._forget_assistant_api_key(),
+            id=self._id_ai_forget_key,
         )
         self.frame.Bind(
             wx.EVT_MENU,
@@ -8587,11 +8597,12 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
             for entry in self._bw_download_status.values()
             if str(entry.get("status", "")).lower() == "running"
         )
-        self._announce(
-            "Status page refreshed. "
-            f"{active_tasks} background task(s) active. "
-            f"{bw_running} BITS Whisperer download(s) running."
-        )
+        message = f"Status page refreshed. {active_tasks} background task(s) active."
+        # BITS Whisperer is deferred to QUILL 2.0; only name transcription downloads
+        # when one is actually running, which never happens in a 1.0 build.
+        if bw_running:
+            message += f" {bw_running} BITS Whisperer download(s) running."
+        self._announce(message)
         self._status_page_last_announce_at = now
         self._status_page_last_announce_signature = signature
 
@@ -19221,6 +19232,32 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
             open_connection=self.open_ai_preferences,
         ).show()
 
+    def _forget_assistant_api_key(self) -> None:
+        """Forget the stored assistant API key (SEC-7).
+
+        Clears the key from both persistence layers (Windows Credential Manager
+        and the DPAPI-protected fallback file) after an explicit confirmation,
+        then announces the outcome.
+        """
+        from quill.core.assistant_ai import clear_assistant_api_key
+
+        wx = self._wx
+        result = self._show_message_box(
+            "Forget the stored AI provider API key? This removes it from the "
+            "Windows Credential Manager and the encrypted fallback file. You "
+            "will need to re-enter the key to use cloud providers again.",
+            "Forget API Key",
+            wx.YES_NO | wx.ICON_WARNING,
+        )
+        if result != wx.YES:
+            self._set_status("Forget API key cancelled. The stored key was kept.")
+            return
+        had_key = clear_assistant_api_key()
+        if had_key:
+            self._set_status("AI provider API key forgotten. Re-enter it to use cloud providers.")
+        else:
+            self._set_status("No stored AI provider API key was found.")
+
     def open_ai_session_browser(self) -> None:
         # Browse the branch tree of the most recent writing session and jump
         # between branches or compare them — fully keyboard- and screen-reader
@@ -22178,7 +22215,10 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
         self._offer_ai_onboarding()
         self._show_assistant_onboarding(force=True)
         self._show_speech_onboarding(force=True)
-        self._show_bw_onboarding(force=True)
+        # BITS Whisperer is deferred to QUILL 2.0 (the master `core.bw_whisperer`
+        # flag is locked off), so a 1.0 first run never offers transcription setup.
+        if self._feature_enabled("core.bw_whisperer"):
+            self._show_bw_onboarding(force=True)
         self._show_watch_folder_onboarding(force=True)
         self._set_status("Startup Wizard completed")
 

@@ -5757,6 +5757,20 @@ surfaces. The boundary is clean: shared rules and fixers in
 id="bits-whisperer-integration-transcription-becomes-a-quill-superpower">20.
 BITS Whisperer integration: transcription becomes a QUILL
 superpower</h3>
+<blockquote>
+<p>Status (2026-06-02): deferred to <strong>QUILL 2.0</strong>. BITS
+Whisperer is not part of the 1.0 milestone; its build order lives in
+Tier 5 (Part V). In the shipping 1.0 application the entire suite is
+held back behind the locked-off <code>core.bw_whisperer</code> feature
+flag — the <strong>BITS Whisperer</strong> menu is not appended to the
+menu bar, its palette commands are gated out via the <code>bw_*</code>
+feature dependencies, and the first-run Startup Wizard skips the BITS
+Whisperer onboarding step — so no transcription surface reaches a 1.0
+user. The narrative below is the 2.0 integration vision; the
+<code>quill/core/bw_speech.py</code> and
+<code>quill/core/bw_providers.py</code> scaffolding is retained as the
+2.0 foundation.</p>
+</blockquote>
 <p>QUILL already contains <code>quill/core/bw_speech.py</code>, a
 speech-model manager that mirrors a subset of BITS Whisperer
 (faster-whisper model specs, hardware eligibility, a model manager,

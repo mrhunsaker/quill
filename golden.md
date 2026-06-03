@@ -1002,6 +1002,16 @@ What to keep lightweight in QUILL: QUILL should not absorb GLOW's web app, its b
 
 ### 20. BITS Whisperer integration: transcription becomes a QUILL superpower
 
+> Status (2026-06-02): deferred to **QUILL 2.0**. BITS Whisperer is not part of
+> the 1.0 milestone; its build order lives in Tier 5 (Part V). In the shipping 1.0
+> application the entire suite is held back behind the locked-off
+> `core.bw_whisperer` feature flag — the **BITS Whisperer** menu is not appended to
+> the menu bar, its palette commands are gated out via the `bw_*` feature
+> dependencies, and the first-run Startup Wizard skips the BITS Whisperer
+> onboarding step — so no transcription surface reaches a 1.0 user. The narrative
+> below is the 2.0 integration vision; the `quill/core/bw_speech.py` and
+> `quill/core/bw_providers.py` scaffolding is retained as the 2.0 foundation.
+
 QUILL already contains `quill/core/bw_speech.py`, a speech-model manager that mirrors a subset of BITS Whisperer (faster-whisper model specs, hardware eligibility, a model manager, provider status), exposed through a "BITS Whisperer" menu group (Speech Model Manager, Provider Center, Use Recommended, and so on). BITS Whisperer itself is a mature, accessibility-first transcription app: 18 providers (cloud and on-device), 14 Whisper models, AI translation and summarization, live microphone transcription, speaker diarization, a watch folder, scheduled transcription, do-not-disturb, a plugin system, seven export formats, and a setup wizard, all WCAG-adapted with a menu-first, screen-reader-first design.
 
 The opportunity is large: a writer who can transcribe an interview or a lecture and immediately edit, audit, and publish it, all in one accessible app, has something no mainstream editor offers. The plan is to bring BITS Whisperer's transcription engine into QUILL as a first-class "Transcribe" capability, reusing BW's provider and model layer rather than reimplementing it.

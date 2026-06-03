@@ -61,6 +61,60 @@ def test_assistant_api_key_prefers_credential_manager(
     assert not assistant_ai.assistant_secret_path().exists()
 
 
+def test_clear_assistant_api_key_clears_both_stores(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # SEC-7: forgetting the key removes it from the credential manager *and* the
+    # DPAPI fallback file, and reports whether anything was actually cleared.
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    vault: dict[str, str] = {}
+
+    monkeypatch.setattr(
+        assistant_ai,
+        "_save_api_key_with_credential_manager",
+        lambda secret: vault.update(secret=secret) or True,
+    )
+    monkeypatch.setattr(
+        assistant_ai,
+        "_load_api_key_from_credential_manager",
+        lambda: vault.get("secret", ""),
+    )
+    monkeypatch.setattr(
+        assistant_ai,
+        "_delete_api_key_from_credential_manager",
+        lambda: vault.clear(),
+    )
+
+    assistant_ai.save_assistant_api_key("to-be-forgotten")
+    assert assistant_ai.load_assistant_api_key() == "to-be-forgotten"
+
+    assert assistant_ai.clear_assistant_api_key() is True
+    assert assistant_ai.load_assistant_api_key() == ""
+    assert not assistant_ai.assistant_secret_path().exists()
+    assert vault == {}
+
+    # Forgetting again, with nothing stored, reports that no key was present.
+    assert assistant_ai.clear_assistant_api_key() is False
+
+
+def test_clear_assistant_api_key_removes_dpapi_fallback_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # SEC-7: when only the on-disk DPAPI fallback exists (no credential
+    # manager), forgetting still deletes the file and reports a clear.
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(assistant_ai, "_save_api_key_with_credential_manager", lambda *_a: False)
+    monkeypatch.setattr(assistant_ai, "_load_api_key_from_credential_manager", lambda: "")
+    monkeypatch.setattr(assistant_ai, "_delete_api_key_from_credential_manager", lambda: None)
+    monkeypatch.setattr(assistant_ai, "protect_secret", lambda secret: f"enc:{secret}")
+
+    assistant_ai.save_assistant_api_key("disk-only-secret")
+    assert assistant_ai.assistant_secret_path().exists()
+
+    assert assistant_ai.clear_assistant_api_key() is True
+    assert not assistant_ai.assistant_secret_path().exists()
+
+
 class _FakeResponse:
     def __init__(self, payload: dict[str, object]) -> None:
         self._payload = payload

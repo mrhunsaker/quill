@@ -4,7 +4,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from quill.core.shell_verbs import ShellVerb, default_shell_verbs
+from quill.core.shell_verbs import ShellVerb, default_shell_verbs, verb_actions
 
 try:  # pragma: no cover - Windows-only module
     import winreg
@@ -51,10 +51,22 @@ def verb_launcher_command(action: str) -> str:
 
     The selected file is passed as ``%1`` and the verb is carried through the
     ``--action`` flag so the running (or new) instance knows what to do.
+
+    SECURITY (SEC-17): the returned string is written verbatim into the Windows
+    registry as a shell command. It must never embed untrusted, free-form user
+    input. The executable is derived from :data:`sys.executable` (never a
+    user-supplied path) and ``action`` is validated against the closed
+    :func:`~quill.core.shell_verbs.verb_actions` registry below; an unknown or
+    malformed action raises :class:`ValueError` rather than reaching the
+    registry. If this function is ever extended to accept a configurable
+    launcher path or a free-form action, those inputs MUST be validated against
+    an allowlist (or quoted) before inclusion here.
     """
 
     executable = Path(sys.executable)
     safe_action = (action or "open").strip().lower()
+    if safe_action not in verb_actions():
+        raise ValueError(f"Unknown shell verb action: {action!r}")
     return f'"{executable}" -m quill --action {safe_action} "%1"'
 
 

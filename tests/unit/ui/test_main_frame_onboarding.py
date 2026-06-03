@@ -1,6 +1,15 @@
 from __future__ import annotations
 
+import re
+from pathlib import Path
+
 from quill.ui.main_frame import MainFrame
+
+
+def _main_frame_source() -> str:
+    return (Path(__file__).resolve().parents[3] / "quill" / "ui" / "main_frame.py").read_text(
+        encoding="utf-8"
+    )
 
 
 class _Frame:
@@ -68,3 +77,18 @@ def test_show_profile_onboarding_uses_real_method_not_corrupted_link_dialog() ->
     assert callable(getattr(MainFrame, "_offer_ai_onboarding", None))
     assert callable(getattr(MainFrame, "_sync_ai_enabled_menu", None))
     assert callable(getattr(MainFrame, "_show_profile_onboarding", None))
+
+
+def test_startup_wizard_gates_bw_onboarding_behind_deferred_flag() -> None:
+    # BITS Whisperer is deferred to QUILL 2.0; the startup wizard must only run
+    # its onboarding when the locked-off `core.bw_whisperer` feature is enabled,
+    # so a 1.0 first run never offers transcription setup.
+    source = _main_frame_source()
+    match = re.search(
+        r"if self\._feature_enabled\(\"core\.bw_whisperer\"\):\s*\n"
+        r"\s*self\._show_bw_onboarding\(force=True\)",
+        source,
+    )
+    assert match is not None, (
+        "run_startup_wizard must gate _show_bw_onboarding behind core.bw_whisperer"
+    )
