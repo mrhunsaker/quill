@@ -525,6 +525,72 @@ def get_glow_services() -> Any:
         return None
 
 
+@dataclass(frozen=True, slots=True)
+class GlowEngineVersions:
+    """The active GLOW engine and rule versions, with a safe fallback.
+
+    ``backend`` is ``"unavailable"`` when the optional package is not installed;
+    the version strings are empty in that case so callers can render a stable
+    "not installed" message without special-casing missing attributes.
+    """
+
+    backend: str
+    release_version: str
+    core_version: str
+    components: tuple[tuple[str, str], ...]
+
+
+def glow_engine_versions() -> GlowEngineVersions:
+    """Report the active GLOW engine and rule version (GLOW-6).
+
+    Reads ``get_component_versions`` plus the startup telemetry backend name.
+    Never raises: a missing package or a backend error degrades to an
+    ``unavailable``/empty manifest so diagnostics and the About dialog can show
+    an honest fallback.
+    """
+    core = _load_glow_core()
+    if core is None:
+        return GlowEngineVersions(
+            backend="unavailable",
+            release_version="",
+            core_version="",
+            components=(),
+        )
+    backend = _backend_name(core)
+    try:
+        manifest = core.get_component_versions()
+    except Exception:
+        manifest = None
+    if manifest is None:
+        return GlowEngineVersions(
+            backend=backend,
+            release_version="",
+            core_version="",
+            components=(),
+        )
+    raw_components = getattr(manifest, "components", {}) or {}
+    try:
+        components = tuple((str(key), str(value)) for key, value in sorted(raw_components.items()))
+    except Exception:
+        components = ()
+    return GlowEngineVersions(
+        backend=backend,
+        release_version=str(getattr(manifest, "release_version", "") or ""),
+        core_version=str(getattr(manifest, "core_version", "") or ""),
+        components=components,
+    )
+
+
+def glow_engine_version_summary() -> str:
+    """A one-line, human-readable summary of the active GLOW engine (GLOW-6)."""
+    versions = glow_engine_versions()
+    if versions.backend == "unavailable":
+        return "GLOW engine: not installed"
+    release = versions.release_version or "unknown"
+    core_version = versions.core_version or "unknown"
+    return f"GLOW engine: {versions.backend} (release {release}, rules {core_version})"
+
+
 def _unavailable_audit(path: str) -> GlowFileAuditResult:
     return GlowFileAuditResult(
         path=path,
@@ -546,18 +612,105 @@ def _unavailable_audit(path: str) -> GlowFileAuditResult:
     )
 
 
-def audit_file(path: str | Path, **kwargs: Any) -> GlowFileAuditResult:
+# ---------------------------------------------------------------------------
+# GLOW optional networked features (GLOW-7).
+#
+# The shared core ships optional features that can reach the network — AI
+# alt-text generation, Presidio PII redaction, and WCAG language processing.
+# QUILL's no-silent-network rule (GATE-9) requires these to be OFF by default
+# and turned on only with explicit per-action consent. The seam below makes
+# that guarantee structural: a default `audit_file`/`fix_file` call forwards no
+# feature-enabling option, so the backend runs its on-device deterministic
+# rules only. A networked feature is reached solely when a caller passes a
+# `GlowNetworkConsent` that explicitly enables it.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class GlowNetworkFeature:
+    """A GLOW optional feature that may perform an outbound network call."""
+
+    feature_id: str
+    label: str
+    description: str
+
+
+GLOW_NETWORK_FEATURES: tuple[GlowNetworkFeature, ...] = (
+    GlowNetworkFeature(
+        feature_id="ai_alt_text",
+        label="AI alt-text generation",
+        description="Generate image alt text with a cloud AI model.",
+    ),
+    GlowNetworkFeature(
+        feature_id="pii_redaction",
+        label="PII redaction",
+        description="Detect and redact personal data with Presidio.",
+    ),
+    GlowNetworkFeature(
+        feature_id="language_processing",
+        label="WCAG language processing",
+        description="Analyze readability and language with a networked service.",
+    ),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class GlowNetworkConsent:
+    """Per-feature consent for GLOW's optional networked features.
+
+    Every feature defaults to ``False`` (off). A networked feature is only
+    reachable when the caller constructs this with the matching flag set to
+    ``True`` after obtaining explicit, per-action user consent.
+    """
+
+    ai_alt_text: bool = False
+    pii_redaction: bool = False
+    language_processing: bool = False
+
+    def enabled_feature_ids(self) -> frozenset[str]:
+        enabled = {
+            feature.feature_id
+            for feature in GLOW_NETWORK_FEATURES
+            if getattr(self, feature.feature_id, False)
+        }
+        return frozenset(enabled)
+
+    def is_any_enabled(self) -> bool:
+        return bool(self.enabled_feature_ids())
+
+    def to_backend_kwargs(self) -> dict[str, bool]:
+        """Backend kwargs for the consented features, or ``{}`` when none.
+
+        The default (no feature enabled) returns an empty mapping, so the GLOW
+        seam forwards nothing network-enabling on the default path.
+        """
+        return {feature_id: True for feature_id in sorted(self.enabled_feature_ids())}
+
+
+def glow_network_features_all_off() -> GlowNetworkConsent:
+    """The default consent state: every optional networked feature off."""
+    return GlowNetworkConsent()
+
+
+def audit_file(
+    path: str | Path,
+    *,
+    consent: GlowNetworkConsent | None = None,
+    **kwargs: Any,
+) -> GlowFileAuditResult:
     """Audit a structured document through the shared GLOW core.
 
     Falls back to a safe, QUILL-native "engine unavailable" result when the
     optional package is absent, so callers never have to special-case the
-    missing backend.
+    missing backend. Optional networked features stay off unless ``consent``
+    explicitly enables them (GLOW-7).
     """
     target = str(path)
     services = get_glow_services()
     if services is None:
         return _unavailable_audit(target)
-    result = services.audit_by_extension(path, **kwargs)
+    network_kwargs = consent.to_backend_kwargs() if consent is not None else {}
+    result = services.audit_by_extension(path, **network_kwargs, **kwargs)
     findings = tuple(_glow_finding_to_quill(item) for item in result.findings)
     return GlowFileAuditResult(
         path=str(getattr(result, "file_path", target)),
@@ -571,11 +724,15 @@ def audit_file(path: str | Path, **kwargs: Any) -> GlowFileAuditResult:
 def fix_file(
     path: str | Path,
     output_path: str | Path | None = None,
+    *,
+    consent: GlowNetworkConsent | None = None,
     **kwargs: Any,
 ) -> GlowFileFixResult:
     """Fix a structured document through the shared GLOW core.
 
-    Returns a safe, no-op result when the optional package is absent.
+    Returns a safe, no-op result when the optional package is absent. Optional
+    networked features stay off unless ``consent`` explicitly enables them
+    (GLOW-7).
     """
     target = str(path)
     services = get_glow_services()
@@ -588,7 +745,8 @@ def fix_file(
             warnings=("The GLOW accessibility engine is not installed; no changes were made.",),
             backend="unavailable",
         )
-    result = services.fix_by_extension(path, output_path, **kwargs)
+    network_kwargs = consent.to_backend_kwargs() if consent is not None else {}
+    result = services.fix_by_extension(path, output_path, **network_kwargs, **kwargs)
     audit_result = getattr(result, "audit_result", None)
     if audit_result is not None:
         findings = tuple(_glow_finding_to_quill(item) for item in audit_result.findings)

@@ -65,6 +65,7 @@ or the command palette (`Ctrl+Shift+P`).
   - [ ] Menu Items tab: select a menu, then reorder, rename, show/hide its items
   - [ ] Context Menu tab: reorder, rename, show/hide context menu items
   - [ ] Rename Menu/Item (text entry, nested): Rename... button within any tab
+- [ ] GLOW Accessibility settings (accessible web form): Preferences (`Ctrl+,`) > GLOW Accessibility
 - [ ] Command Palette: `Ctrl+Shift+P`
 
 ## C. Navigate
@@ -194,6 +195,7 @@ or the command palette (`Ctrl+Shift+P`).
 ## T. Help: startup and support
 
 - [ ] Startup Wizard: via Help menu
+  - [ ] GLOW Accessibility Onboarding (accessible web form, from Startup Wizard sequence)
 - [ ] About Quill: via Help menu
 - [ ] What Can I Do Here?: via Help menu
 - [ ] Save Diagnostics: via Help menu

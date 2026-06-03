@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from quill.core.document import Document
+from quill.core.glow import glow_engine_version_summary
 from quill.core.notifications import Notification
 from quill.core.paths import app_data_dir
 from quill.core.settings import Settings
@@ -256,6 +257,7 @@ def collect_environment_info(
         "locale": locale.getlocale(),
         "timestamp_utc": datetime.now(UTC).isoformat(),
     }
+    info["glow_engine"] = _safe_glow_engine_summary()
     if extra_environment:
         info.update(extra_environment)
     return info
@@ -322,3 +324,10 @@ def _safe_import_version() -> str:
         return __version__
     except Exception:  # noqa: BLE001
         return "unknown"
+
+
+def _safe_glow_engine_summary() -> str:
+    try:
+        return glow_engine_version_summary()
+    except Exception:  # noqa: BLE001
+        return "GLOW engine: unknown"

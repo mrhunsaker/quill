@@ -256,12 +256,14 @@ from quill.core.navigation import (
 from quill.core.notifications import add_notification, clear_notifications, load_notifications
 from quill.core.onboarding import (
     load_assistant_onboarding_complete,
+    load_glow_onboarding_complete,
     load_onboarding_complete,
     load_speech_onboarding_complete,
     load_startup_wizard_prompt_suppressed,
     load_trust_consent_complete,
     load_watch_folder_onboarding_complete,
     mark_assistant_onboarding_complete,
+    mark_glow_onboarding_complete,
     mark_onboarding_complete,
     mark_speech_onboarding_complete,
     mark_startup_wizard_prompt_suppressed,
@@ -854,6 +856,7 @@ class MainFrame(
             and not getattr(self.settings, "assistant_enabled", False)
         )
         self._first_run_speech_prompt = not safe_mode and not load_speech_onboarding_complete()
+        self._first_run_glow_prompt = not safe_mode and not load_glow_onboarding_complete()
         self._first_run_watch_folder_prompt = (
             not safe_mode and not load_watch_folder_onboarding_complete()
         )
@@ -6242,6 +6245,7 @@ class MainFrame(
             ("Keymap Editor", self.open_keymap_editor),
             ("AI Connection", self.open_ai_preferences),
             ("Watch Folder Automation", self.open_watch_folder_settings),
+            ("GLOW Accessibility", self.open_glow_settings),
             ("Install Starter Snippet Packs", self.install_starter_snippet_packs),
         ]
         with wx.SingleChoiceDialog(
@@ -6261,6 +6265,61 @@ class MainFrame(
             return
         _label, handler = options[selected]
         handler()
+
+    def open_glow_settings(self) -> None:
+        """Open the GLOW accessibility settings (engine toggle + network consent).
+
+        GLOW is enabled by default and runs locally; the optional networked
+        features stay off until the user explicitly turns them on here (GLOW-7).
+        """
+        from quill.ui.web_form import show_web_form
+
+        values = show_web_form(
+            self.frame,
+            self._wx,
+            title="GLOW Accessibility",
+            intro=(
+                "GLOW is Quill's built-in accessibility engine. It is on by default "
+                "and runs entirely on your computer. The optional features below can "
+                "use a network connection and are off until you turn them on. Quill "
+                "never sends your document anywhere without asking first."
+            ),
+            fields=[
+                {
+                    "name": "enabled",
+                    "label": "Enable the GLOW accessibility engine",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_enabled", True),
+                },
+                {
+                    "name": "ai_alt_text",
+                    "label": "Allow optional AI alt-text generation (uses the network)",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_ai_alt_text_consent", False),
+                },
+                {
+                    "name": "pii_redaction",
+                    "label": "Allow optional PII redaction (uses the network)",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_pii_redaction_consent", False),
+                },
+                {
+                    "name": "language_processing",
+                    "label": "Allow optional WCAG language processing (uses the network)",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_language_processing_consent", False),
+                },
+            ],
+        )
+        if values is None:
+            self._set_status("GLOW settings cancelled")
+            return
+        self.settings.glow_enabled = bool(values.get("enabled", True))
+        self.settings.glow_ai_alt_text_consent = bool(values.get("ai_alt_text"))
+        self.settings.glow_pii_redaction_consent = bool(values.get("pii_redaction"))
+        self.settings.glow_language_processing_consent = bool(values.get("language_processing"))
+        save_settings(self.settings)
+        self._set_status("GLOW settings saved")
 
     #: Wildcard for exported QUILL settings files (SET-7).
     QSF_WILDCARD = "QUILL settings file (*.qsf)|*.qsf|All files (*.*)|*.*"
@@ -8191,6 +8250,12 @@ class MainFrame(
         bundled_rows = bundled_component_notices()
         dependency_table = render_dependency_notice_table(dependency_rows)
         bundled_table = render_bundled_component_table(bundled_rows)
+        try:
+            from quill.core.glow import glow_engine_version_summary
+
+            glow_summary = glow_engine_version_summary()
+        except Exception:
+            glow_summary = "GLOW engine: unknown"
         return (
             f"# Quill 0.1 Beta\n\n"
             f"Version {__version__}\n\n"
@@ -8200,6 +8265,7 @@ class MainFrame(
             "With sincere thanks to our contributors and beta testers: "
             "Techopolis, Taylor Arndt, Michael Doise, Kayla Bentas, "
             "Shane Popplestone, Doug Langley, and Becky K.\n\n"
+            f"{glow_summary}\n\n"
             "## Links\n\n" + md_links(self._ABOUT_LINKS) + "\n\n"
             "## Contributors on GitHub\n\n" + md_links(self._ABOUT_GITHUB_LINKS) + "\n\n"
             "## Dependencies and attributions\n\n"
@@ -18349,6 +18415,7 @@ class MainFrame(
         self._show_profile_onboarding(force=True)
         self._offer_ai_onboarding()
         self._show_assistant_onboarding(force=True)
+        self._show_glow_onboarding(force=True)
         self._show_speech_onboarding(force=True)
         # BITS Whisperer is deferred to QUILL 2.0 (the master `core.bw_whisperer`
         # flag is locked off), so a 1.0 first run never offers transcription setup.
@@ -18371,6 +18438,7 @@ class MainFrame(
             getattr(self, "_first_run_trust_consent_prompt", False),
             getattr(self, "_first_run_profile_prompt", False),
             getattr(self, "_first_run_assistant_prompt", False),
+            getattr(self, "_first_run_glow_prompt", False),
             getattr(self, "_first_run_speech_prompt", False),
             getattr(self, "_first_run_watch_folder_prompt", False),
         )):
@@ -18392,6 +18460,9 @@ class MainFrame(
         if getattr(self, "_first_run_assistant_prompt", False):
             self._show_assistant_onboarding(force=False)
             self._first_run_assistant_prompt = False
+        if getattr(self, "_first_run_glow_prompt", False):
+            self._show_glow_onboarding(force=False)
+            self._first_run_glow_prompt = False
         if getattr(self, "_first_run_speech_prompt", False):
             self._show_speech_onboarding(force=False)
             self._first_run_speech_prompt = False
@@ -18481,6 +18552,12 @@ class MainFrame(
                 "Writing help",
                 done if load_assistant_onboarding_complete() else todo,
                 "Turn on optional AI writing help and choose its style.",
+            ),
+            (
+                "Accessibility engine (GLOW)",
+                done if load_glow_onboarding_complete() else todo,
+                "GLOW is on by default and runs on your computer; optional network "
+                "features stay off until you turn them on.",
             ),
             (
                 "Speech and voices",
@@ -18667,6 +18744,59 @@ class MainFrame(
         save_settings(self.settings)
         mark_assistant_onboarding_complete()
         self._set_status("Configured writing assistant onboarding")
+
+    def _show_glow_onboarding(self, force: bool) -> None:
+        from quill.ui.web_form import show_web_form
+
+        values = show_web_form(
+            self.frame,
+            self._wx,
+            title="GLOW Accessibility Onboarding",
+            intro=(
+                "GLOW is Quill's built-in accessibility engine. It is turned on by "
+                "default and runs entirely on your computer. A few optional GLOW "
+                "features can use a network connection; these stay off until you turn "
+                "them on here, and Quill never sends your document anywhere without "
+                "asking first. You can change any of this later in Preferences."
+            ),
+            fields=[
+                {
+                    "name": "enabled",
+                    "label": "Keep the GLOW accessibility engine enabled",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_enabled", True),
+                },
+                {
+                    "name": "ai_alt_text",
+                    "label": "Allow optional AI alt-text generation (uses the network)",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_ai_alt_text_consent", False),
+                },
+                {
+                    "name": "pii_redaction",
+                    "label": "Allow optional PII redaction (uses the network)",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_pii_redaction_consent", False),
+                },
+                {
+                    "name": "language_processing",
+                    "label": "Allow optional WCAG language processing (uses the network)",
+                    "type": "checkbox",
+                    "value": getattr(self.settings, "glow_language_processing_consent", False),
+                },
+            ],
+        )
+        if values is None:
+            if not force:
+                mark_glow_onboarding_complete()
+            return
+        self.settings.glow_enabled = bool(values.get("enabled", True))
+        self.settings.glow_ai_alt_text_consent = bool(values.get("ai_alt_text"))
+        self.settings.glow_pii_redaction_consent = bool(values.get("pii_redaction"))
+        self.settings.glow_language_processing_consent = bool(values.get("language_processing"))
+        save_settings(self.settings)
+        mark_glow_onboarding_complete()
+        self._set_status("Configured GLOW accessibility onboarding")
 
     def _show_speech_onboarding(self, force: bool) -> None:  # noqa: PLR0912
         wx = self._wx

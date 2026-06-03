@@ -374,6 +374,16 @@ active.</li>
 <li>Surface it in <code>diagnostics.py</code> and the About dialog,
 keeping the honesty principle.</li>
 </ul>
+<p>Status: Done. <code>quill/core/glow.py</code> adds
+<code>GlowEngineVersions</code>, <code>glow_engine_versions()</code>
+(reads the backend name and <code>get_component_versions</code>, sorts
+components, never raises), and
+<code>glow_engine_version_summary()</code>. The diagnostics environment
+info carries a <code>glow_engine</code> key through a try/except-wrapped
+<code>_safe_glow_engine_summary()</code>, and the About dialog shows the
+same summary. Verified against the live backend (release 8.0.0); the
+fallback yields “GLOW engine: not installed” when the backend is absent.
+Covered by <code>tests/unit/core/test_glow_backend.py</code>.</p>
 <h3
 id="step-7-glow-7-consent-gate-for-optional-ai-and-network-features">Step
 7 (GLOW-7): consent gate for optional AI and network features</h3>
@@ -386,6 +396,14 @@ no-silent-network rule and the GATE-9 egress audit.</li>
 <li>A test asserts the defaults are off and that no GLOW path performs a
 silent outbound call.</li>
 </ul>
+<p>Status: In progress. The core contract and consent UI are done — the
+<code>GlowNetworkConsent</code> model (all three features off by
+default), consent-gated <code>audit_file</code>/<code>fix_file</code>,
+the Settings flags (<code>glow_enabled</code> on by default plus the
+three consent flags off), the “GLOW Accessibility” Preferences entry,
+and the Startup Wizard GLOW step (both sanctioned <code>web</code>
+surfaces). Remaining: the per-action consent prompt at audit time, which
+lands with the in-editor report (GLOW-3).</p>
 <h2 id="how-tier-3-connects-to-the-rest-of-quill">6. How Tier 3 connects
 to the rest of QUILL</h2>
 <ul>

@@ -148,6 +148,12 @@ class Settings:
     quick_nav_include_lists: bool = True
     status_bar_order: list[str] = field(default_factory=_default_status_bar_order)
     status_bar_hidden: list[str] = field(default_factory=_default_status_bar_hidden)
+    # GLOW: the shared accessibility engine is on by default; its optional
+    # networked features stay off until the user gives explicit consent (GLOW-7).
+    glow_enabled: bool = True
+    glow_ai_alt_text_consent: bool = False
+    glow_pii_redaction_consent: bool = False
+    glow_language_processing_consent: bool = False
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Settings:
@@ -421,6 +427,11 @@ class Settings:
         status_bar_hidden = _normalize_status_bar_hidden(
             data.get("status_bar_hidden"), status_bar_order
         )
+        # GLOW engine defaults on; networked features default off (GLOW-7).
+        glow_enabled = bool(data.get("glow_enabled", True))
+        glow_ai_alt_text_consent = bool(data.get("glow_ai_alt_text_consent", False))
+        glow_pii_redaction_consent = bool(data.get("glow_pii_redaction_consent", False))
+        glow_language_processing_consent = bool(data.get("glow_language_processing_consent", False))
         if recent_files_limit < 1:
             recent_files_limit = 1
         if recent_files_limit > 50:
@@ -546,6 +557,10 @@ class Settings:
             quick_nav_include_lists=quick_nav_include_lists,
             status_bar_order=status_bar_order,
             status_bar_hidden=status_bar_hidden,
+            glow_enabled=glow_enabled,
+            glow_ai_alt_text_consent=glow_ai_alt_text_consent,
+            glow_pii_redaction_consent=glow_pii_redaction_consent,
+            glow_language_processing_consent=glow_language_processing_consent,
         )
 
 

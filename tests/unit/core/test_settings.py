@@ -258,6 +258,34 @@ def test_settings_defaults_assistant_to_disabled(
     assert loaded.assistant_prompt_style == "balanced"
 
 
+def test_settings_glow_engine_on_by_default_network_features_off(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    loaded = load_settings()
+    # GLOW engine is enabled by default; optional networked features stay off.
+    assert loaded.glow_enabled is True
+    assert loaded.glow_ai_alt_text_consent is False
+    assert loaded.glow_pii_redaction_consent is False
+    assert loaded.glow_language_processing_consent is False
+
+
+def test_settings_glow_consent_round_trips(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path))
+    (tmp_path / "settings.json").write_text(
+        '{"glow_enabled":false,"glow_ai_alt_text_consent":true,'
+        '"glow_pii_redaction_consent":true,"glow_language_processing_consent":true}',
+        encoding="utf-8",
+    )
+    loaded = load_settings()
+    assert loaded.glow_enabled is False
+    assert loaded.glow_ai_alt_text_consent is True
+    assert loaded.glow_pii_redaction_consent is True
+    assert loaded.glow_language_processing_consent is True
+
+
 def test_settings_clamps_watch_folder_poll_interval(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

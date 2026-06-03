@@ -1059,8 +1059,8 @@ item changes scope or status.
 | GLOW-3 | Navigable in-editor accessibility report | Suite | M | Todo | Findings are a screen-reader-pageable list grouped by severity with one-key jump, plain-language explanation, and reviewable apply-and-undo. |
 | GLOW-4 | Standards profiles setting | Suite | S | Todo | ACB Baseline, APH Submission, and Combined Strict are selectable; the active profile shows in every report. |
 | GLOW-5 | Accessible publish via the GLOW conversion chain | Suite | M | Todo | One-key export to accessible Word, HTML, EPUB, and PDF using the shared conversion chain, with announced results. |
-| GLOW-6 | Show active accessibility engine and rule version | Suite | S | Todo | QUILL displays the GLOW engine and rule version via `get_component_versions` and startup telemetry, surfaced in `diagnostics.py` and the About dialog. |
-| GLOW-7 | Consent gate for GLOW optional AI and network features | Suite | S | Todo | GLOW's optional networked features (AI alt-text generation, Presidio PII redaction, WCAG language processing) are OFF by default and, when a user enables them, are gated by an explicit per-action consent prompt with visible progress and outcome, honoring QUILL's no-silent-network rule and the GATE-9 egress audit. A test asserts the defaults are off and no GLOW path performs a silent outbound call. |
+| GLOW-6 | Show active accessibility engine and rule version | Suite | S | Done | QUILL surfaces the active GLOW engine and rule version with a safe fallback. `quill/core/glow.py` adds `GlowEngineVersions`, `glow_engine_versions()` (reads `_backend_name` + `get_component_versions`, sorts components, never raises), and `glow_engine_version_summary()` ("GLOW engine: glow (release 8.0.0, rules 8.0.0)", or "GLOW engine: not installed" when the backend is absent). `collect_environment_info()` in `diagnostics.py` includes a `glow_engine` key via a try/except-wrapped `_safe_glow_engine_summary()`, and the About dialog shows the same summary. Verified against the live backend (release 8.0.0); `tests/unit/core/test_glow_backend.py` covers the manifest, fallback, and manifest-error paths. |
+| GLOW-7 | Consent gate for GLOW optional AI and network features | Suite | S | In progress | Core contract done: `quill/core/glow.py` defines the `GlowNetworkConsent` model (AI alt-text, Presidio PII redaction, WCAG language processing — all OFF by default) and `glow_network_features_all_off()`; `audit_file`/`fix_file` forward a feature-enabling option only when a caller passes a consent object that explicitly enables it, so the default path is provably network-free. Tests assert the defaults are off, that the default GLOW path forwards no network kwarg, that only consented features are forwarded, and that `quill/core/glow.py` contains no egress call site; the GATE-9 inventory stays green. Settings now carries `glow_enabled` (the local engine is on by default) plus three consent flags (AI alt-text, PII redaction, language processing — all off), a "GLOW Accessibility" entry in Preferences and a GLOW step in the Startup Wizard let the user review and change them (both sanctioned `web` DLG-3 surfaces), and onboarding state persists separately. Remaining: wire the per-action consent prompt (visible progress and outcome) at the point a user invokes a structured GLOW audit — that surface lands with the in-editor report (GLOW-3). |
 | BW-1 | Canonical transcript model and audio-to-document transcription | Suite | L | Todo | Add `quill/core/transcript.py` (a `Transcript` / `TranscriptSegment` / `TranscriptMetadata` model) that normalizes every BITS Whisperer provider's output to one shape, then a Transcribe command produces an editable transcript document from it, reusing BW's `TranscriptionService` / `ProviderManager` / `ModelManager` and the faster-whisper model layer; on-device by default. The model is the keystone the rest of the tier depends on. |
 | BW-2 | Local-first transcription providers with consented cloud | Suite | M | Todo | On-device providers are default; cloud providers are opt-in and consented; no silent network calls. |
 | BW-3 | Live dictation into the editor | Suite | M | Todo | Live microphone transcription writes into the document with clear start, stop, and status announcements. |
@@ -1435,17 +1435,17 @@ This table tracks how many of the backlog IDs each tier names are still open. It
 | Tier | Scope | Total items | Done | Remaining | Open item IDs |
 | --- | --- | --- | --- | --- | --- |
 | Tier 1 | Protect users and unlock the team | 23 | 23 | 0 | (complete) |
-| Tier 2 | Flagship experience | 67 | 57 | 10 | AI-19, SHELL-2, SHELL-3, GLOW-1..7 |
+| Tier 2 | Flagship experience | 67 | 58 | 9 | AI-19, SHELL-2, SHELL-3, GLOW-1, GLOW-2, GLOW-3, GLOW-4, GLOW-5, GLOW-7 |
 | Tier 4 | Structural health and performance | 32 | 32 | 0 | (complete) |
 | Tier 6 | Documentation and learning surface | 35 | 3 | 32 | DLG-3.8, DOC-14..18, DOC-11, DOC-12, DOC-1..8, POD-1..5, TUT-1..7, CQ-11, CQ-14, CQ-23, CQ-24, LINUX-2 |
-| **1.0 subtotal** | Tiers 1, 2, 4, 6 (the QUILL 1.0 scope) | **157** | **115** | **42** | |
+| **1.0 subtotal** | Tiers 1, 2, 4, 6 (the QUILL 1.0 scope) | **157** | **116** | **41** | |
 | Tier 3 (2.0) | GLOW watch action — deferred to QUILL 2.0 | 1 | 0 | 1 | WATCH-8 |
 | Tier 5 (2.0) | BITS Whisperer transcription — deferred to QUILL 2.0 | 28 | 0 | 28 | BW-1..10, WATCH-9, NAV-10, AI-11, AI-12, AI-18, FEAT-12..18, LINUX-1, ECO-1, L10N-1, COLLAB-1 |
 | AX (2.0) | Accessibility Agents / axe-core engine — deferred to QUILL 2.0 | 6 | 0 | 6 | AX-A..F |
 | PKG (2.0) | Packaging / freezing evaluation — deferred to QUILL 2.0 | 1 | 0 | 1 | PKG-1 |
 | EDS | EdSharp feature parity — delivered in QUILL 1.0 | 21 | 21 | 0 | (complete) |
 | **2.0 subtotal** | BITS Whisperer + axe-core + GLOW watch action (EdSharp parity delivered; GLOW engine now in 1.0) | **57** | **21** | **36** | |
-| **Total** | All tiers (1.0 + 2.0) | **213** | **134** | **79** | |
+| **Total** | All tiers (1.0 + 2.0) | **213** | **135** | **78** | |
 
 > Deferral note (2026-06-02): per maintainer direction, the GLOW accessibility
 > engine (Tier 3, including the WATCH-8 GLOW watch action), the BITS Whisperer
@@ -1482,7 +1482,7 @@ under Tier 2.
 
 | Tier | Status | Feature IDs |
 | --- | --- | --- |
-| Tier 2 — Flagship | In progress | AI-19, SHELL-2, SHELL-3, GLOW-1, GLOW-2, GLOW-3, GLOW-4, GLOW-5, GLOW-6, GLOW-7 (GLOW family sequenced after Tier 4) |
+| Tier 2 — Flagship | In progress | AI-19, SHELL-2, SHELL-3, GLOW-1, GLOW-2, GLOW-3, GLOW-4, GLOW-5, GLOW-7 (GLOW family sequenced after Tier 4) |
 | Tier 6 — Documentation | In progress / Todo | DLG-3.8 (SR sign-off, maintainer), DOC-1, DOC-2, DOC-3, DOC-4, DOC-5, DOC-6, DOC-7, DOC-8, DOC-11, DOC-12, DOC-14, DOC-15, DOC-16, DOC-17, DOC-18, POD-1, POD-2, POD-3, POD-4, POD-5, TUT-1, TUT-2, TUT-3, TUT-4, TUT-5, TUT-6, TUT-7, CQ-11, CQ-23, CQ-24, LINUX-2 |
 
 **Completed (QUILL 1.0 — Done)**
@@ -1490,7 +1490,7 @@ under Tier 2.
 | Tier | Feature IDs |
 | --- | --- |
 | Tier 1 — Protect users | BUG-1, BUG-2, BUG-3, BUG-4, BUG-5, BUG-6, BUG-7, SEC-1, SEC-10, SEC-11, SEC-13, GATE-1, GATE-2, GATE-3, GATE-4, GATE-5, GATE-6, GATE-7, GATE-8, GATE-9, FLAG-1, FLAG-2 |
-| Tier 2 — Flagship | QK-1, QK-2, QK-3, QK-4, QK-5, QK-9, NAV-1, NAV-4, NAV-5, SEL-1, SEL-2, SEL-3, AI-1, AI-6, AI-7, AI-13, AI-14, AI-15, AI-16, AI-17, AI-21, AI-23, WATCH-1, WATCH-2, WATCH-3, WATCH-4, WATCH-5, WATCH-6, WATCH-7, SET-1, SET-4, SET-5, SET-6, SET-7, SHARE-1, SHARE-2, SHARE-3, FLAG-3, FLAG-4, MENU-3, MENU-1, MENU-5, DICT-1, CTX-1, DICT-2, FEAT-19, DLG-1, OCR-1, OCR-2, OCR-3, OCR-4, OCR-5, A11Y-4, SET-2, SET-3, AGENT-1, SHELL-1 |
+| Tier 2 — Flagship | QK-1, QK-2, QK-3, QK-4, QK-5, QK-9, NAV-1, NAV-4, NAV-5, SEL-1, SEL-2, SEL-3, AI-1, AI-6, AI-7, AI-13, AI-14, AI-15, AI-16, AI-17, AI-21, AI-23, WATCH-1, WATCH-2, WATCH-3, WATCH-4, WATCH-5, WATCH-6, WATCH-7, SET-1, SET-4, SET-5, SET-6, SET-7, SHARE-1, SHARE-2, SHARE-3, FLAG-3, FLAG-4, MENU-3, MENU-1, MENU-5, DICT-1, CTX-1, DICT-2, FEAT-19, DLG-1, OCR-1, OCR-2, OCR-3, OCR-4, OCR-5, A11Y-4, SET-2, SET-3, AGENT-1, SHELL-1, GLOW-6 |
 | Tier 4 — Structural health | CQ-7, CQ-12, CQ-13, CQ-14, CQ-15, CQ-16, CQ-17, CQ-18, CQ-19, CQ-20, CQ-21, CQ-22, GATE-10, GATE-11, PERF-1, PERF-2, PERF-3, PERF-8, PERF-9, PERF-10, PERF-11, PERF-12, PERF-13, PERF-14, SEC-4, SEC-6, SEC-7, SEC-8, SEC-14, SEC-15, SEC-16, SEC-17, TYPE-1, TYPE-2, TYPE-3, TYPE-4, TYPE-5, TYPE-6, TYPE-7, TYPE-8, CQ-1, DLG-2, DLG-3, ORG-1 |
 | EdSharp parity (delivered in 1.0) | EDS-1, EDS-2, EDS-3, EDS-4, EDS-5, EDS-6, EDS-7, EDS-8, EDS-9, EDS-10, EDS-11, EDS-12, EDS-13, EDS-14, EDS-15, EDS-16, EDS-17, EDS-18, EDS-19, EDS-20, EDS-21 |
 

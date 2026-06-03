@@ -257,3 +257,154 @@ def test_build_file_audit_report_handles_no_findings() -> None:
     report = build_file_audit_report(result)
 
     assert "No GLOW findings detected" in report
+
+
+# --- GLOW-7: optional networked features off by default, consent-gated -------
+
+
+def test_glow_network_features_default_all_off() -> None:
+    consent = glow.glow_network_features_all_off()
+
+    assert consent.ai_alt_text is False
+    assert consent.pii_redaction is False
+    assert consent.language_processing is False
+    assert consent.is_any_enabled() is False
+    assert consent.enabled_feature_ids() == frozenset()
+    assert consent.to_backend_kwargs() == {}
+
+
+def test_glow_network_feature_catalogue_matches_consent_fields() -> None:
+    ids = {feature.feature_id for feature in glow.GLOW_NETWORK_FEATURES}
+    assert ids == {"ai_alt_text", "pii_redaction", "language_processing"}
+
+
+def test_audit_file_default_forwards_no_network_option(monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+
+    class _CapturingServices:
+        def audit_by_extension(self, file_path: Any, **kwargs: Any) -> _FakeAuditResult:
+            captured.update(kwargs)
+            return _FakeAuditResult(Path(str(file_path)), 100, "A", ())
+
+    monkeypatch.setattr(glow, "get_glow_services", lambda: _CapturingServices())
+    monkeypatch.setattr(glow, "_load_glow_core", lambda: None)
+
+    glow.audit_file("report.docx")
+
+    # No consent passed -> no networked feature may be enabled.
+    assert captured == {}
+
+
+def test_audit_file_forwards_only_consented_features(monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+
+    class _CapturingServices:
+        def audit_by_extension(self, file_path: Any, **kwargs: Any) -> _FakeAuditResult:
+            captured.update(kwargs)
+            return _FakeAuditResult(Path(str(file_path)), 100, "A", ())
+
+    monkeypatch.setattr(glow, "get_glow_services", lambda: _CapturingServices())
+    monkeypatch.setattr(glow, "_load_glow_core", lambda: None)
+
+    consent = glow.GlowNetworkConsent(ai_alt_text=True)
+    glow.audit_file("report.docx", consent=consent)
+
+    assert captured == {"ai_alt_text": True}
+
+
+def test_fix_file_default_forwards_no_network_option(monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+
+    class _CapturingServices:
+        def fix_by_extension(
+            self, file_path: Any, output_path: Any = None, **kwargs: Any
+        ) -> _FakeFixResult:
+            captured.update(kwargs)
+            audit = _FakeAuditResult(Path(str(file_path)), 100, "A", ())
+            return _FakeFixResult(Path(str(file_path)), 0, audit)
+
+    monkeypatch.setattr(glow, "get_glow_services", lambda: _CapturingServices())
+    monkeypatch.setattr(glow, "_load_glow_core", lambda: None)
+
+    glow.fix_file("report.docx")
+
+    assert captured == {}
+
+
+def test_glow_module_has_no_network_egress_callsite() -> None:
+    """No GLOW seam in core/glow.py may perform a silent outbound call."""
+    import ast
+
+    source = Path(glow.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    egress = {"urlopen", "urlretrieve", "urlencode", "Request"}
+    found = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            name = (
+                func.attr
+                if isinstance(func, ast.Attribute)
+                else func.id
+                if isinstance(func, ast.Name)
+                else None
+            )
+            if name in egress:
+                found.append(name)
+    assert found == []
+
+
+# --- GLOW-6: engine and rule version surfacing ------------------------------
+
+
+class _FakeManifest:
+    def __init__(self) -> None:
+        self.release_version = "8.0.0"
+        self.core_version = "8.0.0"
+        self.components = {"desktop_package": "8.0.0", "web_package": "not-installed"}
+
+
+def test_glow_engine_versions_fallback_when_absent(monkeypatch) -> None:
+    monkeypatch.setattr(glow, "_load_glow_core", lambda: None)
+
+    versions = glow.glow_engine_versions()
+
+    assert versions.backend == "unavailable"
+    assert versions.release_version == ""
+    assert versions.core_version == ""
+    assert versions.components == ()
+    assert glow.glow_engine_version_summary() == "GLOW engine: not installed"
+
+
+def test_glow_engine_versions_reads_manifest(monkeypatch) -> None:
+    class _FakeCore:
+        def get_component_versions(self) -> _FakeManifest:
+            return _FakeManifest()
+
+    monkeypatch.setattr(glow, "_load_glow_core", lambda: _FakeCore())
+    monkeypatch.setattr(glow, "_backend_name", lambda core: "glow")
+
+    versions = glow.glow_engine_versions()
+
+    assert versions.backend == "glow"
+    assert versions.release_version == "8.0.0"
+    assert versions.core_version == "8.0.0"
+    assert ("desktop_package", "8.0.0") in versions.components
+    # Components are sorted for a stable diagnostic ordering.
+    assert list(versions.components) == sorted(versions.components)
+    assert glow.glow_engine_version_summary() == ("GLOW engine: glow (release 8.0.0, rules 8.0.0)")
+
+
+def test_glow_engine_versions_survives_manifest_error(monkeypatch) -> None:
+    class _BrokenCore:
+        def get_component_versions(self) -> Any:
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(glow, "_load_glow_core", lambda: _BrokenCore())
+    monkeypatch.setattr(glow, "_backend_name", lambda core: "glow")
+
+    versions = glow.glow_engine_versions()
+
+    assert versions.backend == "glow"
+    assert versions.release_version == ""
+    assert versions.components == ()

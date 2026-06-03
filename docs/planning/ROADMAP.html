@@ -6489,23 +6489,46 @@ shared conversion chain, with announced results.</td>
 <td>Show active accessibility engine and rule version</td>
 <td>Suite</td>
 <td>S</td>
-<td>Todo</td>
-<td>QUILL displays the GLOW engine and rule version via
-<code>get_component_versions</code> and startup telemetry, surfaced in
-<code>diagnostics.py</code> and the About dialog.</td>
+<td>Done</td>
+<td>QUILL surfaces the active GLOW engine and rule version with a safe
+fallback. <code>quill/core/glow.py</code> adds
+<code>GlowEngineVersions</code>, <code>glow_engine_versions()</code>
+(reads <code>_backend_name</code> + <code>get_component_versions</code>,
+sorts components, never raises), and
+<code>glow_engine_version_summary()</code> (“GLOW engine: glow (release
+8.0.0, rules 8.0.0)”, or “GLOW engine: not installed” when the backend
+is absent). <code>collect_environment_info()</code> in
+<code>diagnostics.py</code> includes a <code>glow_engine</code> key via
+a try/except-wrapped <code>_safe_glow_engine_summary()</code>, and the
+About dialog shows the same summary. Verified against the live backend
+(release 8.0.0); <code>tests/unit/core/test_glow_backend.py</code>
+covers the manifest, fallback, and manifest-error paths.</td>
 </tr>
 <tr>
 <td>GLOW-7</td>
 <td>Consent gate for GLOW optional AI and network features</td>
 <td>Suite</td>
 <td>S</td>
-<td>Todo</td>
-<td>GLOW’s optional networked features (AI alt-text generation, Presidio
-PII redaction, WCAG language processing) are OFF by default and, when a
-user enables them, are gated by an explicit per-action consent prompt
-with visible progress and outcome, honoring QUILL’s no-silent-network
-rule and the GATE-9 egress audit. A test asserts the defaults are off
-and no GLOW path performs a silent outbound call.</td>
+<td>In progress</td>
+<td>Core contract done: <code>quill/core/glow.py</code> defines the
+<code>GlowNetworkConsent</code> model (AI alt-text, Presidio PII
+redaction, WCAG language processing — all OFF by default) and
+<code>glow_network_features_all_off()</code>;
+<code>audit_file</code>/<code>fix_file</code> forward a feature-enabling
+option only when a caller passes a consent object that explicitly
+enables it, so the default path is provably network-free. Tests assert
+the defaults are off, that the default GLOW path forwards no network
+kwarg, that only consented features are forwarded, and that
+<code>quill/core/glow.py</code> contains no egress call site; the GATE-9
+inventory stays green. Settings now carries <code>glow_enabled</code>
+(the local engine is on by default) plus three consent flags (AI
+alt-text, PII redaction, language processing — all off), a “GLOW
+Accessibility” entry in Preferences and a GLOW step in the Startup
+Wizard let the user review and change them (both sanctioned
+<code>web</code> DLG-3 surfaces), and onboarding state persists
+separately. Remaining: wire the per-action consent prompt (visible
+progress and outcome) at the point a user invokes a structured GLOW
+audit — that surface lands with the in-editor report (GLOW-3).</td>
 </tr>
 <tr>
 <td>BW-1</td>
@@ -7971,9 +7994,10 @@ CQ-16) are counted once, in their primary tier.</p>
 <td>Tier 2</td>
 <td>Flagship experience</td>
 <td>67</td>
-<td>57</td>
-<td>10</td>
-<td>AI-19, SHELL-2, SHELL-3, GLOW-1..7</td>
+<td>58</td>
+<td>9</td>
+<td>AI-19, SHELL-2, SHELL-3, GLOW-1, GLOW-2, GLOW-3, GLOW-4, GLOW-5,
+GLOW-7</td>
 </tr>
 <tr>
 <td>Tier 4</td>
@@ -7996,8 +8020,8 @@ CQ-11, CQ-14, CQ-23, CQ-24, LINUX-2</td>
 <td><strong>1.0 subtotal</strong></td>
 <td>Tiers 1, 2, 4, 6 (the QUILL 1.0 scope)</td>
 <td><strong>157</strong></td>
-<td><strong>115</strong></td>
-<td><strong>42</strong></td>
+<td><strong>116</strong></td>
+<td><strong>41</strong></td>
 <td></td>
 </tr>
 <tr>
@@ -8054,8 +8078,8 @@ delivered; GLOW engine now in 1.0)</td>
 <td><strong>Total</strong></td>
 <td>All tiers (1.0 + 2.0)</td>
 <td><strong>213</strong></td>
-<td><strong>134</strong></td>
-<td><strong>79</strong></td>
+<td><strong>135</strong></td>
+<td><strong>78</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -8115,7 +8139,7 @@ list. The GLOW engine family (GLOW-1..7) is in the 1.0 lists under Tier
 <td>Tier 2 — Flagship</td>
 <td>In progress</td>
 <td>AI-19, SHELL-2, SHELL-3, GLOW-1, GLOW-2, GLOW-3, GLOW-4, GLOW-5,
-GLOW-6, GLOW-7 (GLOW family sequenced after Tier 4)</td>
+GLOW-7 (GLOW family sequenced after Tier 4)</td>
 </tr>
 <tr>
 <td>Tier 6 — Documentation</td>
@@ -8154,7 +8178,7 @@ AI-21, AI-23, WATCH-1, WATCH-2, WATCH-3, WATCH-4, WATCH-5, WATCH-6,
 WATCH-7, SET-1, SET-4, SET-5, SET-6, SET-7, SHARE-1, SHARE-2, SHARE-3,
 FLAG-3, FLAG-4, MENU-3, MENU-1, MENU-5, DICT-1, CTX-1, DICT-2, FEAT-19,
 DLG-1, OCR-1, OCR-2, OCR-3, OCR-4, OCR-5, A11Y-4, SET-2, SET-3, AGENT-1,
-SHELL-1</td>
+SHELL-1, GLOW-6</td>
 </tr>
 <tr>
 <td>Tier 4 — Structural health</td>

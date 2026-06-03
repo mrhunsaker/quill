@@ -9,6 +9,7 @@ _ONBOARDING_STATE_FILE = "onboarding-complete.json"
 _ASSISTANT_ONBOARDING_STATE_FILE = "assistant-onboarding-complete.json"
 _SPEECH_ONBOARDING_STATE_FILE = "speech-onboarding-complete.json"
 _WATCH_FOLDER_ONBOARDING_STATE_FILE = "watch-folder-onboarding-complete.json"
+_GLOW_ONBOARDING_STATE_FILE = "glow-onboarding-complete.json"
 _TRUST_CONSENT_STATE_FILE = "trust-consent.json"
 _STARTUP_WIZARD_PROMPT_STATE_FILE = "startup-wizard-prompt.json"
 _TRUST_CONSENT_VERSION = 1
@@ -28,6 +29,10 @@ def speech_onboarding_complete_path() -> Path:
 
 def watch_folder_onboarding_complete_path() -> Path:
     return app_data_dir() / _WATCH_FOLDER_ONBOARDING_STATE_FILE
+
+
+def glow_onboarding_complete_path() -> Path:
+    return app_data_dir() / _GLOW_ONBOARDING_STATE_FILE
 
 
 def trust_consent_state_path() -> Path:
@@ -69,6 +74,17 @@ def load_speech_onboarding_complete() -> bool:
 
 def mark_speech_onboarding_complete() -> None:
     write_json_atomic(speech_onboarding_complete_path(), {"completed": True})
+
+
+def load_glow_onboarding_complete() -> bool:
+    raw = read_json(glow_onboarding_complete_path(), default={})
+    if not isinstance(raw, dict):
+        return False
+    return bool(raw.get("completed", False))
+
+
+def mark_glow_onboarding_complete() -> None:
+    write_json_atomic(glow_onboarding_complete_path(), {"completed": True})
 
 
 def load_watch_folder_onboarding_complete() -> bool:

@@ -141,6 +141,15 @@ Step 0 in the `glow` repo (green Flask web suite + version reconciliation).
 - Surface it in `diagnostics.py` and the About dialog, keeping the honesty
   principle.
 
+Status: Done. `quill/core/glow.py` adds `GlowEngineVersions`,
+`glow_engine_versions()` (reads the backend name and `get_component_versions`,
+sorts components, never raises), and `glow_engine_version_summary()`. The
+diagnostics environment info carries a `glow_engine` key through a
+try/except-wrapped `_safe_glow_engine_summary()`, and the About dialog shows the
+same summary. Verified against the live backend (release 8.0.0); the fallback
+yields "GLOW engine: not installed" when the backend is absent. Covered by
+`tests/unit/core/test_glow_backend.py`.
+
 ### Step 7 (GLOW-7): consent gate for optional AI and network features
 
 - GLOW's optional networked features (AI alt-text generation, Presidio PII
@@ -150,6 +159,14 @@ Step 0 in the `glow` repo (green Flask web suite + version reconciliation).
   the GATE-9 egress audit.
 - A test asserts the defaults are off and that no GLOW path performs a silent
   outbound call.
+
+Status: In progress. The core contract and consent UI are done — the
+`GlowNetworkConsent` model (all three features off by default), consent-gated
+`audit_file`/`fix_file`, the Settings flags (`glow_enabled` on by default plus
+the three consent flags off), the "GLOW Accessibility" Preferences entry, and
+the Startup Wizard GLOW step (both sanctioned `web` surfaces). Remaining: the
+per-action consent prompt at audit time, which lands with the in-editor report
+(GLOW-3).
 
 ## 6. How Tier 3 connects to the rest of QUILL
 
