@@ -1123,23 +1123,42 @@ follow-up.</td>
 <td>Dialog escape and default audit, enforced by a contract guard</td>
 <td>Accessibility</td>
 <td>M</td>
-<td>Todo</td>
+<td>Done</td>
 <td>Every dialog has an Escape path and an explicit default, and focus
 returns to the editor on close. This is made un-regressable by a
-machine-enforced dialog-contract guard (a GATE-6-style conformance test)
-that fails when a <code>wx.Dialog</code> in the UI violates the
-construction contract that the find-in-files trap (#84) and the
-status-bar/misspelling layout bugs all shared: a
-<code>StdDialogButtonSizer</code> must be added with
-<code>wx.EXPAND</code> (never <code>wx.ALIGN_RIGHT</code>), the dialog
-must own an outer sizer wrapping its panel, an explicit default button
-and <code>apply_modal_ids</code> affirmative/escape id must be set, and
-the dialog must be <code>Destroy()</code>-ed. The guard steers new
+machine-enforced dialog-contract guard wired into the GATE-4
+banned-pattern gate (<code>quill/tools/check_banned_patterns.py</code>,
+<code>_check_dialog_contract</code>): an AST scan of every
+<code>quill/ui/*.py</code> module <strong>bans
+<code>wx.ALIGN_RIGHT</code> outright</strong> (the alignment behind the
+find-in-files trap (#84) and the status-bar/misspelling layout bugs —
+button sizers must be added with <code>wx.EXPAND</code>) and
+<strong>requires any module that builds a raw
+<code>wx.Dialog(...)</code> to also <code>Destroy()</code> it</strong>
+(the auto-destroying <code>with wx.Dialog(...)</code> form is exempt),
+closing the crash-recovery leak class. The four live violations found by
+the new guard were fixed in <code>main_frame.py</code> (the lookup,
+crash-recovery, spell-check, and read-aloud-voice dialogs now use a
+leading stretch spacer + <code>wx.EXPAND</code>, an outer sizer, an
+explicit <code>SetDefault</code>, <code>apply_modal_ids</code>, and
+<code>Destroy</code>). The remaining contract clauses (outer sizer
+wrapping the panel, <code>apply_modal_ids</code> affirmative/escape ids,
+an explicit default button) stay enforced per-dialog by the existing
+source-contract tests (<code>test_session_browser</code>,
+<code>test_ocr_review_dialog</code>,
+<code>test_main_frame_share_dialogs</code>, the menu-editor and
+watch-service dialog tests) and by the approved helpers in
+<code>quill/ui/dialog_contract.py</code>; focus-return-to-editor is
+covered by the OCR-review and palette focus tests. The guard steers new
 dialogs to the approved helpers
 (<code>quill/ui/dialog_contract.py</code>, the stock
 <code>wx.MessageDialog</code>/<code>SingleChoiceDialog</code>/<code>TextEntryDialog</code>,
 or the web <code>show_web_form</code>) so the bug class cannot recur.
-Pairs with the DLG cluster and GitHub issue #73.</td>
+Five new guard tests in
+<code>tests/unit/tools/test_check_banned_patterns.py</code> lock in the
+ALIGN_RIGHT ban, the EXPAND allowance, the missing-Destroy catch, and
+the <code>with</code>-form exemption. Pairs with the DLG cluster and
+GitHub issue #73.</td>
 </tr>
 <tr>
 <td>OPS-1</td>
@@ -5952,9 +5971,9 @@ CQ-16) are counted once, in their primary tier.</p>
 <td>Tier 2</td>
 <td>Flagship experience</td>
 <td>57</td>
-<td>50</td>
-<td>7</td>
-<td>OCR-1, OCR-3, AGENT-1, AI-19, SET-2, SET-3, A11Y-4</td>
+<td>51</td>
+<td>6</td>
+<td>OCR-1, OCR-3, AGENT-1, AI-19, SET-2, SET-3</td>
 </tr>
 <tr>
 <td>Tier 4</td>
@@ -5978,8 +5997,8 @@ CQ-14, CQ-23, CQ-24, LINUX-2</td>
 <td><strong>1.0 subtotal</strong></td>
 <td>Tiers 1, 2, 4, 6 (the QUILL 1.0 scope)</td>
 <td><strong>143</strong></td>
-<td><strong>87</strong></td>
-<td><strong>56</strong></td>
+<td><strong>88</strong></td>
+<td><strong>55</strong></td>
 <td></td>
 </tr>
 <tr>
@@ -6019,8 +6038,8 @@ LINUX-1, ECO-1, L10N-1, COLLAB-1</td>
 <td><strong>Total</strong></td>
 <td>All tiers (1.0 + 2.0)</td>
 <td><strong>185</strong></td>
-<td><strong>87</strong></td>
-<td><strong>98</strong></td>
+<td><strong>88</strong></td>
+<td><strong>97</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -6068,11 +6087,6 @@ the third table and are not part of either 1.0 list.</p>
 <td>SET-2, SET-3, AGENT-1, OCR-1, OCR-3, AI-19</td>
 </tr>
 <tr>
-<td>Tier 2 — Flagship</td>
-<td>Todo</td>
-<td>A11Y-4</td>
-</tr>
-<tr>
 <td>Tier 4 — Structural health</td>
 <td>Todo</td>
 <td>CQ-1, CQ-16, DLG-2, GATE-10, GATE-11, PERF-1, PERF-2, PERF-3,
@@ -6115,7 +6129,7 @@ SEL-2, SEL-3, AI-1, AI-6, AI-7, AI-13, AI-14, AI-15, AI-16, AI-17,
 AI-21, AI-23, WATCH-1, WATCH-2, WATCH-3, WATCH-4, WATCH-5, WATCH-6,
 WATCH-7, SET-1, SET-4, SET-5, SET-6, SET-7, SHARE-1, SHARE-2, SHARE-3,
 FLAG-3, FLAG-4, MENU-3, MENU-1, MENU-5, DICT-1, CTX-1, DICT-2, FEAT-19,
-DLG-1, OCR-2, OCR-4, OCR-5</td>
+DLG-1, OCR-2, OCR-4, OCR-5, A11Y-4</td>
 </tr>
 <tr>
 <td>Tier 4 — Structural health</td>

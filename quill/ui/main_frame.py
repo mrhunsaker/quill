@@ -6973,19 +6973,22 @@ class MainFrame:
             close_btn = wx.Button(panel, wx.ID_CANCEL, "Close")
             btn_sizer.AddButton(close_btn)
             btn_sizer.Realize()
-            sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
+            insert_btn.SetDefault()
+            sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 8)
         else:
             # No insertable items; just a Close button.
             btn_sizer = wx.StdDialogButtonSizer()
             close_btn = wx.Button(panel, wx.ID_CANCEL, "Close")
             btn_sizer.AddButton(close_btn)
             btn_sizer.Realize()
-            sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
+            close_btn.SetDefault()
+            sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 8)
 
         panel.SetSizer(sizer)
         dialog_sizer = wx.BoxSizer(wx.VERTICAL)
         dialog_sizer.Add(panel, 1, wx.EXPAND)
         dialog.SetSizer(dialog_sizer)
+        apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
         dialog.Fit()
         dialog.CenterOnParent()
         dialog.ShowModal()
@@ -7687,6 +7690,9 @@ class MainFrame:
         buttons.Add(skip_button, 0)
         root.Add(buttons, 0, wx.ALL | wx.EXPAND, 8)
         panel.SetSizer(root)
+        outer = wx.BoxSizer(wx.VERTICAL)
+        outer.Add(panel, 1, wx.EXPAND)
+        dialog.SetSizer(outer)
 
         restore_button.Bind(wx.EVT_BUTTON, lambda _e: dialog.EndModal(wx.ID_YES))
         open_logs_button.Bind(wx.EVT_BUTTON, lambda _e: dialog.EndModal(wx.ID_APPLY))
@@ -7696,55 +7702,60 @@ class MainFrame:
         dialog.SetEscapeId(wx.ID_NO)
         restore_button.SetFocus()
 
-        while True:
-            result = self._show_modal_dialog(dialog, "Crash Recovery")
-            if result == wx.ID_APPLY:
-                self.open_logs_folder()
-                continue
-            if result == wx.ID_SAVE:
-                self.save_diagnostics_bundle()
-                continue
-            if result != wx.ID_YES:
-                mark_recovery_offer_dismissed(offer)
+        try:
+            while True:
+                result = self._show_modal_dialog(dialog, "Crash Recovery")
+                if result == wx.ID_APPLY:
+                    self.open_logs_folder()
+                    continue
+                if result == wx.ID_SAVE:
+                    self.save_diagnostics_bundle()
+                    continue
+                if result != wx.ID_YES:
+                    mark_recovery_offer_dismissed(offer)
+                    record_diagnostic_event(
+                        "recovery",
+                        "offer-dismissed",
+                        detail=f"session={offer.session_id}; snapshot={offer.snapshot}",
+                    )
+                    self._set_status("Skipped crash recovery")
+                    self._record_notification("Crash recovery offer dismissed", "recovery")
+                    return
+                try:
+                    recovered_text = read_recovery_snapshot(offer.snapshot)
+                except OSError as error:
+                    record_diagnostic_event(
+                        "recovery",
+                        "snapshot-read-failed",
+                        detail=(
+                            f"session={offer.session_id}; snapshot={offer.snapshot}; error={error}"
+                        ),
+                    )
+                    self._show_message_box(
+                        f"Could not restore snapshot: {error}",
+                        "Crash Recovery",
+                        wx.ICON_ERROR | wx.OK,
+                    )
+                    self._set_status("Crash recovery failed")
+                    return
+                self._create_document_tab(
+                    Document(text=recovered_text, path=None, modified=True),
+                    select=True,
+                )
+                mark_recovery_offer_recovered(offer)
                 record_diagnostic_event(
                     "recovery",
-                    "offer-dismissed",
+                    "snapshot-recovered",
                     detail=f"session={offer.session_id}; snapshot={offer.snapshot}",
                 )
-                self._set_status("Skipped crash recovery")
-                self._record_notification("Crash recovery offer dismissed", "recovery")
+                self._location_ring = LocationRing()
+                self._location_ring.record(0)
+                self._refresh_title()
+                self._set_status("Recovered latest autosave snapshot")
+                self._record_notification("Recovered autosave snapshot", "recovery")
                 return
-            try:
-                recovered_text = read_recovery_snapshot(offer.snapshot)
-            except OSError as error:
-                record_diagnostic_event(
-                    "recovery",
-                    "snapshot-read-failed",
-                    detail=f"session={offer.session_id}; snapshot={offer.snapshot}; error={error}",
-                )
-                self._show_message_box(
-                    f"Could not restore snapshot: {error}",
-                    "Crash Recovery",
-                    wx.ICON_ERROR | wx.OK,
-                )
-                self._set_status("Crash recovery failed")
-                return
-            self._create_document_tab(
-                Document(text=recovered_text, path=None, modified=True),
-                select=True,
-            )
-            mark_recovery_offer_recovered(offer)
-            record_diagnostic_event(
-                "recovery",
-                "snapshot-recovered",
-                detail=f"session={offer.session_id}; snapshot={offer.snapshot}",
-            )
-            self._location_ring = LocationRing()
-            self._location_ring.record(0)
-            self._refresh_title()
-            self._set_status("Recovered latest autosave snapshot")
-            self._record_notification("Recovered autosave snapshot", "recovery")
-            return
+        finally:
+            dialog.Destroy()
 
     def _apply_theme(self, theme: str) -> None:
         wx = self._wx
@@ -14184,10 +14195,11 @@ class MainFrame:
         speak_button = wx.Button(panel, label="Speak Word")
         review_button = wx.Button(panel, id=wx.ID_OK, label="Review Word")
         cancel_button = wx.Button(panel, id=wx.ID_CANCEL, label="Cancel")
+        buttons.AddStretchSpacer(1)
         buttons.Add(speak_button, 0, wx.RIGHT, 8)
         buttons.Add(review_button, 0, wx.RIGHT, 8)
         buttons.Add(cancel_button, 0)
-        root.Add(buttons, 0, wx.ALL | wx.ALIGN_RIGHT, 8)
+        root.Add(buttons, 0, wx.ALL | wx.EXPAND, 8)
         panel.SetSizer(root)
         outer = wx.BoxSizer(wx.VERTICAL)
         outer.Add(panel, 1, wx.EXPAND)
@@ -15025,10 +15037,11 @@ class MainFrame:
         preview_btn = wx.Button(panel, label="&Preview")
         ok_btn = wx.Button(panel, id=wx.ID_OK)
         cancel_btn = wx.Button(panel, id=wx.ID_CANCEL)
+        button_row.AddStretchSpacer(1)
         button_row.Add(preview_btn, 0, wx.RIGHT, 8)
         button_row.Add(ok_btn, 0, wx.RIGHT, 8)
         button_row.Add(cancel_btn, 0)
-        root.Add(button_row, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
+        root.Add(button_row, 0, wx.ALL | wx.EXPAND, 8)
         panel.SetSizer(root)
         outer = wx.BoxSizer(wx.VERTICAL)
         outer.Add(panel, 1, wx.EXPAND)

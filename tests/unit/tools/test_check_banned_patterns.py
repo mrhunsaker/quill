@@ -5,6 +5,7 @@ from pathlib import Path
 
 from quill.tools.check_banned_patterns import (
     _BareWxVisitor,
+    _check_dialog_contract,
     _check_raw_xml,
     find_violations,
 )
@@ -76,3 +77,52 @@ def test_safe_xml_fromstring_call_is_not_flagged(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert _check_raw_xml([module]) == []
+
+
+def test_dialog_align_right_is_flagged(tmp_path: Path) -> None:
+    # The A11Y-4 bug class: button sizers added with wx.ALIGN_RIGHT pushed
+    # OK/Cancel off-screen and broke focus order.
+    module = tmp_path / "panel.py"
+    module.write_text(
+        "def build(self):\n"
+        "    dialog = wx.Dialog(self)\n"
+        "    root.Add(buttons, 0, wx.ALL | wx.ALIGN_RIGHT, 8)\n"
+        "    dialog.Destroy()\n",
+        encoding="utf-8",
+    )
+    violations = _check_dialog_contract([module])
+    assert any("ALIGN_RIGHT" in v.message for v in violations)
+
+
+def test_dialog_expand_button_sizer_is_allowed(tmp_path: Path) -> None:
+    module = tmp_path / "panel.py"
+    module.write_text(
+        "def build(self):\n"
+        "    dialog = wx.Dialog(self)\n"
+        "    buttons.AddStretchSpacer(1)\n"
+        "    root.Add(buttons, 0, wx.ALL | wx.EXPAND, 8)\n"
+        "    dialog.Destroy()\n",
+        encoding="utf-8",
+    )
+    assert _check_dialog_contract([module]) == []
+
+
+def test_raw_dialog_without_destroy_is_flagged(tmp_path: Path) -> None:
+    # The crash-recovery leak class: a modal dialog built but never destroyed.
+    module = tmp_path / "panel.py"
+    module.write_text(
+        "def build(self):\n    dialog = wx.Dialog(self)\n    dialog.ShowModal()\n",
+        encoding="utf-8",
+    )
+    violations = _check_dialog_contract([module])
+    assert any("Destroy" in v.message for v in violations)
+
+
+def test_with_dialog_form_is_exempt_from_destroy(tmp_path: Path) -> None:
+    # The auto-destroying context-manager form needs no explicit Destroy().
+    module = tmp_path / "panel.py"
+    module.write_text(
+        "def build(self):\n    with wx.Dialog(self) as dialog:\n        dialog.ShowModal()\n",
+        encoding="utf-8",
+    )
+    assert _check_dialog_contract([module]) == []

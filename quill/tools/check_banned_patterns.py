@@ -18,6 +18,23 @@ caused real bugs in Quill:
    rules must stay enabled in ``pyproject.toml`` so undefined names and
    duplicate imports (the BUG-1 / BUG-4 classes) keep failing lint.
 
+4. Dialog-contract guard (A11Y-4). Every ``wx.Dialog`` in ``quill/ui`` must
+   follow the construction contract that the find-in-files trap (#84) and the
+   status-bar / misspelling layout bugs all shared:
+
+   * A button sizer is never added with ``wx.ALIGN_RIGHT`` (the banned
+     alignment that pushed OK/Cancel off-screen and broke focus order); the
+     approved pattern adds it with ``wx.EXPAND``. ``wx.ALIGN_RIGHT`` is banned
+     outright in ``quill/ui`` source.
+   * A module that constructs a raw ``wx.Dialog(...)`` (anything other than the
+     auto-destroying ``with wx.Dialog(...)`` form) must also ``Destroy()`` it,
+     so no modal dialog leaks (the crash-recovery leak class).
+
+   This makes the bug class un-regressable and steers new dialogs to the
+   approved helpers (``quill/ui/dialog_contract.py``, the stock
+   ``wx.MessageDialog`` / ``SingleChoiceDialog`` / ``TextEntryDialog``, or the
+   web ``show_web_form``).
+
 Run directly (``python -m quill.tools.check_banned_patterns``) or via pytest
 (``tests/unit/tools/test_check_banned_patterns.py``). Exit code is non-zero when
 any violation is found.
@@ -35,6 +52,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _MAIN_FRAME = _REPO_ROOT / "quill" / "ui" / "main_frame.py"
 _SAFE_XML = _REPO_ROOT / "quill" / "core" / "safe_xml.py"
 _PACKAGE_ROOT = _REPO_ROOT / "quill"
+_UI_ROOT = _REPO_ROOT / "quill" / "ui"
 
 # Names that, when called as ``<name>.fromstring(...)``, indicate a raw stdlib
 # ElementTree parse instead of the hardened wrapper.
@@ -165,6 +183,74 @@ def _check_raw_xml(paths: Iterable[Path]) -> list[Violation]:
     return violations
 
 
+def _is_wx_dialog_call(node: ast.AST) -> bool:
+    """True for a ``wx.Dialog(...)`` construction (base dialog only)."""
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "Dialog"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "wx"
+    )
+
+
+def _check_dialog_contract(paths: Iterable[Path]) -> list[Violation]:
+    """Enforce the A11Y-4 dialog construction contract in ``quill/ui``.
+
+    * ``wx.ALIGN_RIGHT`` is banned outright (button sizers use ``wx.EXPAND``).
+    * A module that builds a raw ``wx.Dialog(...)`` (not the auto-destroying
+      ``with wx.Dialog(...)`` form) must also ``Destroy()`` a dialog somewhere
+      in the module, so modal dialogs never leak.
+    """
+    violations: list[Violation] = []
+    for path in paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+
+        # Collect the wx.Dialog calls that are the context expression of a
+        # ``with`` statement; those auto-destroy and are exempt from the
+        # explicit-Destroy requirement.
+        managed_dialog_calls: set[int] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.With):
+                for item in node.items:
+                    if _is_wx_dialog_call(item.context_expr):
+                        managed_dialog_calls.add(id(item.context_expr))
+
+        has_raw_dialog = False
+        has_destroy = False
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Attribute)
+                and node.attr == "ALIGN_RIGHT"
+                and isinstance(node.value, ast.Name)
+                and node.value.id == "wx"
+            ):
+                violations.append(
+                    Violation(
+                        path,
+                        node.lineno,
+                        "wx.ALIGN_RIGHT is banned in quill/ui; add button "
+                        "sizers with wx.EXPAND (A11Y-4 dialog contract)",
+                    )
+                )
+            if _is_wx_dialog_call(node) and id(node) not in managed_dialog_calls:
+                has_raw_dialog = True
+            if isinstance(node, ast.Attribute) and node.attr == "Destroy":
+                has_destroy = True
+
+        if has_raw_dialog and not has_destroy:
+            violations.append(
+                Violation(
+                    path,
+                    0,
+                    "constructs a raw wx.Dialog but never calls .Destroy(); "
+                    "Destroy the dialog or use 'with wx.Dialog(...)' "
+                    "(A11Y-4 dialog contract)",
+                )
+            )
+    return violations
+
+
 def _check_ruff_config() -> list[Violation]:
     pyproject = _REPO_ROOT / "pyproject.toml"
     data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
@@ -185,6 +271,7 @@ def find_violations() -> list[Violation]:
     violations: list[Violation] = []
     violations.extend(_check_bare_wx(_MAIN_FRAME))
     violations.extend(_check_raw_xml(sorted(_PACKAGE_ROOT.rglob("*.py"))))
+    violations.extend(_check_dialog_contract(sorted(_UI_ROOT.rglob("*.py"))))
     violations.extend(_check_ruff_config())
     return violations
 
