@@ -103,6 +103,8 @@ def build_cheat_sheet(
 
 def _build_prefix_groups(quill_key_label: str, selection_active: bool) -> tuple[KeyHelpGroup, ...]:
     entries = [KeyHelpEntry("N", "Enter browse mode")]
+    entries.append(KeyHelpEntry("G", "Go to anything (Quick Nav)"))
+    entries.append(KeyHelpEntry("M", "Paste HTML clipboard as Markdown"))
     if selection_active:
         entries.append(KeyHelpEntry("A", "Selection actions for the current selection"))
     entries.append(KeyHelpEntry(quill_key_label, "Press again to lock browse mode"))

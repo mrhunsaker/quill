@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>scripting</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="quill-scripting-extensions-design-plan-for-review">QUILL
+Scripting &amp; Extensions — Design Plan (for review)</h1>
+<p>Status: <strong>Draft for review</strong> · Target: <strong>QUILL
+2.0</strong> · Branch: <code>edsharp</code></p>
+<p>This document proposes how QUILL should let power users extend the
+application with custom behaviour that hooks into the <strong>menu
+system</strong>, <strong>hotkeys</strong>, and <strong>right-click /
+context menus</strong>. It is a design plan only — no runtime code in
+this document is wired into the shipping app yet.</p>
+<h2 id="provenance-and-inspiration">0. Provenance and inspiration</h2>
+<p>This capability is QUILL’s answer to the scripting/add-in model
+pioneered by <strong>EdSharp 4.0</strong> by <strong>Jamal
+Mazrui</strong> (2007–2017), a respected accessible, screen-reader-first
+Windows editor that exposed almost its entire object model to add-in
+code.</p>
+<ul>
+<li>Jamal Mazrui on GitHub: <a href="https://github.com/jamalmazrui"
+class="uri">https://github.com/jamalmazrui</a></li>
+<li>EdSharp source: <a href="https://github.com/jamalmazrui/EdSharp"
+class="uri">https://github.com/jamalmazrui/EdSharp</a> and <a
+href="https://github.com/EmpowermentZone/EdSharp"
+class="uri">https://github.com/EmpowermentZone/EdSharp</a></li>
+</ul>
+<p>EdSharp used <strong>JScript.NET</strong> as its scripting language
+because its host application was written in C#/.NET, so the scripting
+language matched the platform object model and the .NET Framework Class
+Library. The faithful translation of that design for QUILL is to expose
+<strong>QUILL’s own object model</strong>, which is
+<strong>Python</strong> — see the language decision below.</p>
+<h2 id="goals-and-non-goals">1. Goals and non-goals</h2>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>Let power users add <strong>menu items</strong>,
+<strong>context-menu entries</strong>, and <strong>hotkeys</strong> that
+run custom actions, without rebuilding QUILL.</li>
+<li>Keep the <strong>writing path plain-text-first</strong> and the
+<strong>screen-reader-first</strong> guarantees intact: extensions must
+never degrade NVDA/JAWS/Narrator parity.</li>
+<li>Make extensions <strong>safe by default</strong>: no ambient
+filesystem, network, or subprocess access unless explicitly declared and
+user-granted, consistent with QUILL’s existing consent gates, DPAPI
+secret handling, and “no silent network calls” rule.</li>
+<li>Make extensions <strong>authorable by blind power users</strong> —
+the EdSharp audience — with plain-text manifests, readable Python, and
+accessible install/enable UX.</li>
+<li>Preserve the architecture boundary: <code>quill/core</code> and
+<code>quill/io</code> stay UI-framework-agnostic; only
+<code>quill/ui</code> and <code>quill/platform/windows</code> touch
+<code>wx</code>.</li>
+</ul>
+<h3
+id="non-goals-explicitly-out-of-scope-for-the-first-iteration">Non-goals
+(explicitly out of scope for the first iteration)</h3>
+<ul>
+<li>A live rich-text/RTF editing surface (a standing QUILL design
+exclusion).</li>
+<li>Arbitrary native code plugins or replacing core UI widgets.</li>
+<li>A general-purpose marketplace / auto-update of third-party
+extensions (later).</li>
+<li>JavaScript as the <em>primary</em> extension language (see §3; a
+QuickJS <strong>snippet expression evaluator</strong> is noted as
+optional future work only).</li>
+</ul>
+<h2 id="language-decision-resolved">2. Language decision (resolved)</h2>
+<p><strong>Two-layer model, with Python as the scripting language, not
+JavaScript.</strong></p>
+<p>Rationale: QUILL’s platform object model is Python, so scripting it
+in Python is the lowest-friction, most powerful, most debuggable, and
+most maintainable option — and it is the faithful analogue of EdSharp
+scripting its C# host with JScript.NET. Choosing JavaScript as the
+primary language would mean maintaining a second runtime and a permanent
+Python⇄JS marshalling layer purely to script an application that is
+already Python. JavaScript’s only strong advantages (familiarity,
+EdSharp-parity optics) do not outweigh that cost.</p>
+<p>A comparison of the options considered (Python, embedded JavaScript
+via QuickJS/V8, Lua via <code>lupa</code>, WASM via Extism,
+declarative-only) is retained in Appendix A.</p>
+<h2 id="architecture-two-layers">3. Architecture: two layers</h2>
+<h3 id="layer-1-declarative-manifest-safe-covers-the-common-70">Layer 1
+— Declarative manifest (safe, covers the common ~70%)</h3>
+<p>A static, schema-validated manifest (JSON, validated like every other
+QUILL store under <code>quill/core/schemas/</code>) that
+<strong>maps</strong> menu items, context-menu entries, and hotkeys
+onto: - existing built-in QUILL command IDs (the same IDs used in
+<code>quill/core/keymap.py</code>), and/or - text <strong>snippets /
+templates</strong> (no executable code).</p>
+<p>This layer is <strong>non-Turing-complete and fully
+sandboxable</strong> — it can do nothing except invoke commands QUILL
+already trusts and insert literal text. Most real “add a menu item /
+bind a key / add a right-click action” requests are satisfied here with
+effectively zero risk.</p>
+<h3 id="layer-2-python-extension-api-real-logic-isolated">Layer 2 —
+Python extension API (real logic, isolated)</h3>
+<p>For genuine custom logic, an extension ships a Python entry point
+that QUILL runs <strong>out-of-process</strong> (mirroring the existing
+OCR worker-process precedent in the concurrency model) behind a
+<strong>capability-gated RPC bridge</strong>. The extension never
+imports <code>wx</code> and never touches the editor widget directly; it
+talks to a narrow, versioned API object and all UI effects are
+marshalled back onto the UI thread via <code>wx.CallAfter</code>.</p>
+<pre><code>+------------------+        capability-gated RPC         +-----------------------+
+|  QUILL UI thread | &lt;--------------------------------&gt; | Extension host worker |
+|  (wx, main_frame)|   (stdio/pipe, JSON messages)      |  (sandboxed Python)   |
++------------------+                                     +-----------------------+
+        |  registers menu/hotkey/context hooks                   |
+        |  marshals results via wx.CallAfter                     | user extension code
+        v                                                        v
+   core command dispatch                                  QuillExtensionApi (v1)</code></pre>
+<h2 id="manifest-schema-layer-1-sketch">4. Manifest schema (Layer 1
+sketch)</h2>
+<p>Stored per-extension under
+<code>%APPDATA%\Quill\extensions\&lt;id&gt;\manifest.json</code>,
+schema-validated, atomic-written, with <code>.bak</code>/recovery like
+other stores.</p>
+<pre class="jsonc"><code>{
+  &quot;schema&quot;: &quot;quill.extension/1&quot;,
+  &quot;id&quot;: &quot;com.example.wraptools&quot;,
+  &quot;name&quot;: &quot;Wrap Tools&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;author&quot;: &quot;Jane Power-User&quot;,
+  &quot;license&quot;: &quot;MIT&quot;,
+  &quot;capabilities&quot;: [&quot;editor.read&quot;, &quot;editor.write&quot;],   // requested permissions
+  &quot;contributes&quot;: {
+    &quot;commands&quot;: [
+      { &quot;id&quot;: &quot;ext.wraptools.fence&quot;, &quot;title&quot;: &quot;Wrap In Code Fence&quot;,
+        &quot;run&quot;: { &quot;snippet&quot;: &quot;```\n${selection}\n```&quot; } }
+    ],
+    &quot;menus&quot;: [
+      { &quot;parent&quot;: &quot;Format&quot;, &quot;command&quot;: &quot;ext.wraptools.fence&quot; }
+    ],
+    &quot;context_menu&quot;: [
+      { &quot;when&quot;: &quot;editor.hasSelection&quot;, &quot;command&quot;: &quot;ext.wraptools.fence&quot; }
+    ],
+    &quot;hotkeys&quot;: [
+      { &quot;command&quot;: &quot;ext.wraptools.fence&quot;, &quot;binding&quot;: &quot;Ctrl+Shift+Grave, F&quot; }
+    ]
+  },
+  &quot;main&quot;: &quot;extension.py&quot;   // optional; presence triggers Layer 2 host
+}</code></pre>
+<p>Notes: - <code>hotkeys[].binding</code> reuses QUILL’s existing
+binding grammar, including the <strong>QUILL Key</strong> chord prefix
+(<code>Ctrl+Shift+Grave, …</code>). Conflicts are detected with the
+existing <code>find_keymap_conflict</code> logic and reported to the
+user; extension bindings never silently override user/default bindings.
+- <code>menus[].parent</code> / <code>context_menu[]</code> register
+through the existing menu and context-menu construction paths in
+<code>quill/ui</code>, honouring the project rule to <strong>defer menu
+mutations until menus are closed</strong>. - A
+<code>command.run.snippet</code> with no <code>main</code> is pure Layer
+1 (no code execution).</p>
+<h2 id="the-python-extension-api-layer-2-sketch">5. The Python extension
+API (Layer 2 sketch)</h2>
+<p>A single, versioned, capability-checked facade — no direct widget
+access:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> QuillExtensionApi:        <span class="co"># v1, passed to the extension&#39;s register()</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># editor.read</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_text(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">str</span>: ...</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_selection(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">str</span>: ...</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_cursor(<span class="va">self</span>) <span class="op">-&gt;</span> CursorAddress: ...     <span class="co"># line, column, percent</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># editor.write   (all routed through core commands + undo history)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> replace_selection(<span class="va">self</span>, text: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="va">None</span>: ...</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_text(<span class="va">self</span>, text: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="va">None</span>: ...</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ui (always marshalled to the UI thread)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> announce(<span class="va">self</span>, message: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="va">None</span>: ...  <span class="co"># screen-reader announcement</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> register_command(<span class="va">self</span>, command_id: <span class="bu">str</span>, title: <span class="bu">str</span>, handler) <span class="op">-&gt;</span> <span class="va">None</span>: ...</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># fs / net only if capability granted + user-consented at install/run</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> read_file(<span class="va">self</span>, path: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>: ...     <span class="co"># requires &quot;fs.read&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fetch(<span class="va">self</span>, url: <span class="bu">str</span>) <span class="op">-&gt;</span> Response: ...      <span class="co"># requires &quot;net&quot; + consent gate</span></span></code></pre></div>
+<p>Design rules: - Every method maps to an existing core operation so
+extension edits flow through <strong>command + history</strong>
+(undoable) and through the <strong>announcement engine</strong> for
+consistent NVDA/JAWS/Narrator output. - All editor mutations go through
+<code>quill/core</code>; the extension process holds <strong>no</strong>
+<code>wx</code> reference and <strong>no</strong> direct buffer handle.
+- The API is <strong>versioned</strong> (<code>v1</code>); breaking
+changes ship a new version while old extensions keep working against the
+old facade.</p>
+<h2 id="security-consent-model">6. Security &amp; consent model</h2>
+<ul>
+<li><strong>Default deny.</strong> No capability ⇒ no filesystem, no
+network, no subprocess. Pure-snippet extensions need no capabilities at
+all.</li>
+<li><strong>Declared + granted.</strong> Capabilities are listed in the
+manifest and <strong>shown to the user at install/enable time</strong>;
+network/file capabilities additionally pass through QUILL’s existing
+per-action <strong>consent gate</strong> with visible progress and
+outcome (no silent network calls).</li>
+<li><strong>Isolation.</strong> Layer 2 runs out-of-process; a crash or
+hang in an extension cannot take down the editor or corrupt the buffer
+(the UI side owns the buffer).</li>
+<li><strong>No secrets to extensions.</strong> Extensions never receive
+DPAPI-protected secrets or document content over the wire unless a
+capability + consent explicitly authorise it; <strong>no document
+content is ever logged</strong>.</li>
+<li><strong>Signing/trust (later).</strong> A future iteration may add
+signature/trust prompts and a per-extension audit log.</li>
+</ul>
+<h2 id="accessibility-of-the-authoring-experience">7. Accessibility of
+the authoring experience</h2>
+<ul>
+<li>Manifests are plain JSON and extensions are plain <code>.py</code> —
+both fully readable in QUILL itself, the EdSharp authoring
+philosophy.</li>
+<li>The <strong>Extensions Manager</strong> dialog uses stock controls
+(<code>wx.ListBox</code> / <code>wx.TextCtrl</code> read-only review
+panes, explicit default buttons, consistent Escape/Close handling, focus
+returned to the editor on close) per the project’s dialog/accessibility
+rules, and is registered in <code>dialogs.md</code>.</li>
+<li>Errors from extension code surface as <strong>announced</strong>,
+reviewable text (a read-only multiline control), never as transient-only
+message boxes.</li>
+</ul>
+<h2 id="packaging">8. Packaging</h2>
+<ul>
+<li>Bundled with the existing Windows distribution builder / Inno Setup
+component model. Layer 1 + Layer 2 (Python host) need <strong>no new
+native runtime</strong> because the interpreter already ships with
+QUILL.</li>
+<li>The optional QuickJS snippet evaluator (Appendix B) would be the
+<em>only</em> item that adds a native dependency, which is why it is
+deferred and optional.</li>
+</ul>
+<h2 id="optional-future-javascript-snippet-evaluator-quickjs">9.
+Optional future: JavaScript snippet evaluator (QuickJS)</h2>
+<p>Strictly optional, post-foundation, for literal EdSharp
+<code>.js</code>-snippet parity: embed <strong>QuickJS</strong> (tiny,
+no ambient I/O by default) as an <strong>expression/snippet
+evaluator</strong> only — e.g. a “Evaluate Expression” command and
+<code>.js</code> snippet tokens, matching EdSharp’s
+<code>Control+Equals</code> / <code>Alt+V</code>. It would
+<strong>not</strong> be the extension API. Capabilities would be granted
+explicitly, identical to the Python layer.</p>
+<h2 id="phasing-milestones">10. Phasing / milestones</h2>
+<ol type="1">
+<li><strong>M1 — Manifest + loader (Layer 1):</strong> schema,
+validation, load/enable/disable, command/menu/context/hotkey
+registration, conflict detection, Extensions Manager dialog. No code
+execution. Highest value, lowest risk.</li>
+<li><strong>M2 — Python host (Layer 2):</strong> out-of-process worker,
+RPC bridge, <code>QuillExtensionApi v1</code> with
+<code>editor.read</code>/<code>editor.write</code>/<code>announce</code>/
+<code>register_command</code>, undo/announcement integration.</li>
+<li><strong>M3 — Capabilities + consent:</strong>
+<code>fs.read</code>/<code>fs.write</code>/<code>net</code>,
+install-time disclosure, per-action consent gate, audit log.</li>
+<li><strong>M4 (optional) — QuickJS snippet evaluator</strong> for
+EdSharp <code>.js</code> parity.</li>
+</ol>
+<h2 id="testing-strategy">11. Testing strategy</h2>
+<ul>
+<li><code>quill/core</code> + <code>quill/io</code> (manifest model,
+schema validation, capability checks, conflict detection): real unit
+tests, wx-free, strict mypy.</li>
+<li>UI registration (menu/context/hotkey wiring): source-contract tests
+plus the A11Y-4 dialog-contract guard for the Extensions Manager
+dialog.</li>
+<li>Host/RPC bridge: integration tests with a fake extension exercising
+read/write/announce and a capability-denied path.</li>
+<li>Security: explicit tests that an undeclared capability is rejected
+and that no document content crosses the bridge without consent.</li>
+</ul>
+<h2 id="open-questions-for-review">12. Open questions for review</h2>
+<ol type="1">
+<li>Distribution: local folder install only for 2.0, or a curated
+gallery later?</li>
+<li>Do we want per-extension <strong>profiles</strong> (tie enablement
+to QUILL feature profiles) in the first cut, or global enable/disable
+only?</li>
+<li>Hotkey precedence when an extension binding conflicts with a user
+rebinding — reject (proposed) vs. prompt-to-override?</li>
+<li>Should Layer 1 snippets support the existing snippet token system,
+unifying “snippets” and “extension snippets” into one engine?</li>
+<li>Minimum capability set for M2 — is <code>editor.read</code> +
+<code>editor.write</code> + <code>announce</code> enough to be useful,
+deferring <code>fs</code>/<code>net</code> to M3?</li>
+</ol>
+<hr />
+<h2 id="manifest-json-schema-normative">13. Manifest JSON Schema
+(normative)</h2>
+<p>This is the authoritative, machine-validatable contract for
+<code>quill.extension/1</code> manifests. It is the schema that will
+live under <code>quill/core/schemas/</code> and be enforced by the
+loader. AI or human authors can validate a generated manifest against
+this before submission.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;$schema&quot;</span><span class="fu">:</span> <span class="st">&quot;https://json-schema.org/draft/2020-12/schema&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;$id&quot;</span><span class="fu">:</span> <span class="st">&quot;https://quill.app/schemas/extension/1.json&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;QUILL Extension Manifest&quot;</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;schema&quot;</span><span class="ot">,</span> <span class="st">&quot;id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;version&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;const&quot;</span><span class="fu">:</span> <span class="st">&quot;quill.extension/1&quot;</span> <span class="fu">},</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Reverse-DNS unique id, e.g. com.example.wraptools.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;pattern&quot;</span><span class="fu">:</span> <span class="st">&quot;^[a-z0-9]+([._-][a-z0-9]+)*$&quot;</span><span class="fu">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;minLength&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;maxLength&quot;</span><span class="fu">:</span> <span class="dv">128</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;minLength&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;maxLength&quot;</span><span class="fu">:</span> <span class="dv">80</span> <span class="fu">},</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Semantic version MAJOR.MINOR.PATCH.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;pattern&quot;</span><span class="fu">:</span> <span class="st">&quot;^</span><span class="ch">\\</span><span class="st">d+</span><span class="ch">\\</span><span class="st">.</span><span class="ch">\\</span><span class="st">d+</span><span class="ch">\\</span><span class="st">.</span><span class="ch">\\</span><span class="st">d+$&quot;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;maxLength&quot;</span><span class="fu">:</span> <span class="dv">120</span> <span class="fu">},</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;maxLength&quot;</span><span class="fu">:</span> <span class="dv">400</span> <span class="fu">},</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;license&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;maxLength&quot;</span><span class="fu">:</span> <span class="dv">64</span> <span class="fu">},</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_quill_version&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;pattern&quot;</span><span class="fu">:</span> <span class="st">&quot;^</span><span class="ch">\\</span><span class="st">d+</span><span class="ch">\\</span><span class="st">.</span><span class="ch">\\</span><span class="st">d+</span><span class="ch">\\</span><span class="st">.</span><span class="ch">\\</span><span class="st">d+$&quot;</span><span class="fu">,</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Lowest QUILL version this extension supports.&quot;</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;capabilities&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;uniqueItems&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;editor.read&quot;</span><span class="ot">,</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;editor.write&quot;</span><span class="ot">,</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;ui.announce&quot;</span><span class="ot">,</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;ui.command&quot;</span><span class="ot">,</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;fs.read&quot;</span><span class="ot">,</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;fs.write&quot;</span><span class="ot">,</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;net&quot;</span><span class="ot">,</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;clipboard.read&quot;</span><span class="ot">,</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;clipboard.write&quot;</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;main&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Relative path to the Python entry module (Layer 2). Omit for snippet-only (Layer 1) extensions.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;pattern&quot;</span><span class="fu">:</span> <span class="st">&quot;^[A-Za-z0-9_./-]+</span><span class="ch">\\</span><span class="st">.py$&quot;</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;contributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;commands&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;id&quot;</span><span class="ot">,</span> <span class="st">&quot;title&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;pattern&quot;</span><span class="fu">:</span> <span class="st">&quot;^ext</span><span class="ch">\\</span><span class="st">.[a-z0-9]+([._-][a-z0-9]+)*$&quot;</span><span class="fu">,</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Must be namespaced under ext. to avoid colliding with built-in command ids.&quot;</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>              <span class="fu">},</span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;minLength&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;maxLength&quot;</span><span class="fu">:</span> <span class="dv">80</span> <span class="fu">},</span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;run&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;How the command executes. Exactly one of snippet or handler.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;oneOf&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">{</span></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;snippet&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>                      <span class="dt">&quot;snippet&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Literal text inserted/replacing selection. Supports ${selection}, ${clipboard}, ${date}, ${time}, ${filename} placeholders. No code execution.&quot;</span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">}</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">}</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">{</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;handler&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>                      <span class="dt">&quot;handler&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Name of a function registered by the Python entry module via api.register_command. Requires main + ui.command capability.&quot;</span></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">}</span></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">}</span></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">}</span></span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>                <span class="ot">]</span></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>              <span class="fu">}</span></span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;menus&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;parent&quot;</span><span class="ot">,</span> <span class="st">&quot;command&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;parent&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Top-level menu title to attach under, e.g. File, Edit, Format, Tools, Help.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;File&quot;</span><span class="ot">,</span> <span class="st">&quot;Edit&quot;</span><span class="ot">,</span> <span class="st">&quot;Format&quot;</span><span class="ot">,</span> <span class="st">&quot;Tools&quot;</span><span class="ot">,</span> <span class="st">&quot;Navigate&quot;</span><span class="ot">,</span> <span class="st">&quot;View&quot;</span><span class="ot">,</span> <span class="st">&quot;Help&quot;</span><span class="ot">]</span></span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>              <span class="fu">},</span></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;A command id contributed above or a built-in command id.&quot;</span> <span class="fu">}</span></span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;context_menu&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span></span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;command&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;when&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Optional visibility guard.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;always&quot;</span><span class="ot">,</span> <span class="st">&quot;editor.hasSelection&quot;</span><span class="ot">,</span> <span class="st">&quot;editor.hasText&quot;</span><span class="ot">,</span> <span class="st">&quot;editor.empty&quot;</span><span class="ot">]</span></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a>              <span class="fu">}</span></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;hotkeys&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span></span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;additionalProperties&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;command&quot;</span><span class="ot">,</span> <span class="st">&quot;binding&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;binding&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span></span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;QUILL binding grammar. Supports the QUILL Key chord prefix, e.g. &#39;Ctrl+Shift+Grave, F&#39;. Conflicts are rejected, never silently overridden.&quot;</span></span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>              <span class="fu">}</span></span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;allOf&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;A handler-based command requires a Python entry module.&quot;</span><span class="fu">,</span></span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;if&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;contributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;commands&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;contains&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;run&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;handler&quot;</span><span class="ot">]</span> <span class="fu">}</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>              <span class="fu">}</span></span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;then&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;main&quot;</span><span class="ot">]</span> <span class="fu">}</span></span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="extension-authoring-reference-humans-and-ai">14. Extension
+authoring reference (humans and AI)</h2>
+<p>This section is the complete, self-contained reference an author
+needs. It is written so an LLM can produce a valid, working extension
+from this document alone, with no access to QUILL source.</p>
+<h3 id="capability-catalogue">14.1 Capability catalogue</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Grants</th>
+<th>Consent</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>editor.read</code></td>
+<td>Read buffer text, selection, cursor address</td>
+<td>Install-time disclosure</td>
+<td>Required by <code>get_text</code>, <code>get_selection</code>,
+<code>get_cursor</code></td>
+</tr>
+<tr>
+<td><code>editor.write</code></td>
+<td>Insert text, replace selection (undoable)</td>
+<td>Install-time disclosure</td>
+<td>All writes flow through core command + history</td>
+</tr>
+<tr>
+<td><code>ui.announce</code></td>
+<td>Send screen-reader announcements</td>
+<td>Install-time disclosure</td>
+<td>Required by <code>announce</code></td>
+</tr>
+<tr>
+<td><code>ui.command</code></td>
+<td>Register <code>handler</code> commands invoked from
+menus/hotkeys</td>
+<td>Install-time disclosure</td>
+<td>Required when <code>run.handler</code> is used</td>
+</tr>
+<tr>
+<td><code>fs.read</code> / <code>fs.write</code></td>
+<td>Read/write files by path</td>
+<td>Per-action consent gate</td>
+<td>Paths validated; no access outside granted scope</td>
+</tr>
+<tr>
+<td><code>net</code></td>
+<td>Outbound HTTP(S)</td>
+<td>Per-action consent gate, visible progress</td>
+<td>No silent network calls — ever</td>
+</tr>
+<tr>
+<td><code>clipboard.read</code> / <code>clipboard.write</code></td>
+<td>Read/write the system clipboard</td>
+<td>Install-time disclosure</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>A pure snippet-only extension declares <strong>no</strong>
+capabilities.</p>
+<h3 id="contribution-reference">14.2 Contribution reference</h3>
+<ul>
+<li><strong>commands</strong> — declare an <code>ext.*</code>-namespaced
+id + human title; <code>run</code> is either a <code>snippet</code>
+(Layer 1, no code) or a <code>handler</code> (Layer 2, requires
+<code>main</code> + <code>ui.command</code>).</li>
+<li><strong>menus</strong> — attach a command under a fixed top-level
+menu (<code>parent</code>). Menu mutation is deferred until menus close
+(project rule).</li>
+<li><strong>context_menu</strong> — attach a command to the editor
+right-click menu, optionally guarded by a <code>when</code>
+predicate.</li>
+<li><strong>hotkeys</strong> — bind a command using QUILL’s binding
+grammar, including the QUILL Key chord prefix
+<code>Ctrl+Shift+Grave, &lt;key&gt;</code>. Conflicts are detected with
+the same logic as user keymaps and <strong>rejected with an announced
+message</strong>.</li>
+</ul>
+<h3 id="snippet-placeholder-reference-layer-1">14.3 Snippet placeholder
+reference (Layer 1)</h3>
+<table>
+<thead>
+<tr>
+<th>Placeholder</th>
+<th>Expands to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>${selection}</code></td>
+<td>Current selection (empty string if none)</td>
+</tr>
+<tr>
+<td><code>${clipboard}</code></td>
+<td>Current clipboard text (requires <code>clipboard.read</code>)</td>
+</tr>
+<tr>
+<td><code>${date}</code></td>
+<td>Current date in the user’s configured format</td>
+</tr>
+<tr>
+<td><code>${time}</code></td>
+<td>Current time in the user’s configured format</td>
+</tr>
+<tr>
+<td><code>${filename}</code></td>
+<td>Current document file name (empty if unsaved)</td>
+</tr>
+<tr>
+<td><code>${cursor}</code></td>
+<td>Final cursor position marker after insertion</td>
+</tr>
+</tbody>
+</table>
+<h3 id="python-api-reference-layer-2-quillextensionapi-v1">14.4 Python
+API reference (Layer 2, <code>QuillExtensionApi</code> v1)</h3>
+<p>Every extension’s entry module defines a top-level
+<code>register(api)</code> function. QUILL calls it once when the
+extension loads. All methods are synchronous from the extension’s
+perspective; UI effects are marshalled onto the UI thread by the host.
+Methods raise <code>CapabilityError</code> if the required capability
+was not granted.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Capability</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>api.register_command(command_id, handler)</code></td>
+<td><code>ui.command</code></td>
+<td><code>None</code></td>
+<td>Bind a <code>handler</code> name (referenced by
+<code>run.handler</code>) to a callable <code>handler(ctx)</code></td>
+</tr>
+<tr>
+<td><code>api.get_text()</code></td>
+<td><code>editor.read</code></td>
+<td><code>str</code></td>
+<td>Full document text</td>
+</tr>
+<tr>
+<td><code>api.get_selection()</code></td>
+<td><code>editor.read</code></td>
+<td><code>str</code></td>
+<td>Selected text (<code>""</code> if none)</td>
+</tr>
+<tr>
+<td><code>api.get_cursor()</code></td>
+<td><code>editor.read</code></td>
+<td><code>CursorAddress</code></td>
+<td><code>.line</code> (1-based), <code>.column</code> (1-based),
+<code>.percent</code> (0–100)</td>
+</tr>
+<tr>
+<td><code>api.insert_text(text)</code></td>
+<td><code>editor.write</code></td>
+<td><code>None</code></td>
+<td>Insert at cursor (undoable)</td>
+</tr>
+<tr>
+<td><code>api.replace_selection(text)</code></td>
+<td><code>editor.write</code></td>
+<td><code>None</code></td>
+<td>Replace selection, or insert if none (undoable)</td>
+</tr>
+<tr>
+<td><code>api.announce(message)</code></td>
+<td><code>ui.announce</code></td>
+<td><code>None</code></td>
+<td>Screen-reader announcement via the announcement engine</td>
+</tr>
+<tr>
+<td><code>api.read_file(path)</code></td>
+<td><code>fs.read</code></td>
+<td><code>str</code></td>
+<td>Read a text file (consent-gated)</td>
+</tr>
+<tr>
+<td><code>api.write_file(path, text)</code></td>
+<td><code>fs.write</code></td>
+<td><code>None</code></td>
+<td>Write a text file (consent-gated)</td>
+</tr>
+<tr>
+<td><code>api.fetch(url, *, method="GET", body=None)</code></td>
+<td><code>net</code></td>
+<td><code>Response</code></td>
+<td>HTTP(S) request (consent-gated, visible progress)</td>
+</tr>
+<tr>
+<td><code>api.get_clipboard()</code></td>
+<td><code>clipboard.read</code></td>
+<td><code>str</code></td>
+<td>Clipboard text</td>
+</tr>
+<tr>
+<td><code>api.set_clipboard(text)</code></td>
+<td><code>clipboard.write</code></td>
+<td><code>None</code></td>
+<td>Set clipboard text</td>
+</tr>
+</tbody>
+</table>
+<p><code>handler(ctx)</code> receives a <code>ctx</code> exposing the
+same read/write/announce surface scoped to the invocation, so a handler
+typically reads, computes, and writes back.</p>
+<p>Error types an author may see: <code>CapabilityError</code>,
+<code>ConsentDeniedError</code>, <code>ConflictError</code>
+(hotkey/menu), <code>ApiVersionError</code>.</p>
+<h3 id="worked-example-a-snippet-only-no-capabilities-no-code">14.5
+Worked example A — snippet-only (no capabilities, no code)</h3>
+<p><code>manifest.json</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="st">&quot;quill.extension/1&quot;</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;com.example.fence&quot;</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Code Fence&quot;</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0.0&quot;</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;contributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;commands&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ext.fence.wrap&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Wrap In Code Fence&quot;</span><span class="fu">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;run&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;snippet&quot;</span><span class="fu">:</span> <span class="st">&quot;```</span><span class="ch">\n</span><span class="st">${selection}</span><span class="ch">\n</span><span class="st">```</span><span class="ch">\n</span><span class="st">${cursor}&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;context_menu&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;when&quot;</span><span class="fu">:</span> <span class="st">&quot;editor.hasSelection&quot;</span><span class="fu">,</span> <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;ext.fence.wrap&quot;</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;hotkeys&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;ext.fence.wrap&quot;</span><span class="fu">,</span> <span class="dt">&quot;binding&quot;</span><span class="fu">:</span> <span class="st">&quot;Ctrl+Shift+Grave, F&quot;</span> <span class="fu">}</span> <span class="ot">]</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="worked-example-b-python-handler">14.6 Worked example B — Python
+handler</h3>
+<p><code>manifest.json</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="st">&quot;quill.extension/1&quot;</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;com.example.titlecase&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Title Case&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0.0&quot;</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;capabilities&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;editor.read&quot;</span><span class="ot">,</span> <span class="st">&quot;editor.write&quot;</span><span class="ot">,</span> <span class="st">&quot;ui.announce&quot;</span><span class="ot">,</span> <span class="st">&quot;ui.command&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;main&quot;</span><span class="fu">:</span> <span class="st">&quot;extension.py&quot;</span><span class="fu">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;contributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;commands&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ext.titlecase.run&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Title Case Selection&quot;</span><span class="fu">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;run&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;handler&quot;</span><span class="fu">:</span> <span class="st">&quot;title_case&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;menus&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;parent&quot;</span><span class="fu">:</span> <span class="st">&quot;Format&quot;</span><span class="fu">,</span> <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;ext.titlecase.run&quot;</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;hotkeys&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;ext.titlecase.run&quot;</span><span class="fu">,</span> <span class="dt">&quot;binding&quot;</span><span class="fu">:</span> <span class="st">&quot;Ctrl+Shift+Grave, T&quot;</span> <span class="fu">}</span> <span class="ot">]</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>extension.py</code>:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> register(api):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> title_case(ctx):</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        text <span class="op">=</span> ctx.get_selection()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> text:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>            ctx.announce(<span class="st">&quot;Title Case: no selection&quot;</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        ctx.replace_selection(text.title())</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        ctx.announce(<span class="st">&quot;Title Case applied&quot;</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    api.register_command(<span class="st">&quot;title_case&quot;</span>, title_case)</span></code></pre></div>
+<h2 id="ai-authoring-guide-deterministic-generation-contract">15. AI
+authoring guide — deterministic generation contract</h2>
+<p>This section gives an AI agent an unambiguous procedure to generate a
+valid extension. Following it should yield a manifest that passes §13
+and an entry module that loads under §14.4.</p>
+<p><strong>Generation checklist (must all hold):</strong> 1.
+<code>schema</code> is exactly <code>"quill.extension/1"</code>. 2.
+<code>id</code> is reverse-DNS, lowercase, matches the §13 pattern, and
+is globally unique. 3. <code>version</code> is
+<code>MAJOR.MINOR.PATCH</code>. 4. Every contributed command
+<code>id</code> starts with <code>ext.</code> and is unique within the
+file. 5. Every <code>menus[].command</code>,
+<code>context_menu[].command</code>, and <code>hotkeys[].command</code>
+references either a contributed command id or a documented built-in id.
+6. If <strong>any</strong> command uses <code>run.handler</code>, then
+<code>main</code> is present <strong>and</strong>
+<code>capabilities</code> includes <code>ui.command</code>. 7.
+<code>capabilities</code> is the minimal set: include a capability
+<strong>iff</strong> an API method or placeholder in the extension
+requires it (see §14.1, §14.3, §14.4). 8. Hotkey <code>binding</code>
+uses the QUILL grammar; prefer the QUILL Key prefix
+(<code>Ctrl+Shift+Grave, &lt;letter&gt;</code>) to avoid clashing with
+built-ins. 9. The Python entry module defines exactly one top-level
+<code>register(api)</code> and registers every <code>handler</code> name
+referenced by the manifest. 10. No <code>wx</code> import, no direct
+filesystem/network/subprocess/clipboard access except through the
+granted <code>api</code> methods.</p>
+<p><strong>Minimal-capability decision table:</strong></p>
+<table>
+<thead>
+<tr>
+<th>If the extension…</th>
+<th>Declare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>only inserts literal/snippet text</td>
+<td><em>(none)</em></td>
+</tr>
+<tr>
+<td>reads buffer/selection/cursor</td>
+<td><code>editor.read</code></td>
+</tr>
+<tr>
+<td>inserts or replaces text</td>
+<td><code>editor.write</code></td>
+</tr>
+<tr>
+<td>speaks to the screen reader</td>
+<td><code>ui.announce</code></td>
+</tr>
+<tr>
+<td>has any <code>run.handler</code> command</td>
+<td><code>ui.command</code> + <code>main</code></td>
+</tr>
+<tr>
+<td>reads/writes files</td>
+<td><code>fs.read</code> / <code>fs.write</code></td>
+</tr>
+<tr>
+<td>makes network requests</td>
+<td><code>net</code></td>
+</tr>
+<tr>
+<td>touches the clipboard</td>
+<td><code>clipboard.read</code> / <code>clipboard.write</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Machine-readable contract summary (for prompt
+embedding):</strong></p>
+<pre><code>ENTRYPOINT: register(api) -&gt; None              # exactly one, top-level
+HANDLER:    handler(ctx) -&gt; None               # ctx mirrors api read/write/announce
+WRITES:     undoable, via core commands only
+THREADING:  api is sync; UI effects marshalled by host (never call wx)
+DENY:       no capability =&gt; no fs/net/subprocess/clipboard
+NAMESPACE:  command ids must start with &quot;ext.&quot;
+CONFLICTS:  hotkey/menu conflicts are rejected + announced, never overridden
+VERSION:    target QuillExtensionApi v1</code></pre>
+<hr />
+<h2 id="internal-modularization-core-as-a-framework">16. Internal
+modularization — core as a framework</h2>
+<p>A deliberate, longer-horizon consequence of this design: the
+<strong>contribution grammar</strong> defined here (commands, menus,
+hotkeys, context-menu entries) is the same vocabulary QUILL already uses
+<em>internally</em> to wire up its built-in features. That makes it a
+natural blueprint for decomposing the
+<code>quill/ui/main_frame.py</code> “god object” into self-registering
+<strong>first-party feature modules</strong>, leaving
+<code>quill/core</code> as a genuine framework.</p>
+<h3 id="two-tiers-one-vocabulary">16.1 Two tiers, one vocabulary</h3>
+<p>There are <strong>two tiers of extension</strong>, sharing one
+contribution grammar but differing in <strong>trust level and API
+breadth</strong> — not in how they appear to users.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th>First-party feature modules</th>
+<th>Third-party extensions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trust</td>
+<td>Trusted, shipped, reviewed</td>
+<td>Untrusted</td>
+</tr>
+<tr>
+<td>Process</td>
+<td>In-process</td>
+<td>Out-of-process (Appendix B)</td>
+</tr>
+<tr>
+<td>API breadth</td>
+<td>Rich, synchronous host API (editor, dialogs, settings, undo,
+workers, platform, announcements)</td>
+<td>Narrow, capability-gated <code>QuillExtensionApi</code> (§5)</td>
+</tr>
+<tr>
+<td>Sandbox</td>
+<td>None needed (trusted code)</td>
+<td>Mandatory (§6)</td>
+</tr>
+<tr>
+<td>Registration</td>
+<td>Same contribution grammar (§4)</td>
+<td>Same contribution grammar (§4)</td>
+</tr>
+</tbody>
+</table>
+<p>The crucial rule: <strong>first-party features must NOT be routed
+through the sandboxed, out-of-process, capability-gated path.</strong>
+Built-ins need rich, synchronous, in-process access; forcing them across
+the RPC bridge would be a severe downgrade in capability, latency
+(per-keystroke operations!), and complexity for zero security benefit,
+since the code is already trusted.</p>
+<h3 id="what-this-enables">16.2 What this enables</h3>
+<ul>
+<li>An internal <code>register(host)</code> module interface, where
+<code>host</code> exposes the rich trusted API. Related commands
+(line-ops, EDS parity, search, formatting…) are extracted from
+<code>main_frame.py</code> into self-registering modules.</li>
+<li><code>quill/core</code> keeps only the framework: document model,
+command registry, keymap, event bus, feature gating, and the
+announcement engine.</li>
+<li>The contribution grammar (this document) becomes the single
+registration mechanism for both tiers.</li>
+</ul>
+<h3 id="honest-limits-do-not-over-rotate">16.3 Honest limits (do not
+over-rotate)</h3>
+<ul>
+<li><strong>Do not pluginize the editor surface or the accessibility /
+announcement engine.</strong> The plain-text <code>wx.TextCtrl</code>
+writing path and NVDA/JAWS/Narrator parity are the framework’s central
+guarantee, not a plugin. Delegating them is how accessibility
+regresses.</li>
+<li><code>main_frame.py</code> is deeply entangled (shared mutable
+state, wx id maps, ordering dependencies). Decompose
+<strong>incrementally and opportunistically, behind characterization
+tests</strong> — never a big-bang “everything is a plugin” rewrite.</li>
+<li>Feature profiles already deliver much of the user-facing modularity
+benefit, so the refactor’s justification is
+<strong>maintainability</strong>, not new capability.</li>
+<li>This is a <strong>2.0-scale effort</strong>, sequenced after
+user-facing wins.</li>
+</ul>
+<h2 id="seamless-use-transparent-governance">17. Seamless use,
+transparent governance</h2>
+<p>Extensions should be <strong>indistinguishable from built-in features
+at the point of use</strong>, while remaining <strong>fully auditable
+and controllable</strong> in management.</p>
+<h3 id="seamless-at-the-point-of-use">17.1 Seamless at the point of
+use</h3>
+<p>A user should never be able to tell, while writing, whether a command
+came from core, a bundled module, or a third-party extension. All of
+them:</p>
+<ul>
+<li>appear in the same menus, command palette, and context menus;</li>
+<li>bind through the same keymap (and surface in the key-describer /
+learning mode);</li>
+<li>announce outcomes through the same announcement engine with
+NVDA/JAWS/Narrator parity;</li>
+<li>respect the same feature-gating and Settings UI.</li>
+</ul>
+<p>That uniformity is exactly <em>why</em> both tiers share one
+contribution grammar (§16.1). No second-class citizens; no “bolted-on”
+feel.</p>
+<h3 id="transparent-where-it-matters-non-negotiable">17.2 Transparent
+where it matters (non-negotiable)</h3>
+<p>Seamlessness hides the <em>seam</em>, never the
+<em>capabilities</em>. Consistent with QUILL’s “no silent network
+calls”, per-action consent, and DPAPI rules:</p>
+<ul>
+<li>An <strong>Extensions manager</strong> lists every installed
+extension, its publisher, and its granted capabilities, so the user can
+audit, disable, or revoke.</li>
+<li><strong>Capability prompts</strong> (§6) surface the first time an
+untrusted extension wants something sensitive (network, filesystem
+beyond the document, clipboard, running executables). Trusted
+first-party modules do not prompt; third-party ones do.</li>
+<li><strong>Provenance is visible on demand</strong> (e.g. in
+command-palette details or a “Where did this come from?” affordance),
+even though it is invisible by default.</li>
+</ul>
+<p>Principle: <strong>users should not have to <em>think</em> about
+whether something is an extension during normal use, but must always be
+<em>able to find out</em> and <em>control it</em> when trust or
+accessibility is at stake.</strong> Hiding the seam is a UX win; hiding
+capabilities or network access would violate QUILL’s privacy-first
+contract.</p>
+<h2 id="declarative-dialogs-accessibility-enforcement">18. Declarative
+dialogs &amp; accessibility enforcement</h2>
+<p>Extensions may contribute <strong>dialogs</strong>, but they
+<strong>describe</strong> dialogs declaratively — they never instantiate
+a <code>wx</code> widget. QUILL renders them. This makes inaccessible or
+unsafe UI <strong>structurally impossible</strong> rather than merely
+discouraged.</p>
+<h3 id="the-mechanism">18.1 The mechanism</h3>
+<p>QUILL already has the right primitive: <code>show_web_form</code>
+(<code>quill/ui/web_form.py</code>) builds a dialog from a <strong>field
+spec</strong> using vetted stock controls (<code>wx.TextCtrl</code>,
+<code>wx.ListBox</code>, <code>wx.Dialog</code>) with consistent focus,
+a default button, and Escape/Close handling. (The EDS <code>DLG-1</code>
+migrations already use it.)</p>
+<p>An extension contributes a dialog description:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dialog&quot;</span><span class="fu">:</span> <span class="st">&quot;calculate_date&quot;</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Calculate Date&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;fields&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;anchor&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Start date&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;text&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;offset&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Days to add&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;number&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;unit&quot;</span><span class="fu">,</span>   <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Unit&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;choice&quot;</span><span class="fu">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;choices&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;days&quot;</span><span class="ot">,</span> <span class="st">&quot;weeks&quot;</span><span class="ot">,</span> <span class="st">&quot;months&quot;</span><span class="ot">]</span> <span class="fu">}</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>…and receives back a plain dict
+(<code>{anchor, offset, unit}</code>). It never creates a control, sets
+a sizer, or manages focus.</p>
+<h3 id="why-this-enforces-accessibility-without-risk">18.2 Why this
+enforces accessibility without risk</h3>
+<ul>
+<li><strong>Accessibility is structural, not requested.</strong> Every
+dialog comes from QUILL’s one renderer, so it inherits stock-control
+usage, focus return to editor, label/announcement parity, and the
+<strong>A11Y-4 dialog-contract guard</strong> automatically. An
+extension <em>cannot</em> produce an inaccessible dialog because it
+cannot produce a dialog at all — only a description of one.</li>
+<li><strong>No untrusted code in the UI thread.</strong> Third-party
+logic stays out-of-process (Appendix B); only data crosses the boundary.
+A buggy or malicious extension cannot freeze the UI, draw a
+custom-painted control, or break screen-reader focus.</li>
+<li><strong><code>dialogs.md</code> stays truthful.</strong> Because the
+renderer is central, contributed dialogs are enumerable and can be
+registered into the manual regression map the same way native dialogs
+are.</li>
+</ul>
+<h3 id="constrained-vocabulary-is-the-safety-property">18.3 Constrained
+vocabulary is the safety property</h3>
+<ul>
+<li>The field-type catalogue is intentionally <strong>finite</strong>:
+text, multiline read-only, number, choice, checkbox,
+file-pick-with-consent, list. Allowing “arbitrary layout” or “custom
+control” would forfeit the guarantee — so it is not allowed. That
+finiteness <em>is</em> the safety property.</li>
+<li>Genuinely novel custom UI is <strong>out of scope</strong> for
+extensions; it must be a first-party module reviewed against A11Y-4
+(§16.1), not a sandboxed extension.</li>
+<li>Anything sensitive a dialog <em>triggers</em> (network, file write,
+run executable) still passes through capability prompts (§6). An
+accessible dialog never bypasses consent.</li>
+</ul>
+<hr />
+<h2 id="appendix-a-language-options-considered">Appendix A — Language
+options considered</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Python (embedded, app’s own language)</strong></td>
+<td>No new runtime; whole object model already Python; best
+debugging/docs/stdlib; faithful analogue of EdSharp scripting its C#
+host; easiest to maintain</td>
+<td>In-process sandboxing is weak — must run out-of-process for real
+isolation</td>
+<td><strong>Chosen (Layer 2)</strong></td>
+</tr>
+<tr>
+<td><strong>JavaScript (QuickJS / V8 via
+<code>py_mini_racer</code>)</strong></td>
+<td>Familiar to most; strong sandbox (isolates / no ambient I/O);
+EdSharp/JScript.NET optics; QuickJS tiny</td>
+<td>Permanent Python⇄JS marshalling; cross-boundary stack traces; native
+build/packaging dependency; async/wx impedance</td>
+<td>Optional future snippet evaluator only</td>
+</tr>
+<tr>
+<td><strong>Lua (<code>lupa</code>/LuaJIT)</strong></td>
+<td>Classic embeddable scripting; tiny; easy to sandbox</td>
+<td>Small user base among QUILL power users; another language to learn;
+weak text-tooling stdlib</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td><strong>WASM (Extism / Wasmtime)</strong></td>
+<td>Strongest sandbox; language-agnostic</td>
+<td>Heavy; complex host bindings; hard to author/debug; overkill</td>
+<td>Rejected for 2.0</td>
+</tr>
+<tr>
+<td><strong>Declarative-only (manifest)</strong></td>
+<td>Safest; covers ~70% of requests; trivially accessible to author</td>
+<td>Not Turing-complete; power users hit a ceiling</td>
+<td><strong>Chosen (Layer 1), paired with Python</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-b-why-out-of-process">Appendix B — Why
+out-of-process</h2>
+<p>QUILL’s concurrency model already runs OCR in a separate worker
+process and marshals UI updates through <code>wx.CallAfter</code>.
+Reusing that pattern for the extension host gives real fault isolation
+(a runaway extension can’t corrupt the buffer or freeze the editor) and
+is the only way to meaningfully sandbox Python. The UI side remains the
+sole owner of the editor buffer; the extension side only ever sends
+intents over the RPC bridge.</p>
+</body>
+</html>

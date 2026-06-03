@@ -1457,162 +1457,66 @@ def test_extend_selection_commits_on_non_movement_key_action() -> None:
     assert frame.editor.selection == (0, 5)
 
 
-def test_prompt_search_defers_focus_and_uses_modal_ids() -> None:
+def test_prompt_search_uses_web_form_and_maps_values(monkeypatch: pytest.MonkeyPatch) -> None:
     frame = _build_frame("alpha beta", insertion_point=0)
     frame._last_find_query = "alpha"
-    deferred: list[object] = []
+    frame._wx = object()
     captured: dict[str, object] = {}
 
-    class _Button:
-        def SetDefault(self) -> None:
-            return None
+    import quill.ui.web_form as web_form_module
 
-    class _ButtonSizer:
-        def FindWindowById(self, _window_id: int) -> _Button:
-            return _Button()
+    def _fake_show_web_form(parent: object, wx: object, *, title: str, fields: list, **_kw: object):
+        captured["title"] = title
+        captured["fields"] = fields
+        return {
+            "query": "needle",
+            "mode": "Regular expression",
+            "case_sensitive": True,
+        }
 
-    class _TextCtrl:
-        def __init__(self, _parent: object, value: str = "", style: int = 0) -> None:
-            self.value = value
-            self.style = style
-            self.focused = False
-            self.selection: tuple[int, int] | None = None
-            self.handlers: dict[int, object] = {}
-            captured["query"] = self
-
-        def Bind(self, event: int, handler: object) -> None:
-            self.handlers[event] = handler
-
-        def GetValue(self) -> str:
-            return self.value
-
-        def SetFocus(self) -> None:
-            self.focused = True
-
-        def SetSelection(self, start: int, end: int) -> None:
-            self.selection = (start, end)
-
-    class _Dialog:
-        def __init__(self, _parent: object, title: str, size: tuple[int, int]) -> None:
-            self.title = title
-            self.size = size
-            self.affirmative_id: int | None = None
-            self.escape_id: int | None = None
-            self.handlers: dict[int, object] = {}
-            self.destroyed = False
-            captured["dialog"] = self
-
-        def CreateButtonSizer(self, _style: int) -> _ButtonSizer:
-            return _ButtonSizer()
-
-        def FindWindowById(self, _window_id: int) -> _Button:
-            return _Button()
-
-        def SetAffirmativeId(self, value: int) -> None:
-            self.affirmative_id = value
-
-        def SetEscapeId(self, value: int) -> None:
-            self.escape_id = value
-
-        def SetSizerAndFit(self, _sizer: object) -> None:
-            return None
-
-        def Bind(self, event: int, handler: object) -> None:
-            self.handlers[event] = handler
-
-        def EndModal(self, _result: int) -> None:
-            return None
-
-        def Destroy(self) -> None:
-            self.destroyed = True
-
-    class _Panel:
-        def __init__(self, _parent: object) -> None:
-            return None
-
-        def SetSizer(self, _sizer: object) -> None:
-            return None
-
-    class _BoxSizer:
-        def __init__(self, _orientation: int) -> None:
-            return None
-
-        def Add(self, _item: object, *_args: object, **_kwargs: object) -> None:
-            return None
-
-    class _StaticText:
-        def __init__(self, _parent: object, label: str) -> None:
-            self.label = label
-
-    class _Choice:
-        def __init__(self, _parent: object, choices: list[str]) -> None:
-            self.choices = choices
-            self.selection = 0
-
-        def SetSelection(self, selection: int) -> None:
-            self.selection = selection
-
-        def GetStringSelection(self) -> str:
-            return self.choices[self.selection]
-
-    class _CheckBox:
-        def __init__(self, _parent: object, label: str) -> None:
-            self.label = label
-            self.value = False
-
-        def GetValue(self) -> bool:
-            return self.value
-
-    wx = type(
-        "WX",
-        (),
-        {
-            "Dialog": _Dialog,
-            "Panel": _Panel,
-            "BoxSizer": _BoxSizer,
-            "StaticText": _StaticText,
-            "TextCtrl": _TextCtrl,
-            "Choice": _Choice,
-            "CheckBox": _CheckBox,
-            "TE_PROCESS_ENTER": 0,
-            "VERTICAL": 1,
-            "EXPAND": 2,
-            "ALL": 4,
-            "LEFT": 8,
-            "RIGHT": 16,
-            "TOP": 32,
-            "OK": 1,
-            "CANCEL": 2,
-            "ID_OK": 1,
-            "ID_CANCEL": 0,
-            "EVT_CHAR_HOOK": 100,
-            "EVT_TEXT_ENTER": 101,
-            "WXK_ESCAPE": 27,
-            "WXK_RETURN": 13,
-            "WXK_NUMPAD_ENTER": 312,
-            "CallAfter": staticmethod(lambda callback: deferred.append(callback)),
-        },
-    )()
-    frame._wx = wx
-
-    def _show_modal(dialog: object, _label: str) -> int:
-        assert dialog.affirmative_id == wx.ID_OK  # type: ignore[attr-defined]
-        assert dialog.escape_id == wx.ID_CANCEL  # type: ignore[attr-defined]
-        query = captured["query"]
-        assert query.focused is False  # type: ignore[attr-defined]
-        assert deferred
-        for callback in deferred:
-            callback()
-        assert query.focused is True  # type: ignore[attr-defined]
-        assert query.selection == (0, len("alpha"))  # type: ignore[attr-defined]
-        return wx.ID_CANCEL
-
-    frame._show_modal_dialog = _show_modal  # type: ignore[method-assign]
+    monkeypatch.setattr(web_form_module, "show_web_form", _fake_show_web_form)
 
     result = frame._prompt_search("Find")
 
-    assert result is None
-    assert deferred
+    assert result is not None
+    query, replacement, options = result
+    assert query == "needle"
+    assert replacement is None
+    assert options.use_regex is True
+    assert options.case_sensitive is True
+    # The default query is seeded from the last find term.
+    query_field = next(f for f in captured["fields"] if f["name"] == "query")
+    assert query_field["value"] == "alpha"
+
+
+def test_prompt_search_returns_none_when_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
+    frame = _build_frame("alpha beta", insertion_point=0)
+    frame._last_find_query = ""
+    frame._search_history = []
+    frame._wx = object()
+    import quill.ui.web_form as web_form_module
+
+    monkeypatch.setattr(web_form_module, "show_web_form", lambda *a, **k: None)
+    assert frame._prompt_search("Find") is None
+
+
+def test_prompt_search_replacement_includes_replace_field(monkeypatch: pytest.MonkeyPatch) -> None:
+    frame = _build_frame("alpha beta", insertion_point=0)
+    frame._last_find_query = ""
+    frame._search_history = []
+    frame._wx = object()
+    import quill.ui.web_form as web_form_module
+
+    def _fake(parent: object, wx: object, *, title: str, fields: list, **_kw: object):
+        assert any(f["name"] == "replacement" for f in fields)
+        return {"query": "a", "replacement": "b", "mode": "Plain text", "case_sensitive": False}
+
+    monkeypatch.setattr(web_form_module, "show_web_form", _fake)
+    result = frame._prompt_search("Replace", replacement=True)
+    assert result is not None
+    query, replacement, _options = result
+    assert query == "a"
+    assert replacement == "b"
 
 
 def test_prompt_file_search_uses_modal_ids() -> None:

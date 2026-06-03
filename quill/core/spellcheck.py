@@ -141,24 +141,31 @@ def _try_enchant() -> object | None:
     with _BACKEND_LOCK:
         if _ENCHANT_TRIED:
             return _ENCHANT_DICT
-        _ENCHANT_TRIED = True
+        # Resolve the dictionary into a local first and only publish
+        # _ENCHANT_TRIED once _ENCHANT_DICT holds its final value. The fast-path
+        # check above is intentionally lock-free, so flipping the flag early
+        # would let a concurrent thread observe a not-yet-assigned dict and fall
+        # back to the wordlist backend (a backend-selection race).
+        resolved: object | None = None
         try:
             import enchant  # type: ignore[import-not-found]
         except Exception:
-            _ENCHANT_DICT = None
-            return None
-        try:
-            # Prefer en_US; fall back to the first installed English variant
-            # if en_US isn't available on this system.
-            if enchant.dict_exists("en_US"):
-                _ENCHANT_DICT = enchant.Dict("en_US")
-            else:
-                for lang in enchant.list_languages():
-                    if lang.lower().startswith("en"):
-                        _ENCHANT_DICT = enchant.Dict(lang)
-                        break
-        except Exception:
-            _ENCHANT_DICT = None
+            resolved = None
+        else:
+            try:
+                # Prefer en_US; fall back to the first installed English variant
+                # if en_US isn't available on this system.
+                if enchant.dict_exists("en_US"):
+                    resolved = enchant.Dict("en_US")
+                else:
+                    for lang in enchant.list_languages():
+                        if lang.lower().startswith("en"):
+                            resolved = enchant.Dict(lang)
+                            break
+            except Exception:
+                resolved = None
+        _ENCHANT_DICT = resolved
+        _ENCHANT_TRIED = True
         return _ENCHANT_DICT
 
 

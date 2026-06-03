@@ -115,8 +115,11 @@ def test_read_structured_rtf_extracts_text(tmp_path: Path) -> None:
     target = tmp_path / "sample.rtf"
     target.write_text(r"{\rtf1\ansi Hello RTF}", encoding="latin-1")
     document = read_structured_document(target)
-    assert "# RTF Extract" in document.text
+    # EDS-21: RTF now round-trips through the real RTF reader rather than the
+    # old lossy "# RTF Extract" placeholder, so the body text is preserved.
     assert "Hello RTF" in document.text
+    assert "# RTF Extract" not in document.text
+    assert document.source_metadata.get("source_kind") == "rtf"
 
 
 def test_read_structured_pdf_attaches_metadata(monkeypatch, tmp_path: Path) -> None:

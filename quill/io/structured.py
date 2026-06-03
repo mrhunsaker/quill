@@ -23,6 +23,7 @@ from quill.core.safe_xml import fromstring as safe_xml_fromstring
 from quill.io.markitdown_bridge import convert_with_markitdown
 from quill.io.pages import read_pages_document
 from quill.io.pdf import extract_pdf_text, format_pdf_document
+from quill.io.rtf import read_rtf_document
 
 
 def read_structured_document(path: Path, encoding: str = "utf-8") -> Document:
@@ -56,8 +57,7 @@ def read_structured_document(path: Path, encoding: str = "utf-8") -> Document:
         text = _format_odt(path)
         metadata = {"source_kind": "odt", "engine": "odt", "quality_score": 100}
     elif suffix == ".rtf":
-        text = _format_rtf(path)
-        metadata = {"source_kind": "rtf", "engine": "rtf", "quality_score": 100}
+        return read_rtf_document(path)
     elif suffix == ".pptx":
         document = _read_via_markitdown(path, "pptx", fallback_engine="pptx")
         if document is not None:
@@ -438,16 +438,6 @@ def _format_odt(path: Path) -> str:
         content = archive.read("content.xml").decode("utf-8", errors="ignore")
     text = _strip_markup(content)
     lines = ["# ODT Extract", "", text or "(no extractable text)"]
-    return "\n".join(lines).rstrip() + "\n"
-
-
-def _format_rtf(path: Path) -> str:
-    raw = path.read_bytes().decode("latin-1", errors="ignore")
-    without_controls = re.sub(r"\\[a-zA-Z]+-?\d* ?", "", raw)
-    without_hex = re.sub(r"\\'[0-9a-fA-F]{2}", "", without_controls)
-    text = without_hex.replace("{", "").replace("}", "").replace("\\", "")
-    normalized = " ".join(text.split())
-    lines = ["# RTF Extract", "", normalized or "(no extractable text)"]
     return "\n".join(lines).rstrip() + "\n"
 
 

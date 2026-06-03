@@ -769,6 +769,21 @@ Performance note:
 - Quick Nav avoids reparsing on every key press by caching artifact anchors.
 - This keeps movement responsive on long Markdown and HTML files.
 
+### QUILL key prefix actions
+
+Pressing the QUILL key (`Ctrl+Shift+Grave`) once arms a short prefix. Follow it with:
+
+- `N` to enter browse/Quick Nav mode (press the QUILL key again to lock it until `Esc`).
+- `G` to open Go to Anything (Quick Nav search).
+- `M` to **paste HTML clipboard content as Markdown** at the cursor. Quill reads the
+  clipboard's rich HTML (the `HTML Format` flavour copied from web pages and word
+  processors), converts headings, lists, links, bold/italic, code, and block quotes to
+  Markdown, and inserts the result. If no rich HTML is present, the plain-text clipboard
+  is treated as HTML. The active read-only guard is respected, so a read-only document is
+  never modified.
+- `A` for selection actions when text is selected.
+- `?` to show the QUILL key cheat sheet, or `Esc` to cancel the prefix.
+
 ## Formatting and Markup Work
 
 Quill understands that many users work in plain text while still caring deeply about exported structure.

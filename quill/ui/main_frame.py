@@ -493,6 +493,7 @@ from quill.ui.assistant_tools import (
 from quill.ui.csv_grid import CsvGridSurface
 from quill.ui.dialog_contract import apply_modal_ids, show_modal_dialog
 from quill.ui.main_frame_browse import BrowseModeMixin
+from quill.ui.main_frame_edsharp import EdSharpActionsMixin
 from quill.ui.main_frame_image import ImageCaptureMixin
 from quill.ui.palette import CommandPaletteDialog
 from quill.ui.session_browser import SessionBrowserDialog
@@ -751,7 +752,7 @@ class _IntellisensePopup:
         return self.suggestions[index]
 
 
-class MainFrame(ImageCaptureMixin, BrowseModeMixin):
+class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin):
     _ANNOUNCEMENT_BACKEND_LABELS: dict[str, str] = {
         "auto": "Automatic (use Prism when available)",
         "prism": "Prism",
@@ -5595,6 +5596,18 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin):
                     self._refresh_statusbar()
                     self.open_quick_nav()
                     return True
+                # EDS: the QUILL key then M pastes clipboard HTML as Markdown.
+                if (
+                    not event.ControlDown()
+                    and not event.AltDown()
+                    and not event.ShiftDown()
+                    and key_code in (ord("M"), ord("m"))
+                ):
+                    self._quill_key_prefix_pending = False
+                    self._quill_key_prefix_started_at = 0.0
+                    self._refresh_statusbar()
+                    self.paste_html_as_markdown()
+                    return True
                 self._quill_key_prefix_pending = False
                 self._quill_key_prefix_started_at = 0.0
                 self._refresh_statusbar()
@@ -5602,11 +5615,11 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin):
             if self._quill_key_prefix_matches(event):
                 self._quill_key_prefix_pending = True
                 self._quill_key_prefix_started_at = time.monotonic()
-                message = "QUILL key prefix active. Press N for browse mode, G to go to anything"
+                message = "QUILL key prefix active. Press N for browse mode, G to go to anything, M to paste HTML as Markdown"
                 if self._has_active_selection():
                     message = (
                         "QUILL key prefix active. Press N for browse mode, G to go to anything, "
-                        "A for selection actions"
+                        "M to paste HTML as Markdown, A for selection actions"
                     )
                 self._set_status_quiet(message)
                 self._refresh_statusbar()
