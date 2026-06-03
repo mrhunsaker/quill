@@ -1469,7 +1469,9 @@ enhanced-native) wxPython constructs</td>
 <td>XL</td>
 <td>In progress</td>
 <td>The flagship Tier 4 refactor, done first. Folds in and supersedes
-issue #73 (and #72). <strong>Delivered (enforcement engine, zfix.md
+issue #73 (and #72). The full plan is canonical in the PRD §9.13 (Dialog
+estate governance), and per-phase progress is tracked in the
+DLG-3.0–DLG-3.8 sub-rows above. <strong>Delivered (enforcement engine,
 Phase 0 + Phase 1):</strong> the authoritative dialog estate is now
 generated from source, not a checklist —
 <code>quill/tools/dialog_inventory.py</code> AST-scans all of
@@ -1489,19 +1491,20 @@ new registry cross-check inside the GATE-4 A11Y-4 banned-pattern gate
 that fails the build on any unregistered or misclassified dialog. Adding
 a dialog now <em>forces</em> it into the registry via a deliberate
 <code>python -m quill.tools.dialog_inventory --write</code>, whose
-classification is reviewed in the diff — the “magical” gating from
-zfix.md. <code>.github/copilot-instructions.md</code> gains a “Dialog
-Excellence Mandates” block + Dialog Change Checklist encoding this.
-<strong>Remaining (honest, zfix.md Phases 2–8):</strong> the per-dialog
-conversion waves (simple→native, enhanced-native standardization, web
-standardization, startup/onboarding hardening, assistant/AI
-consolidation), CQ-16 characterization expansion, and the manual
-NVDA/JAWS/Narrator SR pass across <code>dialogs.md</code> are not yet
-done and require a live Windows screen-reader runtime; this item stays
-In progress until those land. Every single dialog across
-<code>quill/ui/*</code> is reviewed, and any custom-drawn or hand-rolled
-dialog that <em>could</em> conform to a standard surface is converted to
-one of <strong>two</strong> sanctioned kinds: <strong>native</strong>
+classification is reviewed in the diff — the “magical” gating now
+documented in PRD §9.13. <code>.github/copilot-instructions.md</code>
+gains a “Dialog Excellence Mandates” block + Dialog Change Checklist
+encoding this. <strong>Remaining (honest, PRD §9.13 Phases
+2–8):</strong> the per-dialog conversion waves (simple→native,
+enhanced-native standardization, web standardization, startup/onboarding
+hardening, assistant/AI consolidation), CQ-16 characterization
+expansion, and the manual NVDA/JAWS/Narrator SR pass across
+<code>dialogs.md</code> are not yet done and require a live Windows
+screen-reader runtime; this item stays In progress until those land.
+Every single dialog across <code>quill/ui/*</code> is reviewed, and any
+custom-drawn or hand-rolled dialog that <em>could</em> conform to a
+standard surface is converted to one of <strong>two</strong> sanctioned
+kinds: <strong>native</strong>
 (<code>wx.MessageDialog</code>/<code>wx.MessageBox</code> for confirms,
 saves, and simple messages) or the existing <strong>accessible web
 surfaces</strong> (<code>AccessibleChatView</code> for input,
@@ -1538,6 +1541,150 @@ the existing accessible web surfaces; first-run onboarding completes
 without crashing on Windows and macOS with a screen reader on. Gated by
 the strengthened A11Y-4 guard, <code>dialogs.md</code>, and
 screen-reader verification on Windows.</td>
+</tr>
+<tr>
+<td>DLG-3.0</td>
+<td>Phase 0 — authoritative source-generated dialog registry +
+gates</td>
+<td>Code quality</td>
+<td>M</td>
+<td>Done</td>
+<td><code>quill/tools/dialog_inventory.py</code> AST-scans all of
+<code>quill/**/*.py</code> and records every dialog surface (154: 100
+<code>native</code>, 49 <code>hardened_custom</code>, 5
+<code>web</code>) under a stable key with its sanctioned classification;
+snapshot <code>tests/unit/ui/fixtures/dialog_inventory.json</code>
+enforced by <code>tests/unit/ui/test_dialog_inventory.py</code> and the
+A11Y-4 banned-pattern cross-check.</td>
+</tr>
+<tr>
+<td>DLG-3.1</td>
+<td>Phase 1 — strengthened A11Y-4 static dialog-contract guard</td>
+<td>Code quality</td>
+<td>M</td>
+<td>Done</td>
+<td><code>_check_dialog_registry</code> in
+<code>quill/tools/check_banned_patterns.py</code> fails the build on any
+unregistered or misclassified dialog; the existing
+<code>wx.ALIGN_RIGHT</code> and raw-<code>wx.Dialog</code> destroy-path
+checks remain. <code>.github/copilot-instructions.md</code> carries the
+Dialog Excellence Mandates block + Dialog Change Checklist.</td>
+</tr>
+<tr>
+<td>DLG-3.T</td>
+<td>Triage — classify all 49 <code>hardened_custom</code> dialogs into
+convert/harden/keep buckets</td>
+<td>Code quality</td>
+<td>S</td>
+<td>Done</td>
+<td>Every <code>hardened_custom</code> surface received a written
+disposition via a live wx 4.2.5 source/AST audit on this Windows
+machine. <strong>Result: 0 convert, 48 harden, 1 keep-web</strong>
+(<code>AskQuillChatDialog</code>). A source scan for
+<code>EVT_PAINT</code>/<code>wx.lib.agw</code>/<code>OnPaint</code>/<code>wx.PaintDC</code>/owner-draw/<code>wx.html2</code>
+found <strong>zero</strong> custom-drawn dialogs — every
+<code>hardened_custom</code> surface is already a stock-widget
+<code>wx.Dialog</code> container (ListBox, TextCtrl, SearchCtrl,
+TreeCtrl, multi-button workflows), so “convert to native” is, in the
+literal wx sense, already true. The real work is contract hardening, not
+rewrites.</td>
+</tr>
+<tr>
+<td>DLG-3.2</td>
+<td>Phase 2 — native conversion wave (hand-rolled single
+confirm/choice/text → stock one-shot)</td>
+<td>Code quality</td>
+<td>L</td>
+<td>Done (no applicable work)</td>
+<td>The triage (DLG-3.T) found <strong>zero</strong> lossless one-shot
+conversion candidates: every <code>hardened_custom</code> dialog has
+genuine multi-control complexity (live search, lists, preview panes,
+tree controls, multi-action button rows) and would lose capability if
+flattened into a single
+<code>wx.MessageDialog</code>/<code>wx.SingleChoiceDialog</code>/<code>wx.TextEntryDialog</code>.
+Read-only instructional displays correctly use multiline
+<code>wx.TextCtrl</code> per the repo convention, not transient message
+boxes. Honest outcome: no dialog warrants flattening, so this wave
+converts nothing.</td>
+</tr>
+<tr>
+<td>DLG-3.3</td>
+<td>Phase 3 — enhanced-native standardization wave (multi-control
+dialogs onto one contract)</td>
+<td>Code quality</td>
+<td>L</td>
+<td>Done</td>
+<td>All <strong>49</strong> <code>hardened_custom</code> dialogs now
+converge on one focus/default/lifecycle grammar via the shared
+<code>dialog_contract</code> helpers. A machine-derived AST audit found
+only 5 surfaces off-contract; 4 were wired onto
+<code>apply_modal_ids</code> (+ routed direct <code>ShowModal()</code>
+through the announcing <code>_show_modal_dialog</code>, + deterministic
+initial focus): <code>_present_quill_key_help</code>,
+<code>_offer_crash_recovery</code>, <code>_present_quick_nav</code>,
+<code>_choose_searchable_option</code> (the 5th,
+<code>show_watch_folder_status</code>, is a correctly-hardened modeless
+monitor). A durable guard
+<code>tests/unit/ui/test_dialog_hardening_contract.py</code> now
+AST-asserts every <code>hardened_custom</code> surface wires the
+contract, blocking future drift. None flattened — live search, lists,
+and previews preserved.</td>
+</tr>
+<tr>
+<td>DLG-3.4</td>
+<td>Phase 4 — web-surface standardization (only where rich
+rendering/forms justified)</td>
+<td>Code quality</td>
+<td>M</td>
+<td>Todo</td>
+<td>Rich-render/chat/dynamic-form dialogs route only through sanctioned
+web surfaces with native-fallback parity; no raw HTML dumped into
+document tabs in onboarding/welcome paths.</td>
+</tr>
+<tr>
+<td>DLG-3.5</td>
+<td>Phase 5 — startup/onboarding hardening (wizard, first-run, trust
+consent, crash recovery)</td>
+<td>Code quality</td>
+<td>M</td>
+<td>Todo</td>
+<td>Deterministic focus across chained modal flows; explicit-consent
+requirements preserved; the screen-reader startup-crash path
+retired.</td>
+</tr>
+<tr>
+<td>DLG-3.6</td>
+<td>Phase 6 — assistant/AI tool dialog consolidation (folds in
+DLG-2)</td>
+<td>Code quality</td>
+<td>L</td>
+<td>Todo</td>
+<td><code>assistant_tools.py</code>, <code>ai_model_panel.py</code>,
+<code>style_panel.py</code>, <code>assistant_panel.py</code> dialogs
+meet the same modal/focus/error contract with safe async/“busy”
+semantics, converted individually and screen-reader-verified (the DLG-2
+work folded here).</td>
+</tr>
+<tr>
+<td>DLG-3.7</td>
+<td>Phase 7 — CQ-16 characterization expansion around dialog-launch
+command paths</td>
+<td>Code quality</td>
+<td>M</td>
+<td>Todo</td>
+<td>Return-value and side-effect regression tests protect the public
+command surface before any CQ-1 decomposition.</td>
+</tr>
+<tr>
+<td>DLG-3.8</td>
+<td>Phase 8 — manual NVDA/JAWS/Narrator SR pass across
+<code>dialogs.md</code></td>
+<td>Code quality</td>
+<td>M</td>
+<td>Todo</td>
+<td>NVDA baseline, JAWS spot (startup, assistant, sticky notes, watch
+profiles), Narrator sanity; each <code>dialogs.md</code> row carries
+pass/fail evidence. Requires a live Windows screen-reader runtime.</td>
 </tr>
 <tr>
 <td>CQ-11</td>
@@ -7303,6 +7450,71 @@ incidentally cleared the <code>quill/core</code> and
 <code>quill/io</code> portion of the TYPE-1..8 zone, though those formal
 rows stay open until each is individually verified and closed.</p>
 <h4
+id="dlg-3-triage-settled-0-convert-48-harden-1-keep-web-phase-3-contract-hardening-complete">2026-06-04:
+DLG-3 triage settled (0 convert / 48 harden / 1 keep-web); Phase 3
+contract hardening complete</h4>
+<p>The 49 <code>hardened_custom</code> dialogs were triaged on the live
+wx 4.2.5 Windows runtime. A source scan for custom-drawn paint code
+(<code>EVT_PAINT</code>/<code>wx.lib.agw</code>/<code>OnPaint</code>/<code>wx.PaintDC</code>/owner-draw/<code>wx.html2</code>)
+returned <strong>zero</strong> hits, confirming every surface is already
+a stock-widget <code>wx.Dialog</code>. Disposition: <strong>0 convert,
+48 harden, 1 keep-web</strong> (<code>AskQuillChatDialog</code>).</p>
+<ul>
+<li><strong>Phase 2 (DLG-3.2) closed as no-applicable-work:</strong> no
+dialog is a lossless one-shot — flattening any of them into a stock
+<code>wx.MessageDialog</code>/<code>wx.SingleChoiceDialog</code>/<code>wx.TextEntryDialog</code>
+would drop live search, lists, previews, or multi-action rows. Honest
+“Done (no applicable work),” not a fabricated conversion.</li>
+<li><strong>Phase 3 (DLG-3.3) Done:</strong> a machine-derived AST audit
+found 5 surfaces off the shared <code>dialog_contract</code>. Four were
+wired onto <code>apply_modal_ids</code> (and routed direct
+<code>ShowModal()</code> through the announcing
+<code>_show_modal_dialog</code>, with deterministic initial focus):
+<code>_present_quill_key_help</code>,
+<code>_offer_crash_recovery</code>, <code>_present_quick_nav</code>,
+<code>_choose_searchable_option</code>. The fifth,
+<code>show_watch_folder_status</code>, is a correctly-hardened modeless
+monitor. All 49 now pass a new durable guard.</li>
+<li><strong>New anti-regression control:</strong>
+<code>tests/unit/ui/test_dialog_hardening_contract.py</code> AST-asserts
+every <code>hardened_custom</code> surface in the inventory snapshot
+wires the contract, so a future bespoke dialog that skips
+<code>apply_modal_ids</code>/show fails CI at author time.</li>
+<li><strong>Report:</strong> <code>dialogreport.md</code> at the repo
+root captures the full triage table, per-phase status, and honest
+remaining work (Phases 4–8).</li>
+</ul>
+<h4
+id="dlg-3-plan-folded-into-the-prd-per-phase-tracking-ledger-added">2026-06-03:
+DLG-3 plan folded into the PRD; per-phase tracking ledger added</h4>
+<p>The full dialog-estate plan (previously the <code>zfix.md</code>
+working file) was merged into the PRD as <strong>§9.13 Dialog estate
+governance (DLG-3)</strong> so the thinking is canonical and survives
+the scratch-file deletion. The PRD section captures the surface policy,
+source-of-truth inventory, per-dialog interaction contract,
+control-surface completeness, the “every dialog touched” definition,
+high-risk clusters, the eight execution waves, the dialog-by-dialog
+coverage map, the definitive conversion decisions, the
+operational/enforcement mandates, anti-regression controls, and the
+definition of done.</p>
+<ul>
+<li><strong>golden.md tracking:</strong> DLG-3 is now decomposed into
+individually-tracked sub-items DLG-3.0 through DLG-3.8 (plus DLG-3.T
+triage) so each phase shows discrete progress. Phases 0–1 (the
+enforcement engine), the triage, Phase 2 (no applicable work), and Phase
+3 (contract hardening) are Done; Phases 4–8 are Todo.</li>
+<li><strong>Working files retired:</strong>
+<code>zfix.md</code>/<code>zfix.html</code> deleted now that their
+content lives in the PRD.</li>
+<li><strong>Live runtime confirmed:</strong> this Windows machine has
+wxPython 4.2.5 (msw/Phoenix, wxWidgets 3.2.9), so the conversion waves
+are verified by instantiating real dialogs, not source-contract-only. A
+source scan confirmed <strong>zero</strong> custom-drawn dialogs exist —
+every <code>hardened_custom</code> surface is a <code>wx.Dialog</code>
+composed of stock native controls, so the work is
+triage-and-convert/harden, not a from-scratch rewrite.</li>
+</ul>
+<h4
 id="repository-cleanup-editor-history-untracked-working-files-ignored-stale-engineering-docs-retired">2026-06-03:
 Repository cleanup — editor history untracked, working files ignored,
 stale engineering docs retired</h4>
@@ -7340,7 +7552,7 @@ into the PRD is deferred).</li>
 id="dlg-3-dialog-estate-made-source-of-truth-and-machine-gated-enforcement-engine-landed">2026-06-03:
 DLG-3 dialog estate made source-of-truth and machine-gated (enforcement
 engine landed)</h4>
-<p>The flagship Tier 4 dialog refactor’s enforcement engine (zfix.md
+<p>The flagship Tier 4 dialog refactor’s enforcement engine (PRD §9.13
 Phase 0 + Phase 1) shipped: QUILL’s dialog estate is now generated from
 source and gated, so no dialog can ship unregistered, unclassified, or
 on a bespoke surface.</p>
@@ -7368,7 +7580,7 @@ GATE-4 A11Y-4 banned-pattern gate
 fails the build on any unregistered or misclassified dialog. Adding a
 dialog now <em>forces</em> a deliberate
 <code>python -m quill.tools.dialog_inventory --write</code>, whose
-classification is reviewed in the diff — the “magical” gating zfix.md
+classification is reviewed in the diff — the “magical” gating the plan
 asked for.</li>
 <li><strong>Instructions hardened:</strong>
 <code>.github/copilot-instructions.md</code> gained a “Dialog Excellence
@@ -7379,7 +7591,7 @@ disagreement means the work is incomplete.</li>
 banned-pattern gate reports no violations; 16 dialog-gate tests
 pass.</li>
 <li><strong>Honest remainder:</strong> this is the enforcement engine
-only. The per-dialog conversion waves (zfix.md Phases 2–8 —
+only. The per-dialog conversion waves (PRD §9.13 Phases 2–8 —
 simple→native, enhanced-native standardization, web standardization,
 startup/onboarding hardening, assistant/AI consolidation), CQ-16
 characterization expansion, and the manual NVDA/JAWS/Narrator pass

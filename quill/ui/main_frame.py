@@ -5963,13 +5963,13 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
             outer.Add(panel, 1, wx.EXPAND)
             dialog.SetSizer(outer)
             close_button.SetDefault()
-            dialog.SetEscapeId(wx.ID_OK)
+            apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_OK)
             call_after = getattr(wx, "CallAfter", None)
             if callable(call_after):
                 call_after(review.SetFocus)
             else:
                 review.SetFocus()
-            dialog.ShowModal()
+            self._show_modal_dialog(dialog, title)
         finally:
             dialog.Destroy()
             self.editor.SetFocus()
@@ -7350,7 +7350,7 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
         save_diagnostics_button.Bind(wx.EVT_BUTTON, lambda _e: dialog.EndModal(wx.ID_SAVE))
         skip_button.Bind(wx.EVT_BUTTON, lambda _e: dialog.EndModal(wx.ID_NO))
         dialog.SetDefaultItem(restore_button)
-        dialog.SetEscapeId(wx.ID_NO)
+        apply_modal_ids(dialog, affirmative_id=wx.ID_YES, escape_id=wx.ID_NO)
         restore_button.SetFocus()
 
         try:
@@ -12870,14 +12870,14 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
             category_box.Bind(wx.EVT_LISTBOX, on_category)
             results.Bind(wx.EVT_LISTBOX_DCLICK, on_activate)
             go_button.SetDefault()
-            dialog.SetEscapeId(wx.ID_CANCEL)
+            apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
             refresh()
             call_after = getattr(wx, "CallAfter", None)
             if callable(call_after):
                 call_after(search.SetFocus)
             else:
                 search.SetFocus()
-            if dialog.ShowModal() == wx.ID_OK:
+            if self._show_modal_dialog(dialog, "Quick Nav") == wx.ID_OK:
                 if chosen["item"] is None:
                     index = results.GetSelection()
                     if 0 <= index < len(filtered):
@@ -20792,7 +20792,9 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
             results.Bind(wx.EVT_LISTBOX, lambda _event: _announce_selected())
             results.Bind(wx.EVT_LISTBOX_DCLICK, _accept)
             dialog.Bind(wx.EVT_CHAR_HOOK, _on_char_hook)
+            apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
             _refresh()
+            search.SetFocus()
 
             result = self._show_modal_dialog(dialog, dialog_label)
             self._searchable_picker_queries[dialog_label] = search.GetValue().strip()

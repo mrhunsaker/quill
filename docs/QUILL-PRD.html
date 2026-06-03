@@ -5824,6 +5824,208 @@ without an <code>wx.Accessible</code> subclass that passes the
 Inspect.exe parity test.</li>
 <li>Any SR transcript diff exceeds tolerance.</li>
 </ul>
+<h3 id="dialog-estate-governance-dlg-3">9.13 Dialog estate governance
+(DLG-3)</h3>
+<p>Every dialog in Quill is the single highest-risk accessibility
+surface in the UI: controls that do not work, focus landing on the wrong
+control, and rendering breakage all live in dialogs and are otherwise
+invisible to a source-only review. DLG-3 is the flagship
+structural-health refactor that makes the dialog estate correct by
+construction, source-of-truth, and machine-gated. It folds in and
+supersedes the earlier batch ambitions (the form-conversion wave and the
+individual AI-tool conversions).</p>
+<p><strong>Surface policy (the non-negotiable standard).</strong> Every
+dialog surface is exactly one of three sanctioned classifications, and
+no other dialog framework or bespoke modal surface may be
+introduced:</p>
+<ol type="1">
+<li><strong><code>native</code></strong> — stock wx one-shot dialogs
+(<code>wx.MessageDialog</code>, <code>wx.RichMessageDialog</code>,
+<code>wx.MessageBox</code>, <code>wx.SingleChoiceDialog</code>,
+<code>wx.MultiChoiceDialog</code>, <code>wx.TextEntryDialog</code>,
+<code>wx.FileDialog</code>, <code>wx.DirDialog</code>,
+<code>wx.FindReplaceDialog</code>, <code>wx.ProgressDialog</code>,
+About). Native-first is the default for confirms, choices, simple text
+input, and file/folder selection.</li>
+<li><strong><code>web</code></strong> — sanctioned accessible web
+surfaces (<code>show_web_form</code>, the markdown/HTML preview dialog,
+the accessible chat view) used only where rich rendering, chat
+interaction, or dynamic multi-field forms are genuinely required, always
+with a native fallback.</li>
+<li><strong><code>hardened_custom</code></strong> — a
+<code>wx.Dialog</code> container composed <em>only</em> of stock native
+controls (<code>wx.ListBox</code>, <code>wx.TextCtrl</code>,
+<code>wx.SearchCtrl</code>, <code>wx.CheckListBox</code>,
+<code>wx.Notebook</code>, <code>wx.Button</code>, …). These are
+“enhanced-native”: real OS widgets in a dialog frame. No custom-drawn or
+owner-drawn controls are permitted in any dialog.</li>
+</ol>
+<p><strong>Source-of-truth inventory.</strong> The authoritative dialog
+inventory is generated from source, not from a checklist.
+<code>quill/tools/dialog_inventory.py</code> AST-scans all of
+<code>quill/**/*.py</code> and records every dialog surface under a
+stable, line-independent key
+(<code>&lt;module&gt;::&lt;enclosing_qualname&gt;::&lt;kind&gt;</code>)
+with its sanctioned classification. The committed snapshot is
+<code>tests/unit/ui/fixtures/dialog_inventory.json</code>, and two gates
+enforce it: <code>tests/unit/ui/test_dialog_inventory.py</code> fails on
+any new, moved, removed, or reclassified dialog or unsanctioned surface;
+and a registry cross-check inside the A11Y-4 banned-pattern gate fails
+the build on any unregistered or misclassified dialog. Adding a dialog
+forces a deliberate
+<code>python -m quill.tools.dialog_inventory --write</code> whose
+classification is reviewed in the diff. The manual companion checklist
+<code>dialogs.md</code> maps each shipped dialog to its keyboard command
+or menu path and is kept in sync, but it is not the inventory
+authority.</p>
+<p><strong>Per-dialog accessibility interaction contract.</strong> Every
+dialog must satisfy all of: deterministic initial focus on open;
+complete Tab / Shift+Tab traversal; an explicit default action (Enter);
+Escape/close always exits; preserved modal-result semantics; focus
+return to the initiating editor/control on close; the screen reader
+announces the title and every actionable control; and no trap, freeze,
+or silent state. Modal show is routed through the shared
+<code>dialog_contract</code> helpers (<code>apply_modal_ids</code>,
+<code>show_modal_dialog</code>), and raw <code>wx.Dialog(...)</code>
+always has a <code>Destroy()</code> (or <code>with</code> form)
+lifecycle and uses <code>wx.EXPAND</code> button sizers, never
+<code>wx.ALIGN_RIGHT</code>.</p>
+<p><strong>Control-surface completeness.</strong> For every dialog,
+every control surface is audited and explicitly dispositioned as
+<strong>keep</strong> (already excellent, evidence linked),
+<strong>harden</strong> (focus/tab/label/default/announcement
+improvements), or <strong>replace</strong> (native or sanctioned-web
+equivalent). No unlabeled, untabbable, unannounced, or ambiguous control
+remains.</p>
+<p><strong>“Every dialog touched” definition.</strong> A dialog counts
+as touched only when it has all three of: (1) a classification in the
+registry (<code>native</code>, <code>web</code>, or
+<code>hardened_custom</code>); (2) explicit conformance evidence (a
+focused source-contract test or behavior test); and (3) a confirmed
+<code>dialogs.md</code> mapping, updated if its naming, binding, or path
+changed. The authoritative inventory is generated from source —
+including non-<code>quill/ui</code> surfaces such as the startup storage
+chooser in <code>quill/__main__.py</code> and the nested describe-image
+source/file pickers in <code>quill/ui/main_frame_image.py</code> — so
+checklist-only review can never miss a surface. The exit criterion is
+100% source coverage, not a fixed legacy count; the count is expected to
+rise as source-discovered dialogs are folded in.</p>
+<p><strong>High-risk clusters (sequenced first).</strong> The
+concentration of lifecycle/focus risk is known and drives wave order:
+(1) <code>main_frame.py</code> modal sprawl (largest concentration); (2)
+<code>assistant_tools.py</code> (high interaction complexity, async
+actions, many custom dialog classes); (3) the startup/onboarding chain
+(<code>run_startup_wizard</code>, first-run prompts, trust consent,
+web-preview handoff); (4) sticky notes (historical focus-landing
+issues); and (5) mixed rendering surfaces (native + web + fallback)
+where behavior parity must be explicitly pinned. Already in place and
+relied upon: the shared <code>dialog_contract.py</code> modal helpers,
+the banned-pattern gate’s existing <code>wx.ALIGN_RIGHT</code> and
+raw-<code>wx.Dialog</code> destroy-path checks, and the existing
+behavior tests for preview, web-form, and onboarding navigation.</p>
+<p><strong>Execution waves.</strong> DLG-3 proceeds as: Phase 0 —
+authoritative source-generated registry + gates (delivered); Phase 1 —
+strengthened A11Y-4 static guard (delivered); Phase 2 — native
+conversion wave for hand-rolled dialogs that are really a single confirm
+/ choice / text prompt, replaced with the stock one-shot equivalent,
+preserving all user-facing wording and outcomes; Phase 3 —
+enhanced-native standardization wave converging the genuinely
+multi-control dialogs onto one focus/default/lifecycle grammar via the
+shared contract (never flattened into one-shots where that would lose
+live search, lists, or streaming); Phase 4 — web-surface standardization
+only where rich rendering or dynamic forms are justified, with
+native-fallback parity and no raw HTML dumped into document tabs in
+onboarding/welcome paths; Phase 5 — startup/onboarding hardening
+(wizard, first-run, trust consent, crash recovery) for deterministic
+focus across chained modals, preserving the explicit-consent
+requirements and retiring the screen-reader startup-crash path; Phase 6
+— assistant/AI tool dialog consolidation
+(<code>assistant_tools.py</code>, <code>ai_model_panel.py</code>,
+<code>style_panel.py</code>, <code>assistant_panel.py</code>) onto the
+same modal/focus/error contract with safe async/“busy” semantics; Phase
+7 — CQ-16 characterization expansion around dialog-launch command paths
+(return values and side effects) before any CQ-1 decomposition; Phase 8
+— manual NVDA baseline, JAWS spot (startup, assistant, sticky notes,
+watch profiles), and Narrator sanity passes across
+<code>dialogs.md</code>, each row carrying pass/fail evidence.</p>
+<p><strong>Dialog-by-dialog coverage map (no section exempt).</strong>
+Every checklist family in <code>dialogs.md</code> is in scope with a
+default disposition: file/session dialogs (native-flow normalization +
+modal/focus hardening); settings/customization/dialog-launch surfaces
+(enhanced-native consistency — menu editor, settings, command palette);
+navigation dialogs (keep stock/input surfaces, harden bookmark/list/tree
+flows); text-analysis dialogs (normalize spell/lookup/thesaurus list
+workflows); accessibility-tools dialogs (focus/read-order consistency in
+results dialogs); intake/report dialogs (standardized preview/report
+modals); read-aloud/OCR dialogs (keep the OCR review contract, harden
+nested chooser flows); sticky-notes dialogs (retain web-form where
+justified, harden vault/list/editor transitions); external-tools/format
+dialogs (enhanced-native standard patterns); compare dialogs (consistent
+list/option/preview focus); keymap dialogs (stock controls + predictable
+nested edit flow); appearance/backup/import dialogs (import/export
+previews and file-picker transitions hardened); watch-folder dialogs
+(nested editor/browse/preview paths hardened); notifications dialog
+(standardized close/default semantics); formatting dialogs (preserve
+<code>show_web_form</code> for Insert Link, harden list/YAML nested
+flows); macros dialogs (text-entry + management standardization);
+AI/assistant dialogs (the DLG-2 conversions folded in); BITS speech
+dialogs (provider/model/status contract hardening); feature/profile
+dialogs (profile-switch, health, and management consistency);
+help/startup/support dialogs (wizard/about/diagnostics/report-bug
+rendering and focus safety); selection-action dialogs (action-chooser
+semantics hardened); nested/secondary dialogs (explicit coverage for
+each path launched from a parent); EdSharp dialogs (stock prompt/confirm
+consistency); and startup-only dialogs (crash recovery +
+untrusted-location remain top-priority hardened native flows).</p>
+<p><strong>Conversion decisions (definitive).</strong> Keep
+<code>native</code>: simple confirms and binary prompts, and stable
+stock file/folder/select/text prompts. Keep sanctioned <code>web</code>:
+markdown/HTML preview and rich rendered content, explicit multi-field
+forms where <code>show_web_form</code> is already stable and
+fallback-backed, and chat-centric surfaces with native fallback. Harden
+<code>hardened_custom</code> (not a web rewrite by default): complex
+list/CRUD/picker dialogs where stock controls are appropriate and
+lower-risk than a web migration, and interaction-heavy assistant panels
+that are not rich-rendering-centric. No untouched custom paths: any
+retained custom dialog must carry a written rationale plus a contract
+test.</p>
+<p><strong>Operational mandates (enforcement, not intent).</strong>
+Machine-enforced checks that must pass before merge: the expanded A11Y-4
+banned-pattern gate with zero violations; the dialog-registry
+completeness check (no orphan dialogs); the source-contract tests for
+touched dialogs; the characterization checks for dialog-launch command
+paths; and the project-wide source-scan check (no dialog constructor or
+call-site outside the inventory). “Manual QA later” is never a
+substitute for these gates. Manual accessibility verification is
+release-blocking per touched family: a keyboard-only pass (open,
+traverse, act, cancel, close, focus return), a screen-reader pass (NVDA
+baseline; JAWS/Narrator spot by risk), a nested-flow pass (child dialogs
+launched from parents), and a fallback-parity pass (web-backed dialogs
+validated in native fallback). Every dialog change records its impacted
+dialog id(s), the control surfaces touched, the classification decision,
+the tests added/updated, and the manual verification result; missing
+evidence means the change is incomplete.</p>
+<p><strong>Anti-regression controls.</strong> No mixed ad-hoc modal
+patterns may be introduced during the refactor; no dialog merges without
+a classification and test evidence; and no <code>dialogs.md</code> drift
+is allowed in a PR. The source-of-truth rule is absolute: before closing
+any dialog work item, run the inventory scanner across the entire
+<code>quill</code> package, and if scanner output and the committed
+registry disagree, the work is incomplete regardless of checklist
+status.</p>
+<p><strong>Definition of done.</strong> DLG-3 is done only when: 100% of
+source-scanned dialogs are touched and classified (not just a legacy
+checklist count); simple confirm/message/choice/text flows are native
+one-shots; rich/input flows use only sanctioned web surfaces with
+fallback parity; every control in every dialog is inventoried and
+dispositioned
+(<code>keep</code>/<code>harden</code>/<code>replace</code>); any
+retained <code>hardened_custom</code> dialog has an explicit rationale
+and at least one focused source-contract or behavior test; the
+strengthened A11Y-4 guard blocks contract regressions; the startup
+wizard and first-run chains are stable and non-crashing with a screen
+reader active on Windows and macOS; and <code>dialogs.md</code> is
+synchronized with the final command paths and nested flows.</p>
 <hr />
 <h2 id="technical-infrastructure">10. Technical infrastructure</h2>
 <p>This section is the canonical engineering blueprint for Quill. It
