@@ -8175,6 +8175,38 @@ note), and A11Y-1 (announcement grammar). The GATE-3/CQ-7 cleanup also
 incidentally cleared the <code>quill/core</code> and
 <code>quill/io</code> portion of the TYPE-1..8 zone, though those formal
 rows stay open until each is individually verified and closed.</p>
+<h4 id="bug-fix-keymap-editor-dialog-issue-119-restored">2026-06-11: Bug
+fix — Keymap Editor dialog (issue #119) restored</h4>
+<p>The Keymap Editor (<code>Tools → Keymap Editor…</code>) regressed:
+the command list showed empty and the OK button could not dismiss the
+dialog (users had to kill the process). Root cause was a
+parent-ownership mismatch in <code>open_keymap_editor</code>: the
+controls were parented to an inner <code>wx.Panel</code>, but the OK
+button created by <code>dialog.CreateButtonSizer(...)</code> (a child of
+the dialog, not the panel) was added to the <em>panel’s</em> sizer. That
+mixed sizer tree mislaid the OK button — leaving it non-functional — and
+the broken <code>SetSizerAndFit</code> collapsed the list.</p>
+<ul>
+<li><strong>Fix:</strong> every control is now parented directly to the
+dialog and laid out in a single sizer, matching the proven
+<code>_choose_searchable_option</code> pattern. The OK button
+(<code>SetDefault</code>), <code>apply_modal_ids</code>, and
+<code>_show_modal_dialog</code> wiring are unchanged, so the dialog
+keeps its explicit default/escape and accessible announce path. No
+behavior change to the binding-edit flow or persistence.</li>
+<li><strong>Guard:</strong>
+<code>tests/unit/ui/test_keymap_editor_contract.py</code> now asserts
+the controls are dialog-parented (<code>wx.ListBox(dialog</code>,
+<code>wx.Button(dialog</code>, <code>dialog.SetSizer(root)</code>) and
+that no inner <code>wx.Panel(dialog)</code> returns.</li>
+<li><strong>Validated:</strong> ruff format/check clean; the
+keymap-editor contract test, the DLG-3 <code>dialog_inventory</code>
+snapshot (unchanged — the panel was never a dialog surface; 154
+surfaces, classification unchanged), the dialog-contract guard, and the
+A11Y-4 banned-pattern gate all pass.</li>
+<li><strong>Counts:</strong> unchanged — this is a defect fix, not a
+tier-item closure.</li>
+</ul>
 <h4
 id="dlg-3-and-dlg-2-close-code-complete-final-qa-test-plan-written-sr-sign-off-relocated-to-tier-6-dlg-3.8">2026-06-11:
 DLG-3 and DLG-2 close (code complete); final-QA test plan written; SR

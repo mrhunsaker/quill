@@ -16,7 +16,7 @@ def test_keymap_editor_uses_persistent_dialog_with_inline_bindings() -> None:
     body = SOURCE[start:end]
 
     assert 'wx.Dialog(self.frame, title="Keymap Editor"' in body
-    assert "wx.ListBox(panel" in body
+    assert "wx.ListBox(dialog" in body
     assert "or 'Unassigned'" in body
     assert "self._binding_for(command_id)" in body
     assert "def edit_selected" in body
@@ -24,7 +24,11 @@ def test_keymap_editor_uses_persistent_dialog_with_inline_bindings() -> None:
     assert "refresh_list(keep=selected)" in body
     # Double-click and an explicit Edit button both trigger editing.
     assert "EVT_LISTBOX_DCLICK, edit_selected" in body
-    assert 'wx.Button(panel, label="&Edit Keybinding...")' in body
+    assert 'wx.Button(dialog, label="&Edit Keybinding...")' in body
+    # Issue #119: controls are parented to the dialog (not an inner panel) so the
+    # OK button shares the dialog's sizer tree and can dismiss the dialog.
+    assert "wx.Panel(dialog)" not in body
+    assert "dialog.SetSizer(root)" in body
 
 
 def test_apply_keymap_binding_validates_and_persists() -> None:

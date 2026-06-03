@@ -7509,11 +7509,16 @@ class MainFrame(
             return
 
         dialog = wx.Dialog(self.frame, title="Keymap Editor", size=(640, 480))
-        panel = wx.Panel(dialog)
+        # Parent every control directly to the dialog and lay them out in a
+        # single sizer (issue #119). The previous build parented controls to an
+        # inner wx.Panel but added dialog.CreateButtonSizer()'s buttons (children
+        # of the dialog) to the panel's sizer. That parent/sizer mismatch
+        # mislaid the OK button (it could not dismiss the dialog) and collapsed
+        # the command list. This matches the working _choose_searchable_option.
         root = wx.BoxSizer(wx.VERTICAL)
         root.Add(
             wx.StaticText(
-                panel,
+                dialog,
                 label=(
                     "Select a command and choose Edit to change its keybinding. "
                     "The current key (or 'Unassigned') is shown for each command. "
@@ -7524,10 +7529,10 @@ class MainFrame(
             wx.ALL | wx.EXPAND,
             8,
         )
-        listbox = wx.ListBox(panel, style=wx.LB_SINGLE)
+        listbox = wx.ListBox(dialog, style=wx.LB_SINGLE)
         root.Add(listbox, 1, wx.ALL | wx.EXPAND, 8)
         controls = wx.BoxSizer(wx.HORIZONTAL)
-        edit_button = wx.Button(panel, label="&Edit Keybinding...")
+        edit_button = wx.Button(dialog, label="&Edit Keybinding...")
         controls.Add(edit_button, 0, wx.RIGHT, 8)
         root.Add(controls, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
         buttons = dialog.CreateButtonSizer(wx.OK)
@@ -7537,10 +7542,7 @@ class MainFrame(
                 ok_button.SetDefault()
             root.Add(buttons, 0, wx.EXPAND | wx.ALL, 8)
         apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
-        panel.SetSizer(root)
-        outer = wx.BoxSizer(wx.VERTICAL)
-        outer.Add(panel, 1, wx.EXPAND)
-        dialog.SetSizerAndFit(outer)
+        dialog.SetSizer(root)
 
         def refresh_list(keep: int | None = None) -> None:
             labels = [

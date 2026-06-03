@@ -1507,6 +1507,30 @@ under Tier 2.
 
 Completed outside the formal tier lists (cross-cutting protections and quality work that the tiers reference only by theme): SEC-2 (path-escape guard for persistence writes), SEC-3 (OCR language allowlist), SEC-4 (documented and validated cwd safety for safe_subprocess), SEC-5 (verified TLS everywhere), GATE-1 (pre-commit), PERF-8 (documented scoped type-check), CQ-17 (thread-safety invariants note), and A11Y-1 (announcement grammar). The GATE-3/CQ-7 cleanup also incidentally cleared the `quill/core` and `quill/io` portion of the TYPE-1..8 zone, though those formal rows stay open until each is individually verified and closed.
 
+#### 2026-06-11: Bug fix — Keymap Editor dialog (issue #119) restored
+
+The Keymap Editor (`Tools → Keymap Editor…`) regressed: the command list showed
+empty and the OK button could not dismiss the dialog (users had to kill the
+process). Root cause was a parent-ownership mismatch in `open_keymap_editor`: the
+controls were parented to an inner `wx.Panel`, but the OK button created by
+`dialog.CreateButtonSizer(...)` (a child of the dialog, not the panel) was added
+to the *panel's* sizer. That mixed sizer tree mislaid the OK button — leaving it
+non-functional — and the broken `SetSizerAndFit` collapsed the list.
+
+- **Fix:** every control is now parented directly to the dialog and laid out in a
+  single sizer, matching the proven `_choose_searchable_option` pattern. The OK
+  button (`SetDefault`), `apply_modal_ids`, and `_show_modal_dialog` wiring are
+  unchanged, so the dialog keeps its explicit default/escape and accessible
+  announce path. No behavior change to the binding-edit flow or persistence.
+- **Guard:** `tests/unit/ui/test_keymap_editor_contract.py` now asserts the
+  controls are dialog-parented (`wx.ListBox(dialog`, `wx.Button(dialog`,
+  `dialog.SetSizer(root)`) and that no inner `wx.Panel(dialog)` returns.
+- **Validated:** ruff format/check clean; the keymap-editor contract test, the
+  DLG-3 `dialog_inventory` snapshot (unchanged — the panel was never a dialog
+  surface; 154 surfaces, classification unchanged), the dialog-contract guard,
+  and the A11Y-4 banned-pattern gate all pass.
+- **Counts:** unchanged — this is a defect fix, not a tier-item closure.
+
 #### 2026-06-11: DLG-3 and DLG-2 close (code complete); final-QA test plan written; SR sign-off relocated to Tier 6 (DLG-3.8)
 
 The dialog-estate code program reached genuine Done, and the residual manual screen-reader sign-off was given a real home and a real script.
