@@ -7631,11 +7631,18 @@ class MainFrame(
         item_order = list(self.settings.status_bar_order)
         hidden = set(self.settings.status_bar_hidden)
         dialog = wx.Dialog(self.frame, title="Status Bar Layout", size=(560, 420))
-        panel = wx.Panel(dialog)
+        # Parent every control directly to the dialog and lay them out in one
+        # sizer (issue #119 pattern). The previous build parented controls to an
+        # inner wx.Panel but added dialog.CreateButtonSizer()'s buttons (children
+        # of the dialog) to the panel's sizer. That parent/sizer mismatch
+        # mislaid the OK/Cancel buttons, and because SetEscapeId(wx.ID_CANCEL)
+        # needs a realized Cancel button, neither the buttons nor Escape could
+        # dismiss the dialog. This matches the working Keymap Editor and search
+        # dialogs.
         root = wx.BoxSizer(wx.VERTICAL)
         root.Add(
             wx.StaticText(
-                panel,
+                dialog,
                 label=(
                     "Choose visible status items and order. "
                     "Use Move Up/Down, or right-click for Move Left/Right and Hide/Show."
@@ -7646,35 +7653,28 @@ class MainFrame(
             8,
         )
         chooser = wx.CheckListBox(
-            panel,
+            dialog,
             choices=[self._STATUS_BAR_LABELS.get(item, item) for item in item_order],
         )
         for index, item in enumerate(item_order):
             chooser.Check(index, item not in hidden)
         root.Add(chooser, 1, wx.ALL | wx.EXPAND, 8)
         controls = wx.BoxSizer(wx.HORIZONTAL)
-        move_up = wx.Button(panel, label="Move Up")
-        move_down = wx.Button(panel, label="Move Down")
-        restore_defaults = wx.Button(panel, label="Restore Defaults")
+        move_up = wx.Button(dialog, label="Move Up")
+        move_down = wx.Button(dialog, label="Move Down")
+        restore_defaults = wx.Button(dialog, label="Restore Defaults")
         controls.Add(move_up, 0, wx.RIGHT, 8)
         controls.Add(move_down, 0, wx.RIGHT, 8)
         controls.Add(restore_defaults, 0, wx.RIGHT, 8)
         root.Add(controls, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
         buttons = dialog.CreateButtonSizer(wx.OK | wx.CANCEL)
         if buttons is not None:
-            # Same fix as the search dialogs (#84): add the StdDialogButtonSizer
-            # with wx.EXPAND (not wx.ALIGN_RIGHT) and give the dialog its own
-            # outer sizer wrapping the panel, so the buttons are realized and
-            # the panel fills the dialog. Previously only the panel had a sizer.
             ok_button = dialog.FindWindowById(wx.ID_OK)
             if ok_button is not None:
                 ok_button.SetDefault()
             root.Add(buttons, 0, wx.EXPAND | wx.ALL, 8)
         apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
-        panel.SetSizer(root)
-        outer = wx.BoxSizer(wx.VERTICAL)
-        outer.Add(panel, 1, wx.EXPAND)
-        dialog.SetSizerAndFit(outer)
+        dialog.SetSizer(root)
         restore_defaults_selected = False
 
         def swap_items(first: int, second: int) -> None:
