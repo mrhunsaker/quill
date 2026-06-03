@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from quill.core.shell_verbs import default_shell_verbs
 from scripts.build_windows_distribution import (
     build_inno_setup_script,
+    build_shell_verb_registry_lines,
     build_windows_distribution,
     bundled_runtime_dependencies,
     compile_inno_setup_installer,
@@ -210,6 +212,55 @@ def test_build_inno_setup_script_mentions_portable_bundle() -> None:
     assert "HKLM" not in script
     # The script parses as plain ASCII text (catches stray bad characters).
     script.encode("ascii")
+
+
+def test_shell_verb_registry_lines_cover_every_verb_and_extension() -> None:
+    # SHELL-3: the installer's right-click verbs are generated straight from
+    # the single core registry, so the menu can never drift from the CLI.
+    lines = build_shell_verb_registry_lines()
+    text = "\n".join(lines)
+    for verb in default_shell_verbs():
+        key = f"shell\\Quill.{verb.verb_id}"
+        # Each verb appears with its label and its --action launch command.
+        assert f'ValueData: "{verb.label}"' in text
+        assert f"--action {verb.action} " in text
+        for extension in verb.extensions:
+            base = f"Software\\Classes\\SystemFileAssociations\\{extension}\\{key}"
+            assert f'Subkey: "{base}"' in text
+            assert f'Subkey: "{base}\\command"' in text
+
+
+def test_shell_verb_registry_lines_are_optin_and_uninstall_clean() -> None:
+    # Every verb key is gated behind the opt-in shellverbs task and tagged
+    # uninsdeletekey so a full uninstall removes the context-menu entries.
+    lines = build_shell_verb_registry_lines()
+    assert lines, "expected at least one generated verb registry line"
+    assert all("Tasks: shellverbs" in line for line in lines)
+    # The verb root keys (not the MUIVerb/command values) carry uninsdeletekey.
+    root_key_lines = [line for line in lines if 'ValueName: ""' in line and "\\command" not in line]
+    assert root_key_lines
+    assert all("Flags: uninsdeletekey" in line for line in root_key_lines)
+
+
+def test_shell_verb_command_launches_run_quill_cmd_with_action() -> None:
+    # The launch command routes through run-quill.cmd (AppExeName), which
+    # forwards %* to `python -m quill`, passing the file as %1.
+    lines = build_shell_verb_registry_lines()
+    command_lines = [line for line in lines if "\\command" in line]
+    assert command_lines
+    for line in command_lines:
+        assert 'ValueData: """{app}\\{#AppExeName}"" --action ' in line
+        assert '""%1"""' in line
+
+
+def test_inno_setup_script_includes_shell_verb_task_and_registry() -> None:
+    # SHELL-3 is wired end-to-end into the generated installer script.
+    script = build_inno_setup_script("9.9.9")
+    assert 'Name: "shellverbs"; Description: "Add ""Send to Quill"" actions' in script
+    assert 'Send to Quill" file right-click verbs (SHELL-3)' in script
+    # Spot-check one concrete verb/extension pair made it into the [Registry].
+    assert 'Subkey: "Software\\Classes\\SystemFileAssociations\\.png\\shell\\Quill.ocr"' in script
+    assert "--action ocr " in script
 
 
 def test_build_windows_distribution_can_bundle_external_tools(tmp_path: Path) -> None:

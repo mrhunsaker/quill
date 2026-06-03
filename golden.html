@@ -1885,18 +1885,34 @@ this stays honestly In progress.</td>
 </tr>
 <tr>
 <td>SHELL-3</td>
-<td>Windows 11 modern context menu (IExplorerCommand) + installer
-registration</td>
+<td>Installer-registered “Send to Quill” context-menu verbs
+(classic/Show-more-options menu)</td>
 <td>Integration</td>
 <td>M</td>
-<td>Todo</td>
-<td>The classic (pre-Win11)
-<code>HKCU\Software\Classes\SystemFileAssociations</code> verb path
-ships in SHELL-1 and is buildable and verifiable locally. The packaged
-<code>IExplorerCommand</code> sparse-package that surfaces the same
-verbs in the Windows 11 primary (non-“Show more options”) menu, and its
-installer/uninstaller registration, require a live install/uninstall
-verification cycle and are deferred. Tracks intake issues #113
+<td>In progress</td>
+<td><strong>Delivered:</strong> the Inno Setup installer now registers
+the “Send to Quill” file right-click verbs, generated directly from the
+single core registry (<code>quill/core/shell_verbs.py</code>) by
+<code>build_shell_verb_registry_lines()</code> in
+<code>scripts/build_windows_distribution.py</code>, so the installer
+menu, the runtime registry writer, the CLI <code>--action</code> map,
+and the Settings toggles can never drift. Each verb is written per file
+extension under
+<code>HKCU\Software\Classes\SystemFileAssociations\&lt;ext&gt;\shell\Quill.&lt;verb_id&gt;</code>
+with a <code>"{app}\run-quill.cmd" --action &lt;action&gt; "%1"</code>
+command (run-quill.cmd forwards <code>%*</code> to
+<code>python -m quill</code>), gated behind a new opt-in
+<code>shellverbs</code> task, and tagged <code>uninsdeletekey</code> for
+clean uninstall. Six contract tests assert per-verb/per-extension
+coverage, opt-in + uninstall-clean flags, the launch command, and
+end-to-end presence in the generated <code>.iss</code>; the committed
+<code>installer/quill.iss</code> is regenerated. <strong>Remaining
+(Windows-runtime only):</strong> one live install → right-click a
+<code>.png</code>/<code>.pdf</code> → confirm the verb appears (Show
+more options / Shift+F10) and runs → uninstall → confirm removal. The
+Windows 11 <em>primary</em>-menu <code>IExplorerCommand</code>
+sparse-package (which the OS gates behind compiled COM + package
+identity) is descoped to QUILL 2.0. Tracks intake issues #113
 (umbrella), #114 (Windows Explorer), and #116 (structured OCR data
 model, delivered by SHELL-1/SHELL-2); macOS Finder (#115) stays blocked
 on the macOS port (#42).</td>
@@ -7135,11 +7151,24 @@ safely to plain OCR with a status note otherwise. Covered by
 <code>test_structure_operation.py</code> and source-contract tests. The
 honest remainder is live-key end-to-end verification and
 structuring-quality tuning on real-world OCR output.</li>
-<li><strong>SHELL-3 (Todo):</strong> the classic Explorer menu ships in
-SHELL-1; the Windows 11 <code>IExplorerCommand</code> modern-menu
-package and its installer registration require a real install/uninstall
-cycle and stay deferred. Tracks intake #113/#114/#116; macOS Finder
-(#115) stays blocked on the macOS port (#42).</li>
+<li><strong>SHELL-3 (advanced, still In progress):</strong> the Inno
+Setup installer now registers the “Send to Quill” file right-click
+verbs, generated directly from the core registry by
+<code>build_shell_verb_registry_lines()</code> so the installer menu can
+never drift from the in-app menu, the CLI <code>--action</code> map, or
+the Settings toggles. Each verb is written per extension under
+<code>HKCU\Software\Classes\SystemFileAssociations\&lt;ext&gt;\shell\Quill.&lt;verb_id&gt;</code>
+with a <code>"{app}\run-quill.cmd" --action &lt;action&gt; "%1"</code>
+command, gated behind a new opt-in <code>shellverbs</code> task and
+tagged <code>uninsdeletekey</code>; the committed
+<code>installer/quill.iss</code> was regenerated. Covered by six new
+contract tests in <code>test_build_windows_distribution.py</code>. The
+honest remainder is one live install → right-click → run → uninstall
+verification pass (Inno Setup must be installed). The Windows 11
+<em>primary</em>-menu <code>IExplorerCommand</code> sparse-package is
+descoped to QUILL 2.0 (the OS gates it behind compiled COM + package
+identity). Tracks intake #113/#114/#116; macOS Finder (#115) stays
+blocked on the macOS port (#42).</li>
 <li>Counts: SHELL-1 closes; SHELL-2 and SHELL-3 join AI-19 as the open
 Tier 2 items, moving Tier 2 to <strong>57 of 60 done (3 remaining:
 AI-19, SHELL-2, SHELL-3)</strong>.</li>

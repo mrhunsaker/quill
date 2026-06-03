@@ -28,6 +28,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from quill.core.shell_verbs import ShellVerb, default_shell_verbs
 from quill.core.storage import write_json_atomic
 
 # Pinned Windows embeddable Python. Bumping these values is the only
@@ -398,6 +399,53 @@ def _render_readme(
     )
 
 
+def build_shell_verb_registry_lines(
+    verbs: tuple[ShellVerb, ...] | list[ShellVerb] | None = None,
+) -> list[str]:
+    """Return Inno ``[Registry]`` lines for the "Send to Quill" verbs (SHELL-3).
+
+    Driven entirely by :func:`quill.core.shell_verbs.default_shell_verbs` so the
+    installer, the runtime registry writer
+    (``quill/platform/windows/shell_integration.py``), the CLI ``--action`` map,
+    and the Settings toggles can never drift. Each verb is registered per file
+    extension under
+    ``Software\\Classes\\SystemFileAssociations\\<ext>\\shell\\Quill.<verb_id>``
+    so QUILL appears in the file right-click menu without owning the file's
+    default association. Every key is gated behind the opt-in ``shellverbs`` task
+    and tagged ``uninsdeletekey`` so a full uninstall removes the verbs cleanly.
+
+    The launch command is ``"{app}\\run-quill.cmd" --action <action> "%1"``;
+    ``run-quill.cmd`` forwards ``%*`` to ``python -m quill``, so the selected
+    file path and verb reach the same dispatch used by the in-app menu.
+    """
+
+    selected = tuple(verbs) if verbs is not None else default_shell_verbs()
+    lines: list[str] = []
+    for verb in selected:
+        key_name = f"Quill.{verb.verb_id}"
+        label = verb.label.replace('"', '""')
+        # Inno escapes a literal double-quote inside a string value as "".
+        command = f'"""{{app}}\\{{#AppExeName}}"" --action {verb.action} ""%1"""'
+        for extension in verb.extensions:
+            base = f"Software\\Classes\\SystemFileAssociations\\{extension}\\shell\\{key_name}"
+            lines.append(
+                f'Root: HKCU; Subkey: "{base}";'
+                f' ValueType: string; ValueName: ""; ValueData: "{label}";'
+                " Flags: uninsdeletekey; Tasks: shellverbs"
+            )
+            lines.append(
+                f'Root: HKCU; Subkey: "{base}";'
+                f' ValueType: string; ValueName: "MUIVerb"; ValueData: "{label}";'
+                " Tasks: shellverbs"
+            )
+            lines.append(
+                f'Root: HKCU; Subkey: "{base}\\command";'
+                f' ValueType: string; ValueName: ""; ValueData: {command};'
+                " Tasks: shellverbs"
+            )
+    return lines
+
+
 def build_inno_setup_script(version: str) -> str:
     """Return a production-quality Inno Setup script for the portable bundle.
 
@@ -456,6 +504,9 @@ def build_inno_setup_script(version: str) -> str:
         ' GroupDescription: "Additional shortcuts:"; Flags: unchecked',
         'Name: "fileassoc"; Description: "Register Quill in the Open With menu'
         ' for common text formats (.txt, .md, .rst, .log, .csv, .json)";'
+        ' GroupDescription: "File associations:"; Flags: unchecked',
+        'Name: "shellverbs"; Description: "Add ""Send to Quill"" actions'
+        ' (OCR, Open, Read aloud) to the file right-click menu";'
         ' GroupDescription: "File associations:"; Flags: unchecked',
         "",
         "[Components]",
@@ -573,6 +624,14 @@ def build_inno_setup_script(version: str) -> str:
             f'Root: HKCU; Subkey: "Software\\Classes\\{extension}\\OpenWithList\\{{#AppExeName}}";'
             " Flags: uninsdeletekey; Tasks: fileassoc"
         )
+    lines += [
+        "",
+        '; "Send to Quill" file right-click verbs (SHELL-3). Generated from',
+        "; quill.core.shell_verbs so the installer, runtime registry writer, CLI",
+        "; --action map, and Settings toggles stay in lockstep. Opt-in via the",
+        "; shellverbs task; uninsdeletekey removes them on uninstall.",
+    ]
+    lines += build_shell_verb_registry_lines()
     lines += [
         "",
         "[Run]",
