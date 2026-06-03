@@ -227,7 +227,7 @@ Quill then goes further with selection and navigation-aware editing:
 - **Follow Link** opens the link under the caret.
 - **Find...** and **Replace...** sit here as expected.
 - **Replace...** includes a **Replace All** action in the dialog, so bulk replacement stays in one place.
-- **Preferences...** opens the broader customization surface.
+- **Preferences...** and **Customize Menus...** now live together with the rest of Quill's configuration under **Tools -> Customize**.
 
 ### View
 
@@ -606,6 +606,8 @@ These tools help review the editor experience itself, the current document's lin
 - **Report a Bug...**
 - **Save Diagnostics...**
 - **Check for Updates...**
+- **Preferences...**
+- **Customize Menus...**
 - **Profiles and Features...**
 - **Status Bar Settings...**
 - **Keymap Editor...**

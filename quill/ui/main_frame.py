@@ -2806,15 +2806,6 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
         selection_menu.AppendSeparator()
         selection_menu.AppendSubMenu(mark_ring_menu, "Recent &Marks (Ring)")
         edit_menu.AppendSubMenu(selection_menu, "&Selection")
-        edit_menu.AppendSeparator()
-        edit_menu.Append(
-            self._id_preferences,
-            self._menu_label("Pre&ferences...", "app.preferences"),
-        )
-        edit_menu.Append(
-            self._id_menu_editor,
-            self._menu_label("Customize &Menus...", "app.menu_editor"),
-        )
         menu_bar.Append(edit_menu, "&Edit")
         insert_menu = wx.Menu()
         menu_bar.Append(insert_menu, "&Insert")
@@ -3867,6 +3858,15 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
 
         customize_menu = wx.Menu()
         customize_menu.Append(
+            self._id_preferences,
+            self._menu_label("Pre&ferences...", "app.preferences"),
+        )
+        customize_menu.Append(
+            self._id_menu_editor,
+            self._menu_label("Customize &Menus...", "app.menu_editor"),
+        )
+        customize_menu.AppendSeparator()
+        customize_menu.Append(
             self._id_profiles_and_features,
             self._menu_label("&Profiles and Features...", "tools.profiles_and_features_settings"),
         )
@@ -3886,9 +3886,10 @@ class MainFrame(ImageCaptureMixin, BrowseModeMixin, EdSharpActionsMixin, EdSharp
         menu_bar.Append(format_menu, "F&ormat")
         menu_bar.Append(tools_menu, "&Tools")
 
-        # The former top-level "Settings" menu is gone. Its contents now
-        # live in Edit > Preferences and Tools > Customize, which is the
-        # Windows/Office standard. Nothing references settings_menu after
+        # The former top-level "Settings" menu is gone. All configuration now
+        # lives together under Tools > Customize (Preferences, Customize Menus,
+        # profiles/features, export/import, and keymap), which is the
+        # Windows/Tools convention. Nothing references settings_menu after
         # this point; do not append it to the menu bar.
 
         help_menu = wx.Menu()
