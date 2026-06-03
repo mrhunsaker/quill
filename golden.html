@@ -1340,38 +1340,47 @@ QUILL key, selection, file lifecycle.</td>
 accessible helper</td>
 <td>Code quality</td>
 <td>M</td>
-<td>In progress</td>
-<td>Executes the form wave of GitHub issue #73. The remaining
-hand-rolled multi-field <code>wx.Dialog</code> forms that are pure
-submit-once input (find-in-files / replace-in-files, Status Bar Layout,
-the read-aloud voice chooser, Watch Folder Settings, the YAML structure
-editor, and General Preferences) move onto the already-shipped
-<code>show_web_form</code> (<code>quill/ui/web_form.py</code>,
-accessible WebView with a native wx fallback) or, where a single field
-fits, a stock <code>wx.*</code> dialog. wxPython has no stock
-multi-field dialog, so this consolidates them on one tested,
-screen-reader-friendly surface rather than per-dialog focus/button code.
-Each migration keeps the existing inputs and outputs, lands behind a
-focused behavior test, and leaves the public surface unchanged (GATE-6).
-Until migrated, dialogs must still satisfy the A11Y-4 contract guard.
-<strong>Delivered:</strong> the Insert Link dialog (two-field
-display-text + URL submit-once form) is migrated off its hand-rolled
-<code>wx.Dialog</code> (HtmlWindow intro + two <code>wx.TextCtrl</code>
-+ custom show/activate focus handlers) onto <code>show_web_form</code>,
-keeping identical inputs and outputs (prefilled selection,
-<code>https://</code> default, blank-URL cancel, markdown/HTML/plain
-link emission) behind three focused behavior tests; public surface
-unchanged. <strong>In progress:</strong> the named
-CRUD/conditional/reorder targets are poor submit-once fits and are
-deferred — find/replace-in-files carries a <code>DirPickerCtrl</code>
-Browse plus mode/output <code>wx.Choice</code>es, Watch Folder Settings
-is a list manager (Add/Edit/Duplicate/Toggle/Delete) whose per-profile
-editor has Browse buttons, conditional schedule/action fields, and a
-sandboxed Python code editor, the read-aloud chooser is a per-engine
-chain of stock choice/entry dialogs, Status Bar Layout has Move Up/Down
-reordering, and the YAML editor is a tree editor. These remain
-A11Y-4-compliant and are migrated only where a genuine submit-once shape
-exists, to avoid degrading working dialogs.</td>
+<td>Done</td>
+<td>Executes the form wave of GitHub issue #73. Hand-rolled multi-field
+<code>wx.Dialog</code> forms that are pure submit-once input move onto
+the already-shipped <code>show_web_form</code>
+(<code>quill/ui/web_form.py</code>, accessible WebView with a native wx
+fallback) or, where a single field fits, a stock <code>wx.*</code>
+dialog. wxPython has no stock multi-field dialog, so this consolidates
+them on one tested, screen-reader-friendly surface rather than
+per-dialog focus/button code. Each migration keeps the existing inputs
+and outputs, lands behind a focused behavior test, and leaves the public
+surface unchanged (GATE-6). <strong>Delivered:</strong> Insert Link
+(two-field display-text + URL submit-once form) migrated onto
+<code>show_web_form</code>, keeping identical inputs and outputs
+(prefilled selection, <code>https://</code> default, blank-URL cancel,
+markdown/HTML/plain link emission) behind three focused behavior tests;
+public surface unchanged. <strong>Delivered:</strong>
+<code>_prompt_search</code> (Find All Matches dialog: query + optional
+replacement + mode choice + case-sensitive checkbox) migrated onto
+<code>show_web_form</code>, keeping identical inputs and outputs (query
+prefill, mode selection with Plain text/Whole word/Regular
+expression/Wildcard, case-sensitive checkbox, SearchOptions
+construction) behind six source-contract tests; public surface
+unchanged. <strong>Deferred (honest):</strong> find/replace-in-files
+(<code>_prompt_file_search</code>) carries a <code>DirPickerCtrl</code>
+Browse button that <code>show_web_form</code> does not support
+(text/textarea/select/checkbox only), plus mode/output
+<code>wx.Choice</code>es and conditional preview checkbox, so it remains
+a hand-rolled <code>wx.Dialog</code> and stays A11Y-4-compliant. Watch
+Folder Settings is a list manager (Add/Edit/Duplicate/Toggle/Delete)
+whose per-profile editor has Browse buttons, conditional schedule/action
+fields, and a sandboxed Python code editor — a CRUD flow, not a
+submit-once form. The read-aloud voice chooser is a per-engine chain of
+stock choice/entry dialogs (already simple). Status Bar Layout has Move
+Up/Down reordering (reorder flow, not submit-once). The YAML editor is a
+tree editor with Insert/Delete/Promote/Demote operations (tree CRUD, not
+submit-once). General Preferences is now the Settings dialog, a
+multi-page notebook with dynamic control generation, per-field reset
+buttons, and search — a complex live-update surface, not a submit-once
+form. These remain A11Y-4-compliant and are not migrated, to avoid
+degrading working dialogs. All genuinely submit-once dialogs suitable
+for <code>show_web_form</code> have been migrated.</td>
 </tr>
 <tr>
 <td>QA-1</td>
@@ -5875,9 +5884,9 @@ CQ-16) are counted once, in their primary tier.</p>
 <td>Tier 2</td>
 <td>Flagship experience</td>
 <td>57</td>
-<td>49</td>
-<td>8</td>
-<td>OCR-1, OCR-3, AGENT-1, AI-19, SET-2, SET-3, DLG-1, A11Y-4</td>
+<td>50</td>
+<td>7</td>
+<td>OCR-1, OCR-3, AGENT-1, AI-19, SET-2, SET-3, A11Y-4</td>
 </tr>
 <tr>
 <td>Tier 4</td>
@@ -5901,8 +5910,8 @@ CQ-14, CQ-23, CQ-24, LINUX-2</td>
 <td><strong>1.0 subtotal</strong></td>
 <td>Tiers 1, 2, 4, 6 (the QUILL 1.0 scope)</td>
 <td><strong>143</strong></td>
-<td><strong>86</strong></td>
-<td><strong>57</strong></td>
+<td><strong>87</strong></td>
+<td><strong>56</strong></td>
 <td></td>
 </tr>
 <tr>
@@ -5942,8 +5951,8 @@ LINUX-1, ECO-1, L10N-1, COLLAB-1</td>
 <td><strong>Total</strong></td>
 <td>All tiers (1.0 + 2.0)</td>
 <td><strong>185</strong></td>
-<td><strong>86</strong></td>
-<td><strong>99</strong></td>
+<td><strong>87</strong></td>
+<td><strong>98</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -5988,7 +5997,7 @@ the third table and are not part of either 1.0 list.</p>
 <tr>
 <td>Tier 2 — Flagship</td>
 <td>In progress</td>
-<td>SET-2, SET-3, AGENT-1, OCR-1, OCR-3, DLG-1, AI-19</td>
+<td>SET-2, SET-3, AGENT-1, OCR-1, OCR-3, AI-19</td>
 </tr>
 <tr>
 <td>Tier 2 — Flagship</td>
@@ -6038,7 +6047,7 @@ SEL-2, SEL-3, AI-1, AI-6, AI-7, AI-13, AI-14, AI-15, AI-16, AI-17,
 AI-21, AI-23, WATCH-1, WATCH-2, WATCH-3, WATCH-4, WATCH-5, WATCH-6,
 WATCH-7, SET-1, SET-4, SET-5, SET-6, SET-7, SHARE-1, SHARE-2, SHARE-3,
 FLAG-3, FLAG-4, MENU-3, MENU-1, MENU-5, DICT-1, CTX-1, DICT-2, FEAT-19,
-OCR-2, OCR-4, OCR-5</td>
+DLG-1, OCR-2, OCR-4, OCR-5</td>
 </tr>
 <tr>
 <td>Tier 4 — Structural health</td>
