@@ -2,7 +2,7 @@
   "_comment": "GATE-11 module-size budget. Each entry is the maximum allowed line count (Python splitlines) for that module. Budgets are a ratchet: they may only DECREASE as code is extracted (CQ-1), never increase. The gate fails when a tracked file grows past its budget, or when any untracked file exceeds the default cap (600) without an explicit, acknowledged entry here. Lower these numbers as main_frame.py and friends are decomposed.",
   "_default_cap": 600,
   "budgets": {
-    "quill/ui/main_frame.py": 22877,
+    "quill/ui/main_frame.py": 22460,
     "quill/ui/assistant_tools.py": 1728,
     "quill/ui/main_frame_edsharp.py": 737,
     "quill/core/read_aloud.py": 1240,

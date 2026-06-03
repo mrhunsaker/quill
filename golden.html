@@ -1377,11 +1377,25 @@ a new <code>settings_normalizers.py</code> (re-exported).
 <code>main_frame.py</code> is now 22,866 lines and every touched GATE-11
 budget ratcheted down with the change; all moves are proven
 behavior-identical by the main_frame UI suite, the regenerated
-characterization fixture, and the core settings/registry suites. The
-mixin pattern is now established for the remaining clusters (menu
-construction, QUILL key/Quick Nav, selection/marks, file/session
-lifecycle, status bar), so this stays honestly In progress (XL) until
-those land.</td>
+characterization fixture, and the core settings/registry suites.
+<strong>Third seam delivered:</strong> the contiguous 17-method
+status-bar cluster (status-bar item resolution, value/label/help text,
+cell construction and refresh, keyboard navigation, activation,
+hide/restore, and the per-cell context menu, ~400 lines) was extracted
+verbatim from <code>main_frame.py</code> into
+<code>quill/ui/main_frame_statusbar.py</code> as
+<code>StatusBarMixin</code>, taking the <code>_StatusBarCell</code>
+dataclass with it (re-imported for the annotation that stays behind);
+because every moved method is private, the GATE-6 public-surface
+snapshot was unchanged and needed no regen. <code>main_frame.py</code>
+dropped 22,866→22,460 lines (budget ratcheted to 22,460); the new module
+is 433 lines (under the 600 cap). Verified live on Windows: the full
+322-test UI suite, GATE-11, GATE-6 characterization, the
+dialog-contract/inventory gates, and the A11Y-4 banned-pattern gate all
+pass. The mixin pattern is now established for the remaining clusters
+(menu construction, QUILL key/Quick Nav, selection/marks, file/session
+lifecycle), so this stays honestly In progress (XL) until those
+land.</td>
 </tr>
 <tr>
 <td>CQ-16</td>
