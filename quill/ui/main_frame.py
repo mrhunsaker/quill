@@ -16203,6 +16203,21 @@ class MainFrame(
             if bar.FindItemById(item_id) is not None:
                 bar.Enable(item_id, enabled)
 
+        # "Forget API Key" is gated on whether a key is actually stored, not on
+        # the AI on/off toggle (#128): a user must be able to forget a key even
+        # with AI disabled, but the item is meaningless when nothing is stored.
+        if bar.FindItemById(self._id_ai_forget_key) is not None:
+            bar.Enable(self._id_ai_forget_key, self._assistant_api_key_present())
+
+    def _assistant_api_key_present(self) -> bool:
+        """True when an assistant API key is stored in either persistence layer."""
+        from quill.core.assistant_ai import load_assistant_api_key
+
+        try:
+            return bool(load_assistant_api_key())
+        except Exception:  # noqa: BLE001 - storage probing must never crash the menu
+            return False
+
     def open_ask_quill_chat(self) -> None:
         from quill.core.ai.model_manager import load_ai_enabled
 
@@ -16297,6 +16312,8 @@ class MainFrame(
             self._set_status("AI provider API key forgotten. Re-enter it to use cloud providers.")
         else:
             self._set_status("No stored AI provider API key was found.")
+        # Reflect the now-absent key in the menu so "Forget API Key" greys out (#128).
+        self._request_menu_refresh()
 
     def open_ai_session_browser(self) -> None:
         # Browse the branch tree of the most recent writing session and jump
