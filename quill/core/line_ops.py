@@ -52,6 +52,107 @@ def join_with_next_line(text: str, cursor: int) -> tuple[str, int]:
     return updated, _line_start(updated, index)
 
 
+def move_lines_up(text: str, start: int, end: int) -> tuple[str, int, int]:
+    """Move the whole block of lines spanned by ``[start, end]`` up one line.
+
+    Selection-aware companion to :func:`move_line_up` (issue #133): a multi-line
+    selection moves as one block instead of only its first line. With no
+    selection (``start == end``) this moves just the caret's line. Returns the
+    updated text and the new selection bounds covering the moved block.
+    """
+    lines = _lines(text)
+    first, last = _selected_line_bounds(text, start, end)
+    if first == 0:
+        return text, start, end
+    block = lines[first : last + 1]
+    del lines[first : last + 1]
+    lines[first - 1 : first - 1] = block
+    updated = "\n".join(lines)
+    new_start = _line_start(updated, first - 1)
+    new_end = _line_end_offset(updated, last - 1)
+    return updated, new_start, new_end
+
+
+def move_lines_down(text: str, start: int, end: int) -> tuple[str, int, int]:
+    """Move the whole block of lines spanned by ``[start, end]`` down one line.
+
+    Selection-aware companion to :func:`move_line_down` (issue #133).
+    """
+    lines = _lines(text)
+    first, last = _selected_line_bounds(text, start, end)
+    if last >= len(lines) - 1:
+        return text, start, end
+    block = lines[first : last + 1]
+    del lines[first : last + 1]
+    lines[first + 1 : first + 1] = block
+    updated = "\n".join(lines)
+    new_start = _line_start(updated, first + 1)
+    new_end = _line_end_offset(updated, last + 1)
+    return updated, new_start, new_end
+
+
+def join_selected_lines(text: str, start: int, end: int) -> tuple[str, int, int]:
+    """Join every line in the selection, preserving blank-line paragraph breaks.
+
+    Issue #135: "Join lines" previously merged only the first two lines. With a
+    selection this now collapses each run of non-blank lines into one line
+    (single spaces between words) while keeping blank lines as paragraph
+    separators, so selecting a whole document reflows it paragraph by paragraph.
+    With no selection it joins the caret's paragraph (see :func:`join_paragraph`).
+    """
+    if start == end:
+        updated, cursor = join_paragraph(text, start)
+        return updated, cursor, cursor
+    lines = _lines(text)
+    first, last = _selected_line_bounds(text, start, end)
+    joined_segment = _join_paragraph_lines(lines[first : last + 1])
+    new_lines = lines[:first] + joined_segment + lines[last + 1 :]
+    updated = "\n".join(new_lines)
+    new_start = _line_start(updated, first)
+    new_end = _line_end_offset(updated, first + len(joined_segment) - 1)
+    return updated, new_start, new_end
+
+
+def join_paragraph(text: str, cursor: int) -> tuple[str, int]:
+    """Join the caret's paragraph (consecutive non-blank lines) into one line.
+
+    A paragraph runs from the caret's line until the next blank line, matching
+    the "word wrap each paragraph until you see the double enter" behaviour
+    requested in issue #135. A no-op on a blank line or a single-line paragraph.
+    """
+    lines = _lines(text)
+    index = _line_index(text, cursor)
+    if lines[index].strip() == "":
+        return text, cursor
+    first = index
+    last = index
+    while last < len(lines) - 1 and lines[last + 1].strip() != "":
+        last += 1
+    if first == last:
+        return text, cursor
+    joined = " ".join(part.strip() for part in lines[first : last + 1])
+    new_lines = lines[:first] + [joined] + lines[last + 1 :]
+    updated = "\n".join(new_lines)
+    return updated, _line_start(updated, first)
+
+
+def _join_paragraph_lines(segment: list[str]) -> list[str]:
+    """Collapse runs of non-blank lines into single lines, keeping blank lines."""
+    result: list[str] = []
+    buffer: list[str] = []
+    for line in segment:
+        if line.strip() == "":
+            if buffer:
+                result.append(" ".join(part.strip() for part in buffer))
+                buffer = []
+            result.append(line)
+        else:
+            buffer.append(line)
+    if buffer:
+        result.append(" ".join(part.strip() for part in buffer))
+    return result
+
+
 def number_lines(text: str, start: int = 1, separator: str = ". ") -> str:
     """Prefix each non-blank line with a consecutive number (EDS-4).
 
@@ -158,3 +259,24 @@ def _line_start(text: str, index: int) -> int:
             current += 1
         position += 1
     return position
+
+
+def _line_end_offset(text: str, index: int) -> int:
+    """Return the offset of the end of the line at ``index`` (before its newline)."""
+    start = _line_start(text, index)
+    newline = text.find("\n", start)
+    return len(text) if newline == -1 else newline
+
+
+def _selected_line_bounds(text: str, start: int, end: int) -> tuple[int, int]:
+    """Return the first and last line indices spanned by the selection.
+
+    A selection that ends exactly at a line start does not pull in the following
+    line, so the bounds cover only the lines the user visibly selected.
+    """
+    if end < start:
+        start, end = end, start
+    first = _line_index(text, start)
+    last_pos = end - 1 if end > start else end
+    last = _line_index(text, max(start, last_pos))
+    return first, last

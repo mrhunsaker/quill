@@ -234,9 +234,9 @@ from quill.core.lexical_preload import start_lexical_preload
 from quill.core.line_ops import (
     delete_line,
     duplicate_line,
-    join_with_next_line,
-    move_line_down,
-    move_line_up,
+    join_selected_lines,
+    move_lines_down,
+    move_lines_up,
 )
 from quill.core.link_inventory import collect_link_inventory, render_link_inventory_report
 from quill.core.links import build_link_text, find_link_at_cursor, infer_markup_kind
@@ -16476,10 +16476,11 @@ class MainFrame(
         )
 
     def move_line_up(self) -> None:
-        self._apply_line_operation(move_line_up, "Moved line up")
+        # Selection-aware (issue #133): a multi-line selection moves as one block.
+        self._apply_selection_operation(move_lines_up, "Moved line up")
 
     def move_line_down(self) -> None:
-        self._apply_line_operation(move_line_down, "Moved line down")
+        self._apply_selection_operation(move_lines_down, "Moved line down")
 
     def duplicate_line(self) -> None:
         self._apply_line_operation(duplicate_line, "Duplicated line")
@@ -16488,7 +16489,10 @@ class MainFrame(
         self._apply_line_operation(delete_line, "Deleted line")
 
     def join_lines(self) -> None:
-        self._apply_line_operation(join_with_next_line, "Joined lines")
+        # Selection-aware (issue #135): joins the whole selection, or the
+        # caret's paragraph when there is no selection, instead of only the
+        # current line and the next one.
+        self._apply_selection_operation(join_selected_lines, "Joined lines")
 
     def sort_lines_ascending(self) -> None:
         self._apply_text_block_operation(

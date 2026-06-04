@@ -198,6 +198,50 @@ class RichTextSurface:
     def SetFocus(self) -> None:  # noqa: N802
         self._active_control().SetFocus()
 
+    # -- canonical offset-editing API --------------------------------------- #
+    # QUILL's offset-based editor commands (join/move lines, case transforms,
+    # search, spell check) must act on the canonical Markdown lens even while the
+    # read-only rich pane is showing. Delegating these explicitly to ``text_ctrl``
+    # keeps those commands exact on RTF documents instead of routing through
+    # ``__getattr__`` to the rich view, whose offsets differ from the markup
+    # (issue: "all surfaces, text and rtf"). The hard bidirectional rich-edit
+    # mapping stays deferred, as documented above.
+    def GetSelection(self) -> tuple[int, int]:  # noqa: N802
+        return self.text_ctrl.GetSelection()
+
+    def SetSelection(self, start: int, end: int) -> None:  # noqa: N802
+        self.text_ctrl.SetSelection(start, end)
+
+    def GetStringSelection(self) -> str:  # noqa: N802
+        return self.text_ctrl.GetStringSelection()
+
+    def GetInsertionPoint(self) -> int:  # noqa: N802
+        return self.text_ctrl.GetInsertionPoint()
+
+    def SetInsertionPoint(self, pos: int) -> None:  # noqa: N802
+        self.text_ctrl.SetInsertionPoint(pos)
+
+    def GetRange(self, start: int, end: int) -> str:  # noqa: N802
+        return self.text_ctrl.GetRange(start, end)
+
+    def Replace(self, start: int, end: int, value: str) -> None:  # noqa: N802
+        self.text_ctrl.Replace(start, end, value)
+        self._render_rich(self.text_ctrl.GetValue())
+
+    def CanUndo(self) -> bool:  # noqa: N802
+        return bool(self.text_ctrl.CanUndo())
+
+    def CanRedo(self) -> bool:  # noqa: N802
+        return bool(self.text_ctrl.CanRedo())
+
+    def Undo(self) -> None:  # noqa: N802
+        self.text_ctrl.Undo()
+        self._render_rich(self.text_ctrl.GetValue())
+
+    def Redo(self) -> None:  # noqa: N802
+        self.text_ctrl.Redo()
+        self._render_rich(self.text_ctrl.GetValue())
+
     # -- spoken formatting -------------------------------------------------- #
     def caret_format_description(self) -> str:
         """Return the spoken formatting phrase for the current caret position."""

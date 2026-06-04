@@ -50,6 +50,9 @@ class _FakeTextCtrl(_Recorder):
         self._value = ""
         self._point = 0
         self._editable = True
+        self._sel: tuple[int, int] = (0, 0)
+        self._undo: list[str] = []
+        self._redo: list[str] = []
 
     def ChangeValue(self, value: str) -> None:  # noqa: N802
         self._value = value
@@ -62,6 +65,39 @@ class _FakeTextCtrl(_Recorder):
 
     def SetInsertionPoint(self, point: int) -> None:  # noqa: N802
         self._point = point
+
+    def GetSelection(self) -> tuple[int, int]:  # noqa: N802
+        return self._sel
+
+    def SetSelection(self, start: int, end: int) -> None:  # noqa: N802
+        self._sel = (start, end)
+
+    def GetStringSelection(self) -> str:  # noqa: N802
+        start, end = self._sel
+        return self._value[start:end]
+
+    def GetRange(self, start: int, end: int) -> str:  # noqa: N802
+        return self._value[start:end]
+
+    def Replace(self, start: int, end: int, value: str) -> None:  # noqa: N802
+        self._undo.append(self._value)
+        self._value = self._value[:start] + value + self._value[end:]
+
+    def CanUndo(self) -> bool:  # noqa: N802
+        return bool(self._undo)
+
+    def CanRedo(self) -> bool:  # noqa: N802
+        return bool(self._redo)
+
+    def Undo(self) -> None:  # noqa: N802
+        if self._undo:
+            self._redo.append(self._value)
+            self._value = self._undo.pop()
+
+    def Redo(self) -> None:  # noqa: N802
+        if self._redo:
+            self._undo.append(self._value)
+            self._value = self._redo.pop()
 
     def SetEditable(self, editable: bool) -> None:  # noqa: N802
         self._editable = editable
@@ -255,3 +291,34 @@ def test_caret_format_description_bold() -> None:
     markdown = surface.GetValue()
     surface.text_ctrl.SetInsertionPoint(markdown.index("bold") + 1)
     assert surface.caret_format_description() == "bold"
+
+
+# --------------------------------------------------------------------------- #
+# Offset-editing delegates to the canonical Markdown lens (all surfaces: rtf)
+# --------------------------------------------------------------------------- #
+def test_offset_api_delegates_to_markdown_lens_not_rich_view() -> None:
+    # While the read-only rich pane is showing, offset queries must read the
+    # canonical text_ctrl so join/move/transform commands stay exact on RTF.
+    surface = _make_surface()
+    assert surface.is_text_mode() is False  # default: rich pane visible
+    surface.text_ctrl.SetSelection(2, 7)
+    assert surface.GetSelection() == (2, 7)
+    assert surface.GetInsertionPoint() == surface.text_ctrl.GetInsertionPoint()
+    assert surface.GetStringSelection() == surface.GetValue()[2:7]
+
+
+def test_replace_edits_markdown_and_rerenders_rich() -> None:
+    surface = _make_surface()
+    surface.Replace(0, len(surface.GetValue()), "**hi**")
+    assert surface.GetValue() == "**hi**"
+    # The rich pane re-rendered the new markup.
+    assert ("WriteText", "hi") in surface.rich.ops
+
+
+def test_undo_redo_route_through_markdown_lens() -> None:
+    surface = _make_surface()
+    original = surface.GetValue()
+    surface.Replace(0, len(original), "changed")
+    assert surface.CanUndo() is True
+    surface.Undo()
+    assert surface.GetValue() == original

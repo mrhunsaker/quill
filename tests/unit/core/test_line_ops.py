@@ -7,10 +7,14 @@ from quill.core.line_ops import (
     delete_to_line_start,
     duplicate_line,
     first_non_blank_position,
+    join_paragraph,
+    join_selected_lines,
     join_with_next_line,
     last_non_blank_position,
     move_line_down,
     move_line_up,
+    move_lines_down,
+    move_lines_up,
     number_lines,
 )
 
@@ -39,6 +43,69 @@ def test_move_line_down() -> None:
 def test_join_with_next_line() -> None:
     updated, _ = join_with_next_line("a\nb\nc", 0)
     assert updated == "a b\nc"
+
+
+def test_move_lines_up_moves_whole_selection() -> None:
+    # Select line3 and line4 (issue #133): both move, not just the first.
+    text = "line1\nline2\nline3\nline4"
+    start = text.index("line3")
+    end = len(text)
+    updated, new_start, new_end = move_lines_up(text, start, end)
+    assert updated == "line1\nline3\nline4\nline2"
+    assert updated[new_start:new_end] == "line3\nline4"
+
+
+def test_move_lines_down_moves_whole_selection() -> None:
+    text = "line1\nline2\nline3\nline4"
+    start = text.index("line1")
+    end = text.index("line2") + len("line2")
+    updated, new_start, new_end = move_lines_down(text, start, end)
+    assert updated == "line3\nline1\nline2\nline4"
+    assert updated[new_start:new_end] == "line1\nline2"
+
+
+def test_move_lines_up_single_line_without_selection() -> None:
+    text = "a\nb\nc"
+    caret = text.index("b")
+    updated, _start, _end = move_lines_up(text, caret, caret)
+    assert updated == "b\na\nc"
+
+
+def test_move_lines_up_at_top_is_noop() -> None:
+    text = "a\nb\nc"
+    updated, start, end = move_lines_up(text, 0, 0)
+    assert updated == text
+    assert (start, end) == (0, 0)
+
+
+def test_join_selected_lines_collapses_whole_selection() -> None:
+    # Issue #135: each word on its own line, select all, join -> one line.
+    text = "this\nis\na\ntest\nof\nthe\neditor"
+    updated, new_start, new_end = join_selected_lines(text, 0, len(text))
+    assert updated == "this is a test of the editor"
+    assert updated[new_start:new_end] == "this is a test of the editor"
+
+
+def test_join_selected_lines_preserves_paragraph_breaks() -> None:
+    text = "one\ntwo\n\nthree\nfour"
+    updated, _start, _end = join_selected_lines(text, 0, len(text))
+    assert updated == "one two\n\nthree four"
+
+
+def test_join_paragraph_without_selection() -> None:
+    text = "this\nis\na\ntest\n\nnext para"
+    caret = text.index("this")
+    updated, cursor = join_paragraph(text, caret)
+    assert updated == "this is a test\n\nnext para"
+    assert cursor == 0
+
+
+def test_join_paragraph_on_blank_line_is_noop() -> None:
+    text = "a\n\nb"
+    blank = text.index("\n\n") + 1
+    updated, cursor = join_paragraph(text, blank)
+    assert updated == text
+    assert cursor == blank
 
 
 def test_number_lines_start_value() -> None:
