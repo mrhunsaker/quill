@@ -73,7 +73,10 @@ Persistence model in the PRD:
 
 ## Dialog, Window, and Accessibility Lessons
 
-Apply these rules to every UI change in `quill/ui/*`:
+Apply these rules to every UI change in `quill/ui/*`. The full, wx-grounded
+authoring guide lives in
+`.github/instructions/accessible-dialogs.instructions.md` (auto-applied to
+`quill/ui/**/*.py`); the highlights below are the must-knows.
 
 - Keep parent ownership consistent in dialog layout trees.
   - If controls are parented to `panel = wx.Panel(dialog)`, keep that control tree in a panel sizer and attach the panel to an outer dialog sizer.
