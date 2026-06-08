@@ -82,6 +82,13 @@ _REVIEWED_EGRESS: dict[str, str] = {
         "and Datamuse). Only runs when the user enables online lexical lookups; "
         "HTTPS with a verified TLS context, no API key, graceful offline fallback."
     ),
+    "ui/main_frame_quillins.py::fetch": (
+        "Quillin host 'net' capability bridge. A Quillin can only reach this "
+        "method when its manifest declares the default-deny 'net' capability AND "
+        "the user grants explicit per-action consent at the runtime consent gate "
+        "(_EditorHostServices reaches fetch only after the host's capability + "
+        "consent check passes); there is no silent path."
+    ),
 }
 
 

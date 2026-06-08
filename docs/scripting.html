@@ -332,8 +332,24 @@ the experience speaks of <strong>Quillins</strong>.</p>
 <td><code>tests/unit/ui/test_main_frame_quillins.py</code>, A11Y-4
 dialog inventory</td>
 </tr>
+<tr>
+<td>Worked example Quillin (Layer 1 snippet + Layer 2 handler)</td>
+<td><code>examples/quillins/markdown-helpers/</code></td>
+<td><code>tests/unit/core/test_quillins_example.py</code></td>
+</tr>
 </tbody>
 </table>
+<p>A complete, loadable <strong>proof-of-concept Quillin</strong> ships
+in <a
+href="../examples/quillins/markdown-helpers/"><code>examples/quillins/markdown-helpers/</code></a>:
+a <code>manifest.json</code> contributing a Layer 1 front-matter snippet
+(<code>ext.mdh.frontmatter</code>) and a Layer 2 bold-selection handler
+(<code>ext.mdh.bold</code>), plus an <code>extension.py</code> entry
+module. <code>tests/unit/core/test_quillins_example.py</code> validates
+the manifest, builds a conflict-free contribution registry, expands the
+snippet, and drives the handler — and the same directory loads and runs
+through the real out-of-process host worker. It is the canonical
+template for authoring a new Quillin.</p>
 <p>This document is a design plan turned reference; where it describes
 future, optional, or 2.0-scale work it says so explicitly (the QuickJS
 evaluator in §9, and the internal modularization in §16).</p>

@@ -15,10 +15,12 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # The only Markdown files sanctioned to live at the repository root: conventional
-# community/governance/legal files plus dialogs.md, the manual dialog-regression
-# checklist that copilot-instructions pins to the root. Every other Markdown
-# document — design notes, research, planning (including ROADMAP.md), and
-# engineering — lives under docs/ so the root stays scannable at a glance.
+# community/governance/legal files plus the two master regression/usability plans
+# that copilot-instructions pins to the root — dialogs.md (the manual
+# dialog-regression checklist) and menus.md (the definitive menu-reorganization
+# plan). Every other Markdown document — design notes, research, planning
+# (including ROADMAP.md), and engineering — lives under docs/ so the root stays
+# scannable at a glance.
 _SANCTIONED_ROOT_MARKDOWN = frozenset({
     "CHANGELOG.md",
     "CODE_OF_CONDUCT.md",
@@ -31,6 +33,7 @@ _SANCTIONED_ROOT_MARKDOWN = frozenset({
     "RESPONSIBLE_AI_USE.md",
     "SECURITY.md",
     "dialogs.md",
+    "menus.md",
 })
 
 

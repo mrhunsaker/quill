@@ -30,6 +30,17 @@ wire/code identifiers; the experience speaks of **Quillins**.
 | Out-of-process host + capability/consent gate (§5, §6) | `quill/core/quillins/host.py` | `tests/unit/core/test_quillins_host.py`, `tests/integration/test_quillins_host_integration.py` |
 | Sandboxed worker + `QuillExtensionApi` (§5, §14.4) | `quill/core/quillins/host_worker.py` | `tests/integration/test_quillins_host_integration.py` |
 | Tools ▸ Quillins menu, runtime, Quillins Manager dialog (§7, §17) | `quill/ui/main_frame_quillins.py` | `tests/unit/ui/test_main_frame_quillins.py`, A11Y-4 dialog inventory |
+| Worked example Quillin (Layer 1 snippet + Layer 2 handler) | `examples/quillins/markdown-helpers/` | `tests/unit/core/test_quillins_example.py` |
+
+A complete, loadable **proof-of-concept Quillin** ships in
+[`examples/quillins/markdown-helpers/`](../examples/quillins/markdown-helpers/):
+a `manifest.json` contributing a Layer 1 front-matter snippet
+(`ext.mdh.frontmatter`) and a Layer 2 bold-selection handler (`ext.mdh.bold`),
+plus an `extension.py` entry module. `tests/unit/core/test_quillins_example.py`
+validates the manifest, builds a conflict-free contribution registry, expands the
+snippet, and drives the handler — and the same directory loads and runs through
+the real out-of-process host worker. It is the canonical template for authoring a
+new Quillin.
 
 This document is a design plan turned reference; where it describes future,
 optional, or 2.0-scale work it says so explicitly (the QuickJS evaluator in §9,

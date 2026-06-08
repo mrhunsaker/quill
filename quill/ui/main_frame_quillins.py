@@ -393,7 +393,7 @@ class QuillinsMenuMixin:
         close_button.SetDefault()
         from quill.ui.dialog_contract import apply_modal_ids
 
-        apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
+        apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_OK)
         refresh_details()
 
         call_after = getattr(wx, "CallAfter", None)

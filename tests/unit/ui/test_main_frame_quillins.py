@@ -96,8 +96,11 @@ def test_modal_ids_route_through_dialog_contract() -> None:
     manager = _QUILLINS[_QUILLINS.index("def open_quillins_manager") :]
     # The Manager applies the shared modal-id contract inline (DLG-3 hardening
     # guard requires the literal apply_modal_ids call within the dialog scope).
+    # Escape maps to the single Close button (wx.ID_OK), the only non-destructive
+    # dismiss, so Escape can always close the dialog without a keyboard trap
+    # (WCAG 2.1.2; enforced by the dialog button-contract gate).
     assert "from quill.ui.dialog_contract import apply_modal_ids" in manager
-    assert "apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)" in manager
+    assert "apply_modal_ids(dialog, affirmative_id=wx.ID_OK, escape_id=wx.ID_OK)" in manager
 
 
 def test_panel_owns_its_control_tree() -> None:

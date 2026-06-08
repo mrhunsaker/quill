@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>quillin-conversion-roadmap</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="converting-quill-features-into-bundled-quillins-a-flexibility-proof">Converting
+QUILL features into bundled Quillins — a flexibility proof</h1>
+<p>Status: <strong>Proposed roadmap (2.0-scale, demonstration- and
+maintainability-driven)</strong> · Companion to
+<code>docs/scripting.md</code> (esp. §6 security, §16 modularization)
+and <code>docs/quillin-migration-plan.md</code> · Sample artifact: <a
+href="../examples/quillins/markdown-helpers/"><code>examples/quillins/markdown-helpers/</code></a></p>
+<blockquote>
+<p><strong>This is the bolder sibling of
+<code>docs/quillin-migration-plan.md</code>.</strong> That plan moves
+built-in features onto the contribution <em>grammar</em> but keeps them
+<strong>trusted and in-process</strong> (the rich <code>Host</code>
+facade). This roadmap takes the step that actually <em>proves the
+platform</em>: re-express a curated set of real QUILL features as
+<strong>genuine Quillins</strong> — <code>register(api)</code>,
+out-of-process, capability-gated — ship them <strong>bundled and
+enabled</strong>, and <strong>delete their implementation from
+core</strong>. If QUILL can host its own features through the same
+narrow door it offers strangers, the extension platform is real, not a
+brochure.</p>
+</blockquote>
+<h2 id="what-this-proves-and-why-it-is-worth-doing">1. What this proves,
+and why it is worth doing</h2>
+<p>The Quillins framework is fully built and tested
+(<code>quill/core/quillins/*</code>), but in QUILL 1.0 it runs
+<strong>zero</strong> real extensions: third-party execution is locked
+off (SEC-8) and every shipping feature lives in core/UI Python. The
+framework is therefore proven only by its own unit/integration tests and
+one worked example (<a
+href="../examples/quillins/markdown-helpers/"><code>examples/quillins/markdown-helpers/</code></a>).</p>
+<p>Converting real features into Quillins delivers three things a test
+suite cannot:</p>
+<ol type="1">
+<li><strong>A flexibility proof.</strong> Exercising the contribution
+grammar, capability catalogue, consent gate, out-of-process isolation,
+and packaging against <em>features users already rely on</em> shows the
+platform can carry production weight — the strongest possible signal to
+third-party authors.</li>
+<li><strong>A smaller core.</strong> Each converted feature’s algorithm,
+tests, menu wiring, and handler leave
+<code>quill/core</code>/<code>quill/ui</code>. The god object
+(<code>quill/ui/main_frame.py</code>) shrinks and
+<code>quill/core</code> keeps only what other core code still
+needs.</li>
+<li><strong>A living dogfood.</strong> Bundled Quillins are run on every
+launch, so the framework’s hot paths stay exercised and honest rather
+than dormant behind a locked flag.</li>
+</ol>
+<p>This is a <strong>demonstration + maintainability</strong> effort. It
+adds no user-facing capability (the features already exist), so it is
+sequenced <strong>after</strong> 1.0 user-facing work and proceeds
+opportunistically — every step leaves the suite green and the
+accessibility contract intact, or it does not land.</p>
+<h2 id="three-trust-tiers-read-this-before-proposing-any-conversion">2.
+Three trust tiers (read this before proposing any conversion)</h2>
+<p>The migration plan established two tiers; this roadmap needs a third.
+Keeping them straight is the whole game.</p>
+<pre><code>  Tier A — CORE GUARDRAILS            Tier B — FIRST-PARTY MODULES        Tier C — BUNDLED QUILLINS
+  editor surface, announcement        register(host): trusted,            register(api): trusted-AUTHOR but
+  engine, lifecycle, registry         in-process, rich Host facade        run through the SAME sandboxed,
+  (never pluginized — §2 of           (quillin-migration-plan.md)         out-of-process, capability-gated
+  migration plan)                                                         path as third-party Quillins
+       │                                     │                                     │
+       └─────────── one contribution grammar / one registry / one keymap ─────────┘</code></pre>
+<ul>
+<li><strong>Tier A — core guardrails.</strong> Unchanged from
+<code>quillin-migration-plan.md</code> §2: the <code>wx.TextCtrl</code>
+editor surface, the NVDA/JAWS/Narrator announcement engine, app
+lifecycle/frame construction, and the contribution registry/keymap
+itself. These are never converted.</li>
+<li><strong>Tier B — first-party in-process modules.</strong> The
+subject of <code>quillin-migration-plan.md</code>. Trusted code, no
+sandbox, rich facade, sub-ms latency. The right home for anything
+latency-sensitive or wx-bound that is still command-shaped.</li>
+<li><strong>Tier C — bundled Quillins (NEW, this roadmap).</strong> Real
+Quillins authored by the QUILL project, shipped <em>inside</em> the
+install tree, and enabled by a <strong>separate trusted
+mechanism</strong> — they are <strong>not</strong> discovered from
+<code>%APPDATA%\Quill\extensions\</code> and are therefore
+<strong>unaffected by the SEC-8 third-party lock</strong>. They run
+through the identical out-of-process, capability, and consent machinery
+as third-party code, which is exactly why they are a valid proof of
+it.</li>
+</ul>
+<blockquote>
+<p><strong>Non-negotiable boundary (restated from
+<code>scripting.md</code> §16.1).</strong> Tier B exists precisely so
+trusted per-keystroke built-ins are <em>not</em> forced across an RPC
+bridge. Tier C is for features where the out-of-process round-trip is
+acceptable (on-demand, not per-keystroke) <strong>and</strong> the whole
+point is to demo the extension path. Converting a hot-path feature to
+Tier C to “be pure” would wreck latency for zero gain — that belongs in
+Tier B.</p>
+</blockquote>
+<h2
+id="the-enabling-work-the-platform-needs-first-honest-prerequisites">3.
+The enabling work the platform needs first (honest prerequisites)</h2>
+<p>Tier C does not exist yet. Wave 0 builds it. None of this weakens
+SEC-8.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Prerequisite</th>
+<th>What it is</th>
+<th>Where it touches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bundled-extensions root</strong></td>
+<td>A read-only <code>extensions/</code> directory staged
+<em>inside</em> the install tree, discovered separately from the
+per-user <code>%APPDATA%</code> root.</td>
+<td>New branch in <code>quill/core/quillins/loader.py</code>
+(<code>bundled_extensions_root()</code> alongside
+<code>extensions_root()</code>), path-contained like today.</td>
+</tr>
+<tr>
+<td><strong>Trusted-enable path</strong></td>
+<td>Bundled Quillins ship <strong>enabled</strong> without the
+<code>core.third_party_plugins</code> flag (which stays
+<code>locked_off</code>). A distinct, on-by-default
+<code>core.bundled_quillins</code> gate, or an explicit bundled-manifest
+allowlist.</td>
+<td><code>quill/core/quillins/loader.py</code> discovery gate;
+<code>quill/core/features.py</code> feature definition.</td>
+</tr>
+<tr>
+<td><strong>Worker imports its own modules</strong></td>
+<td>A bundled Quillin may ship pure-Python helpers next to
+<code>extension.py</code> and import them.</td>
+<td>Already supported — <code>host_worker.py</code> loads
+<code>main</code> and sibling files within the path-contained extension
+dir. Confirm + test.</td>
+</tr>
+<tr>
+<td><strong>Capability pre-grant for trusted authors</strong></td>
+<td>Bundled Quillins still <em>declare</em> capabilities and still hit
+the <strong>consent gate</strong> for <code>fs.*</code>/<code>net</code>
+(the proof must be real); non-consent-gated caps (<code>editor.*</code>,
+<code>ui.*</code>, <code>clipboard.*</code>) may be pre-granted so a
+shipped feature does not nag on first use.</td>
+<td><code>loader.grant_capabilities</code> seeded for bundled ids;
+consent path unchanged.</td>
+</tr>
+<tr>
+<td><strong>Packaging</strong></td>
+<td>The installer stages the bundled <code>extensions/</code> tree and
+registers it as a component.</td>
+<td><code>scripts/build_windows_distribution.py</code>,
+<code>installer/quill.iss</code>.</td>
+</tr>
+<tr>
+<td><strong>Latency budget</strong></td>
+<td>Measure cold-load + warm-invoke round-trip for an on-demand command;
+set a published budget (e.g. warm invoke &lt; 50 ms) below which Tier C
+is acceptable.</td>
+<td>New perf test under <code>tests/perf</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Wave 0 exit criterion:</strong> the existing
+<code>examples/quillins/markdown-helpers</code> sample, promoted to a
+bundled Quillin, ships enabled in a build, appears in <strong>Tools ▸
+Quillins Manager</strong>, and runs end-to-end — with the third-party
+flag still <code>locked_off</code>.</p>
+<h2 id="candidate-selection-what-can-become-a-quillin">4. Candidate
+selection — what can become a Quillin</h2>
+<p>A feature is a Tier C candidate iff <strong>all</strong> hold:</p>
+<ul>
+<li><strong>Command-shaped:</strong> stable id, title, handler, optional
+menu/hotkey/context.</li>
+<li><strong>Capability-expressible:</strong> its effect is reachable
+through the catalogue (<code>editor.read/write</code>,
+<code>ui.announce/command</code>, <code>clipboard.read/write</code>, and
+— consent-gated — <code>fs.read/write</code>, <code>net</code>). If it
+needs anything outside that catalogue, it cannot be a Quillin by
+construction.</li>
+<li><strong>No <code>wx</code>, no platform API, no tight
+editor/selection-state coupling.</strong> Pure logic over
+text/clipboard/files.</li>
+<li><strong>Latency-tolerant:</strong> invoked on demand, never on every
+keystroke.</li>
+<li><strong>Deterministic &amp; characterization-testable</strong>
+before the move.</li>
+</ul>
+<h3 id="candidate-catalogue-grounded-in-todays-code">Candidate catalogue
+(grounded in today’s code)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature(s)</th>
+<th>Current home</th>
+<th>Verdict</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Line transforms: number lines, hard-wrap</td>
+<td><code>quill/ui/features/line_transforms.py</code> (already Tier
+B)</td>
+<td>✅ Strong — pure text, already extracted</td>
+<td>Tier C “Text Tools”</td>
+</tr>
+<tr>
+<td><code>set_lines_first_not_second</code>,
+<code>set_lines_common</code></td>
+<td><code>quill/ui/main_frame_edsharp.py</code></td>
+<td>✅ Strong — pure set algebra over two buffers</td>
+<td>Tier C “Text Tools”</td>
+</tr>
+<tr>
+<td><code>count_regex_matches</code>,
+<code>extract_regex_matches</code></td>
+<td><code>quill/ui/main_frame_edsharp.py</code></td>
+<td>✅ Good — pure regex over text (uses <code>regex</code>, a runtime
+dep the worker can ship)</td>
+<td>Tier C “Text Tools”</td>
+</tr>
+<tr>
+<td>HTML-clipboard → Markdown paste</td>
+<td><code>quill/core/html_to_markdown.py</code> +
+<code>paste_html_as_markdown</code></td>
+<td>✅ Good — pure transform + <code>clipboard.read</code>; helper
+vendored into the Quillin</td>
+<td>Tier C “Markdown Tools”</td>
+</tr>
+<tr>
+<td>Insert date/time, calculate-and-insert-date</td>
+<td><code>insert_date_time</code>,
+<code>calculate_and_insert_date</code></td>
+<td>✅ Good — Layer 1 snippet
+(<code>${date}</code>/<code>${time}</code>) or a small handler, no caps
+/ <code>editor.write</code></td>
+<td>Tier C “Insert Tools”</td>
+</tr>
+<tr>
+<td>Front-matter / boilerplate snippets</td>
+<td>sample Quillin</td>
+<td>✅ Already a Layer 1 Quillin (the worked example)</td>
+<td>Tier C (ship it)</td>
+</tr>
+<tr>
+<td>Read-only guard, <code>speak_*</code>, key describer, indent
+announce</td>
+<td><code>quill/ui/main_frame_edsharp.py</code></td>
+<td>❌ No — announcement-engine / wx / live-event coupled (Tier
+A/B)</td>
+<td>Stay core</td>
+</tr>
+<tr>
+<td><code>run_current_file</code>, <code>run_target_at_cursor</code>,
+file rename/delete</td>
+<td><code>quill/ui/main_frame_edsharp.py</code></td>
+<td>❌ No — process execution / shell / filesystem beyond the consent
+model’s intent</td>
+<td>Stay core</td>
+</tr>
+<tr>
+<td>Dictation, OCR, AI assistant, watch folders, sticky-notes UI,
+spell-check</td>
+<td>various <code>quill/ui</code>, <code>quill/platform</code></td>
+<td>❌ No — wx UI, platform bindings, background services, or
+models</td>
+<td>Stay core</td>
+</tr>
+</tbody>
+</table>
+<p>The pattern is clear: <strong>the EdSharp-parity text transforms are
+the ideal proving ground</strong> — many are already pure functions or
+one mixin method away from it, and several already passed through Tier B
+(<code>line_transforms.py</code>), so the path from inline → Tier B →
+Tier C is a graded, low-risk ramp.</p>
+<h2 id="the-conversion-procedure-per-feature-strangler-fig">5. The
+conversion procedure (per feature, strangler-fig)</h2>
+<p>Mirrors <code>quillin-migration-plan.md</code> §5/§8 but the target
+is the <strong>Quillin path</strong>, and the algorithm <strong>moves
+out of core</strong> rather than staying behind a facade.</p>
+<ol type="1">
+<li><strong>Pin behavior first.</strong> Add/extend a characterization
+test asserting the feature’s current observable behavior (handler output
+for representative input, announcement text, menu/hotkey placement). For
+an already-extracted helper, the existing core test is the
+baseline.</li>
+<li><strong>Author the bundled Quillin.</strong> Create
+<code>quill/quillins_bundled/&lt;name&gt;/</code> (or the chosen
+install-tree home) with a <code>manifest.json</code>
+(<code>quill.extension/1</code>, <code>ext.*</code> ids, declared
+capabilities) and <code>extension.py</code>. <strong>Vendor the pure
+algorithm into the Quillin</strong> — move the wx-free helper (e.g. the
+relevant function from <code>quill/core/html_to_markdown.py</code>) into
+a sibling module the Quillin imports, and move its unit tests alongside.
+“Thin core, fat Quillin”: core keeps a function only if other
+<em>core</em> code still calls it.</li>
+<li><strong>Register it as bundled.</strong> Add the Quillin to the
+bundled-manifest allowlist so it ships enabled (Wave 0 machinery).</li>
+<li><strong>Delete the old wiring.</strong> Remove the mixin handler
+body, the inline command registration, and the menu/hotkey wiring from
+core/UI in the <em>same</em> PR — no dead duplicate.</li>
+<li><strong>Re-pin through the Quillin.</strong> Convert the
+characterization test to load the bundled Quillin through
+<code>ExtensionHost</code>, invoke the command, and assert the
+<strong>identical</strong> output/announcement. (This is exactly the
+shape of <code>tests/unit/core/test_quillins_example.py</code> + the
+live host smoke test.)</li>
+<li><strong>Verify the bar.</strong>
+<code>ruff format</code>/<code>check</code>; strict <code>mypy</code> on
+any touched <code>quill/core</code>; dialog/inventory/egress gates
+green; public-surface fixture regenerated if a <code>MainFrame</code>
+method disappeared.</li>
+</ol>
+<p>Rollback at any step is a single-directory + single-PR revert.</p>
+<h2 id="wave-by-wave-sequencing">6. Wave-by-wave sequencing</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Wave</th>
+<th>Scope</th>
+<th>Exit criterion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0 — Platform</strong></td>
+<td>Build Tier C: bundled-extensions root, trusted-enable gate,
+packaging, latency budget (§3).</td>
+<td>The promoted <code>markdown-helpers</code> Quillin ships
+<strong>enabled</strong>, shows in the Manager, runs end-to-end;
+third-party flag still <code>locked_off</code>; perf budget published
+and met.</td>
+</tr>
+<tr>
+<td><strong>1 — Text Tools</strong></td>
+<td>Convert 3–5 pure text transforms (<code>set_lines_*</code>,
+number/wrap lines, trim/case/sort if present) into ONE bundled “Text
+Tools” Quillin; delete their core helpers.</td>
+<td>Each command loads + invokes through the host with byte-identical
+output; core LOC for those features removed; suite green.</td>
+</tr>
+<tr>
+<td><strong>2 — Insert Tools</strong></td>
+<td>Convert date/time + snippet/boilerplate inserters into a bundled
+“Insert Tools” Quillin (mostly Layer 1, zero capabilities).</td>
+<td>Snippets expand identically; no consent prompts (no gated caps);
+menu homes match <code>menus.md</code>.</td>
+</tr>
+<tr>
+<td><strong>3 — Gated proof</strong></td>
+<td>Convert one <strong>consent-gated</strong> feature (e.g. an online
+lookup over <code>net</code>, or a file-backed action over
+<code>fs.*</code>) to a bundled Quillin.</td>
+<td>The real shipped Quillin triggers the <strong>consent gate</strong>
+before its first network/file action and degrades gracefully on denial —
+proving the gated path in production.</td>
+</tr>
+<tr>
+<td><strong>4 — Markdown Tools</strong></td>
+<td>Convert HTML→Markdown paste, vendoring <code>html_to_markdown</code>
+into the Quillin; retire the core helper if no other core caller
+remains.</td>
+<td><code>clipboard.read</code> capability exercised; conversion
+fidelity tests move alongside the Quillin.</td>
+</tr>
+<tr>
+<td><strong>N — Re-evaluate</strong></td>
+<td>Measure core LOC removed and Manager dogfood coverage; decide the
+stop point.</td>
+<td>A documented tally of features now served by bundled Quillins, with
+the guardrail set (§2) explicitly <em>not</em> converted.</td>
+</tr>
+</tbody>
+</table>
+<p>Each wave is multiple small PRs. Stop converting the moment a feature
+would have to cross a guardrail (§2) or a latency budget (§3) — that
+feature belongs in Tier A/B, and saying so is part of the honest
+result.</p>
+<h2 id="done-criteria-honest-limits">7. Done criteria &amp; honest
+limits</h2>
+<p><strong>Done looks like:</strong> a Tier C mechanism shipping a
+handful of QUILL’s own text/insert/markdown features as <strong>bundled,
+enabled, sandboxed Quillins</strong>; their algorithms and tests living
+<em>in the Quillins</em>, not in
+<code>quill/core</code>/<code>quill/ui</code>; the <strong>Tools ▸
+Quillins Manager</strong> listing real, running, project-authored
+Quillins on a default build; and a published latency budget the
+out-of-process path meets.</p>
+<p><strong>Honest limits — what this roadmap deliberately does NOT
+claim:</strong></p>
+<ul>
+<li><strong>Not everything becomes a Quillin.</strong> The editor
+surface, announcement engine, lifecycle,
+dictation/OCR/AI/watch/spell-check, and every wx/platform-bound or
+per-keystroke feature stay in Tier A/B <em>by design</em> (§2, §4). A
+platform proven by converting <em>suitable</em> features is the goal;
+converting <em>all</em> features is an anti-goal that would regress
+accessibility and latency.</li>
+<li><strong>SEC-8 is untouched.</strong> Third-party discovery/execution
+remains <code>locked_off</code>. Tier C is trusted-author, install-tree,
+separately gated code — the proof works precisely <em>because</em> it
+reuses the sandbox without unlocking strangers.</li>
+<li><strong>No new user-facing capability.</strong> Justification is
+flexibility-demonstration and maintainability; sequence after 1.0
+user-facing work; every wave stays green and accessible or it does not
+land.</li>
+<li><strong>Latency is a real constraint, not a footnote.</strong> If
+Wave 0’s measurement shows the out-of-process round-trip is too slow for
+a candidate’s expected use, that candidate stays Tier B. The budget
+decides, not the aspiration.</li>
+</ul>
+</body>
+</html>
