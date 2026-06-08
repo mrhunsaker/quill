@@ -1,0 +1,35 @@
+{
+  "schema": "quill.extension/1",
+  "id": "com.quill.showcase.zen_bridge",
+  "name": "Zen Focus Bridge",
+  "version": "1.0.0",
+  "author": "QUILL Team",
+  "description": "Connects your editor's focus state to your system environment.",
+  "min_quill_version": "1.0.0",
+  "capabilities": ["ui.command", "net"],
+  "contributes": {
+    "commands": [
+      {
+        "id": "ext.zen.activate",
+        "label": "Activate Zen Sanctuary",
+        "run": {
+          "handler": "activate_zen"
+        }
+      },
+      {
+        "id": "ext.zen.deactivate",
+        "label": "Exit Zen Sanctuary",
+        "run": {
+          "handler": "deactivate_zen"
+        }
+      }
+    ],
+    "menus": [
+      {
+        "parent": "View",
+        "commands": ["ext.zen.activate", "ext.zen.deactivate"]
+      }
+    ]
+  },
+  "main": "extension"
+}

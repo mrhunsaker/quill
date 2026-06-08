@@ -1,0 +1,35 @@
+{
+  "schema": "quill.extension/1",
+  "id": "com.quill.showcase.ghostwriter_mirror",
+  "name": "Ghostwriter's Mirror",
+  "version": "1.0.0",
+  "author": "QUILL Team",
+  "description": "Transforms the 'vibe' and structure of selected text based on a chose persona.",
+  "min_quill_version": "1.0.0",
+  "capabilities": ["ui.command"],
+  "contributes": {
+    "commands": [
+      {
+        "id": "ext.ghostwriter.formalize",
+        "label": "Mirror as: Legal Formalist",
+        "run": {
+          "handler": "mirror_formal"
+        }
+      },
+      {
+        "id": "ext.ghostwriter.poetic",
+        "label": "Mirror as: Victorian Poet",
+        "run": {
+          "handler": "mirror_poetic"
+        }
+      }
+    ],
+    "menus": [
+      {
+        "parent": "Format",
+        "commands": ["ext.ghostwriter.formalize", "ext.ghostwriter.poetic"]
+      }
+    ]
+  },
+  "main": "extension"
+}

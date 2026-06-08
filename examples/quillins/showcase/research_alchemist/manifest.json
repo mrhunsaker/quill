@@ -1,0 +1,28 @@
+{
+  "schema": "quill.extension/1",
+  "id": "com.quill.showcase.research_alchemist",
+  "name": "Research Alchemist",
+  "version": "1.0.0",
+  "author": "QUILL Team",
+  "description": "Siphons key quotes and facts from a directory of files into the current document.",
+  "min_quill_version": "1.0.0",
+  "capabilities": ["fs.read", "ui.command"],
+  "contributes": {
+    "commands": [
+      {
+        "id": "ext.research.siphon",
+        "label": "Siphon Knowledge",
+        "run": {
+          "handler": "siphon_knowledge"
+        }
+      }
+    ],
+    "menus": [
+      {
+        "parent": "Tools",
+        "commands": ["ext.research.siphon"]
+      }
+    ]
+  },
+  "main": "extension"
+}

@@ -1,0 +1,11 @@
+# Quillin Hub Requirements
+flask
+flask-sqlalchemy
+flask-migrate
+psycopg2-binary
+flask-cors
+pygithub
+python-dotenv
+Werkzeug
+bandit
+

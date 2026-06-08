@@ -1,0 +1,28 @@
+{
+  "schema": "quill.extension/1",
+  "id": "com.quill.showcase.acc_auditor",
+  "name": "Accessibility Auditor",
+  "version": "1.0.0",
+  "author": "QUILL Team",
+  "description": "Scans documents for accessibility issues and provides a fix-it menu.",
+  "min_quill_version": "1.0.0",
+  "capabilities": ["ui.command"],
+  "contributes": {
+    "commands": [
+      {
+        "id": "ext.audit.run",
+        "label": "Audit Accessibility",
+        "run": {
+          "handler": "run_audit"
+        }
+      }
+    ],
+    "menus": [
+      {
+        "parent": "Tools",
+        "commands": ["ext.audit.run"]
+      }
+    ]
+  },
+  "main": "extension"
+}
