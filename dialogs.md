@@ -129,6 +129,14 @@ or the command palette (`Ctrl+Shift+P`).
 - [ ] Compare Difference List: via Tools menu
 - [ ] Compare Options: via Tools menu
 
+## J2. Tools: Quillins (extensions)
+
+The Quillins Manager always opens, even when third-party Quillins are disabled
+(SEC-8 `core.third_party_plugins` is locked off for 1.0); it then reports that
+state and lists any installed Quillins read-only.
+
+- [ ] Quillins Manager (list, details, Enable/Disable/Reload/Remove): Tools > Quillins > Manage Quillins... (`tools.quillins_manager`)
+
 ## K. Tools: keyboard
 
 - [ ] Keymap Editor: via Tools menu
@@ -237,6 +245,8 @@ parent first.
 - [ ] Confirm item deletion (from YAML Structure Editor)
 - [ ] Regex Helper (from Tools)
 - [ ] Update downloaded (from Check for Updates, after a successful download)
+- [ ] Remove Quillin confirm (from Quillins Manager, Remove... button)
+- [ ] Quillin permission request (from running a third-party Quillin that requests a consent-gated capability: fs.read, fs.write, or net)
 
 ## W. EdSharp Tools
 

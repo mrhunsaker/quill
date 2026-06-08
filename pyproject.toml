@@ -90,6 +90,7 @@ packages = ["quill"]
 "quill/data/th_en_US_v2.dat" = "quill/data/th_en_US_v2.dat"
 "quill/data/th_en_US_LICENSE.txt" = "quill/data/th_en_US_LICENSE.txt"
 "quill/data/th_en_US_WordNet_LICENSE.txt" = "quill/data/th_en_US_WordNet_LICENSE.txt"
+"quill/core/schemas/extension.json" = "quill/core/schemas/extension.json"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

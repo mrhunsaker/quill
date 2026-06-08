@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quill.app/schemas/extension/1.json",
+  "title": "QUILL Extension Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "name", "version"],
+  "properties": {
+    "schema": { "const": "quill.extension/1" },
+    "id": {
+      "type": "string",
+      "description": "Reverse-DNS unique id, e.g. com.example.wraptools.",
+      "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 128
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "version": {
+      "type": "string",
+      "description": "Semantic version MAJOR.MINOR.PATCH.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "author": { "type": "string", "maxLength": 120 },
+    "description": { "type": "string", "maxLength": 400 },
+    "license": { "type": "string", "maxLength": 64 },
+    "min_quill_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Lowest QUILL version this extension supports."
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "editor.read",
+          "editor.write",
+          "ui.announce",
+          "ui.command",
+          "fs.read",
+          "fs.write",
+          "net",
+          "clipboard.read",
+          "clipboard.write"
+        ]
+      }
+    },
+    "main": {
+      "type": "string",
+      "description": "Relative path to the Python entry module (Layer 2). Omit for snippet-only (Layer 1) extensions.",
+      "pattern": "^[A-Za-z0-9_./-]+\\.py$"
+    },
+    "contributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^ext\\.[a-z0-9]+([._-][a-z0-9]+)*$",
+                "description": "Must be namespaced under ext. to avoid colliding with built-in command ids."
+              },
+              "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "run": {
+                "type": "object",
+                "description": "How the command executes. Exactly one of snippet or handler.",
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "required": ["snippet"],
+                    "properties": {
+                      "snippet": {
+                        "type": "string",
+                        "description": "Literal text inserted/replacing selection. Supports ${selection}, ${clipboard}, ${date}, ${time}, ${filename} placeholders. No code execution."
+                      }
+                    }
+                  },
+                  {
+                    "additionalProperties": false,
+                    "required": ["handler"],
+                    "properties": {
+                      "handler": {
+                        "type": "string",
+                        "description": "Name of a function registered by the Python entry module via api.register_command. Requires main + ui.command capability."
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "menus": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["parent", "command"],
+            "properties": {
+              "parent": {
+                "type": "string",
+                "description": "Top-level menu title to attach under, e.g. File, Edit, Format, Tools, Help.",
+                "enum": ["File", "Edit", "Format", "Tools", "Navigate", "View", "Help"]
+              },
+              "command": { "type": "string", "description": "A command id contributed above or a built-in command id." }
+            }
+          }
+        },
+        "context_menu": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command"],
+            "properties": {
+              "command": { "type": "string" },
+              "when": {
+                "type": "string",
+                "description": "Optional visibility guard.",
+                "enum": ["always", "editor.hasSelection", "editor.hasText", "editor.empty"]
+              }
+            }
+          }
+        },
+        "hotkeys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command", "binding"],
+            "properties": {
+              "command": { "type": "string" },
+              "binding": {
+                "type": "string",
+                "description": "QUILL binding grammar. Supports the QUILL Key chord prefix, e.g. 'Ctrl+Shift+Grave, F'. Conflicts are rejected, never silently overridden."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "A handler-based command requires a Python entry module.",
+      "if": {
+        "properties": {
+          "contributes": {
+            "properties": {
+              "commands": {
+                "contains": { "properties": { "run": { "required": ["handler"] } } }
+              }
+            }
+          }
+        }
+      },
+      "then": { "required": ["main"] }
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+"""Unit tests for the capability- and consent-gated API dispatcher.
+
+These drive :class:`quill.core.quillins.host.ApiDispatcher` directly, without
+spawning a worker subprocess, so the security gate is tested in isolation.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from quill.core.quillins.host import ApiDispatcher
+from quill.core.quillins.model import Contributions, ExtensionManifest
+
+
+class _RecordingServices:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, tuple[Any, ...]]] = []
+
+    def get_text(self) -> str:
+        self.calls.append(("get_text", ()))
+        return "document body"
+
+    def get_selection(self) -> str:
+        self.calls.append(("get_selection", ()))
+        return "sel"
+
+    def get_cursor(self) -> dict[str, int]:
+        return {"line": 1, "column": 1, "percent": 0}
+
+    def insert_text(self, text: str) -> None:
+        self.calls.append(("insert_text", (text,)))
+
+    def replace_selection(self, text: str) -> None:
+        self.calls.append(("replace_selection", (text,)))
+
+    def announce(self, message: str) -> None:
+        self.calls.append(("announce", (message,)))
+
+    def read_file(self, path: str) -> str:
+        self.calls.append(("read_file", (path,)))
+        return "file contents"
+
+    def write_file(self, path: str, text: str) -> None:
+        self.calls.append(("write_file", (path, text)))
+
+    def fetch(self, url: str, method: str, body: str | None) -> dict[str, Any]:
+        self.calls.append(("fetch", (url, method, body)))
+        return {"status": 200}
+
+    def get_clipboard(self) -> str:
+        return "clip"
+
+    def set_clipboard(self, text: str) -> None:
+        self.calls.append(("set_clipboard", (text,)))
+
+
+def _manifest(*capabilities: str) -> ExtensionManifest:
+    return ExtensionManifest(
+        id="com.example.t",
+        name="T",
+        version="1.0.0",
+        capabilities=tuple(capabilities),
+        main="extension.py",
+        contributes=Contributions(),
+    )
+
+
+def _call(dispatcher: ApiDispatcher, method: str, *args: Any) -> dict[str, Any]:
+    return dispatcher.handle({"type": "api_call", "id": 1, "method": method, "args": list(args)})
+
+
+def test_granted_read_method_succeeds() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(_manifest("editor.read"), services)
+    result = _call(dispatcher, "get_text")
+    assert result["ok"] is True
+    assert result["value"] == "document body"
+
+
+def test_ungranted_capability_is_denied() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(_manifest("editor.read"), services)  # no editor.write
+    result = _call(dispatcher, "insert_text", "x")
+    assert result["ok"] is False
+    assert result["error_kind"] == "CapabilityError"
+    assert services.calls == []  # service was never reached
+
+
+def test_unknown_method_is_rejected() -> None:
+    dispatcher = ApiDispatcher(_manifest("editor.read"), _RecordingServices())
+    result = _call(dispatcher, "launch_missiles")
+    assert result["ok"] is False
+    assert "unknown method" in result["message"]
+
+
+def test_consent_gated_capability_requires_consent_grant() -> None:
+    services = _RecordingServices()
+    seen: list[tuple[str, str]] = []
+
+    def consent(capability: str, detail: str) -> bool:
+        seen.append((capability, detail))
+        return True
+
+    dispatcher = ApiDispatcher(_manifest("fs.read"), services, consent=consent)
+    result = _call(dispatcher, "read_file", "C:/notes.txt")
+    assert result["ok"] is True
+    assert seen and seen[0][0] == "fs.read"
+    assert services.calls == [("read_file", ("C:/notes.txt",))]
+
+
+def test_consent_denied_blocks_the_call() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(_manifest("fs.read"), services, consent=lambda c, d: False)
+    result = _call(dispatcher, "read_file", "C:/notes.txt")
+    assert result["ok"] is False
+    assert result["error_kind"] == "ConsentDeniedError"
+    assert services.calls == []
+
+
+def test_default_consent_is_deny() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(_manifest("net"), services)  # no consent callback
+    result = _call(dispatcher, "fetch", "https://example.com")
+    assert result["ok"] is False
+    assert result["error_kind"] == "ConsentDeniedError"
+
+
+def test_non_consent_capability_does_not_prompt() -> None:
+    services = _RecordingServices()
+    prompted = False
+
+    def consent(capability: str, detail: str) -> bool:
+        nonlocal prompted
+        prompted = True
+        return True
+
+    dispatcher = ApiDispatcher(_manifest("editor.write"), services, consent=consent)
+    result = _call(dispatcher, "insert_text", "hello")
+    assert result["ok"] is True
+    assert prompted is False  # install-time capability, never per-action prompt
+
+
+def test_granted_capabilities_override_manifest() -> None:
+    services = _RecordingServices()
+    # Manifest declares editor.write, but the user only granted editor.read.
+    dispatcher = ApiDispatcher(
+        _manifest("editor.read", "editor.write"),
+        services,
+        granted_capabilities=("editor.read",),
+    )
+    assert _call(dispatcher, "get_text")["ok"] is True
+    assert _call(dispatcher, "insert_text", "x")["ok"] is False
+
+
+def test_args_must_be_a_list() -> None:
+    dispatcher = ApiDispatcher(_manifest("editor.read"), _RecordingServices())
+    result = dispatcher.handle({"type": "api_call", "id": 1, "method": "get_text", "args": "x"})
+    assert result["ok"] is False
+    assert "args must be a list" in result["message"]

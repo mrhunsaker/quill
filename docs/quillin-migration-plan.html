@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>quillin-migration-plan</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1
+id="migrating-quills-first-party-code-onto-the-quillins-contribution-grammar">Migrating
+QUILL’s first-party code onto the Quillins contribution grammar</h1>
+<p>Status: <strong>Plan / playbook</strong> · Companion to
+<code>docs/scripting.md</code> (esp. §16) · Scope: <strong>internal
+refactor, 2.0-scale, maintainability-driven</strong></p>
+<blockquote>
+<p>Read <code>docs/scripting.md</code> §16 for the <em>why</em> (one
+vocabulary, two tiers). This document is the <em>how</em>: a concrete,
+low-risk, reversible procedure for moving built-in features out of the
+<code>quill/ui/main_frame.py</code> god object and onto the same
+<strong>contribution grammar</strong> (commands, menus, hotkeys,
+context-menu entries) that Quillins already use — turning
+<code>quill/core</code> into a genuine framework.</p>
+</blockquote>
+<h2 id="the-one-insight-this-plan-rests-on">1. The one insight this plan
+rests on</h2>
+<p>The Quillins framework already defines, validates, and wires a
+contribution vocabulary: a <strong>command</strong> (<code>id</code>,
+<code>title</code>, a handler), its placement in <strong>menus</strong>
+and the <strong>context menu</strong>, and its <strong>hotkey</strong>
+binding, all merged with conflict detection
+(<code>quill/core/quillins/registry.py</code>). QUILL’s built-ins are
+wired with <em>the same concepts</em>, but by hand, inline, inside one
+20k-line class.</p>
+<p>So the migration is not “rewrite features”. It is: <strong>express
+each existing feature as a self-registering module that contributes
+commands through one host facade</strong>, and delete the corresponding
+hand-wiring from <code>main_frame.py</code>.</p>
+<pre><code>            ┌─────────────── one contribution grammar ───────────────┐
+            │                                                         │
+  first-party feature module                          third-party Quillin
+  register(host)  ── rich, in-process host ──►   register(api) ── narrow, gated API
+  (trusted, no sandbox)                           (untrusted, out-of-process, §6)
+            │                                                         │
+            └────────► same commands / menus / hotkeys / palette ◄────┘</code></pre>
+<p>The crucial rule (restated from §16.1, non-negotiable):
+<strong>first-party modules run in-process against a rich host facade.
+They are NEVER routed through the sandboxed, capability-gated,
+out-of-process Quillin path.</strong> That path exists for
+<em>untrusted</em> code; forcing trusted per-keystroke built-ins across
+an RPC bridge would wreck latency and capability for zero security
+gain.</p>
+<h2 id="guardrails-what-must-not-be-migrated">2. Guardrails — what must
+NOT be migrated</h2>
+<p>These are load-bearing for QUILL’s identity. Decomposing them is how
+accessibility regresses (see §16.3):</p>
+<ul>
+<li><strong>The editor surface.</strong> The plain-text
+<code>wx.TextCtrl</code> writing path stays a first-class, hand-owned
+widget. It is not a plugin and gets no <code>register(host)</code>.</li>
+<li><strong>The accessibility / announcement engine.</strong>
+NVDA/JAWS/Narrator parity is the framework’s central guarantee. It is
+<em>called by</em> migrated modules; it is not itself pluginized.</li>
+<li><strong>App lifecycle &amp; frame construction.</strong> Startup
+ordering, tab management, the single-instance guard, crash recovery, and
+the menu <em>bar</em> skeleton remain core.</li>
+<li><strong>Anything with deep shared-mutable-state coupling</strong>
+that cannot be covered by a characterization test first (see §5). If you
+can’t pin its behavior, you can’t safely move it yet.</li>
+</ul>
+<p>When in doubt: a feature is a migration candidate iff it is
+<strong>command-shaped</strong> — it has a stable id, a title, a
+handler, and (optionally) a menu/hotkey/context placement — and its
+handler can reach everything it needs through the host facade (§4).</p>
+<h2 id="target-shape-of-a-migrated-module">3. Target shape of a migrated
+module</h2>
+<p>A first-party feature module is a small, self-contained file exposing
+one top-level <code>register(host)</code> that contributes its commands.
+It mirrors the Quillin <code>register(api)</code> shape so the mental
+model is identical, but <code>host</code> is the <strong>rich trusted
+facade</strong>, not the narrow capability-gated
+<code>QuillExtensionApi</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># quill/ui/features/line_ops.py  (illustrative target)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">&quot;&quot;&quot;Line operations, migrated off main_frame.py onto the contribution grammar.&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> quill.core.contributions <span class="im">import</span> Host  <span class="co"># the first-party host facade (§4)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> register(host: Host) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    host.add_command(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span><span class="op">=</span><span class="st">&quot;lines.number&quot;</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">&quot;Number Lines&quot;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        handler<span class="op">=</span>_number_lines,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        menu<span class="op">=</span>(<span class="st">&quot;Format&quot;</span>,),          <span class="co"># optional placement</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        context<span class="op">=</span>(<span class="st">&quot;editor.hasText&quot;</span>,),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="co"># no default hotkey: user binds via the Keymap Editor</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _number_lines(ctx: Host) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> ctx.get_text()</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    numbered <span class="op">=</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>.join(<span class="ss">f&quot;</span><span class="sc">{</span>i <span class="op">+</span> <span class="dv">1</span><span class="sc">}</span><span class="ch">\t</span><span class="sc">{</span>line<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> i, line <span class="kw">in</span> <span class="bu">enumerate</span>(text.splitlines()))</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> ctx.undo_group(<span class="st">&quot;Number Lines&quot;</span>):</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        ctx.set_text(numbered)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    ctx.announce(<span class="st">&quot;Numbered lines&quot;</span>)</span></code></pre></div>
+<p>The module imports <strong>no <code>wx</code></strong> directly for
+its <em>logic</em>; UI effects go through the host facade, exactly as
+the EdSharp handlers already centralize their edits. (A module may still
+live under <code>quill/ui/</code> and use <code>wx</code> for genuinely
+bespoke UI, but that UI must pass A11Y-4 review — it is first-party, not
+a sandboxed extension.)</p>
+<h2 id="the-first-party-host-facade">4. The first-party host facade</h2>
+<p>This is the single piece of <em>new</em> core surface the migration
+introduces: <code>quill/core/contributions.py</code> (wx-free protocol)
+with a <code>quill/ui</code> implementation that adapts
+<code>MainFrame</code>. It is the trusted superset of
+<code>QuillExtensionApi</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Group</th>
+<th>Methods (illustrative)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registration</td>
+<td><code>add_command</code>, <code>add_menu</code>,
+<code>add_context</code>, <code>add_hotkey</code></td>
+<td>Same grammar as <code>Contributions</code>; conflicts routed through
+<code>build_registry</code></td>
+</tr>
+<tr>
+<td>Editor read</td>
+<td><code>get_text</code>, <code>get_selection</code>,
+<code>get_cursor</code>, <code>get_lines</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Editor write</td>
+<td><code>set_text</code>, <code>insert_text</code>,
+<code>replace_selection</code>, <code>undo_group(label)</code></td>
+<td>All writes go through core command + history (undoable)</td>
+</tr>
+<tr>
+<td>Announce</td>
+<td><code>announce</code>, <code>set_status</code></td>
+<td>The one announcement engine; never bypassed</td>
+</tr>
+<tr>
+<td>Services</td>
+<td><code>settings</code>, <code>document</code>,
+<code>dialogs.show_web_form</code>, <code>workers</code>,
+<code>platform</code></td>
+<td>Rich, synchronous, in-process — the trusted breadth</td>
+</tr>
+</tbody>
+</table>
+<p>Two design rules keep this honest:</p>
+<ol type="1">
+<li><strong>The registration quartet is shared with Quillins.</strong>
+<code>add_command</code> / <code>add_menu</code> /
+<code>add_hotkey</code> feed the <em>same</em>
+<code>ContributionRegistry</code>
+(<code>quill/core/quillins/registry.py</code>) so first-party and
+third-party contributions collide-detect against each other and the host
+keymap uniformly. First-party ids are <em>not</em> forced under
+<code>ext.</code> — they keep their existing namespaces
+(<code>lines.*</code>, <code>eds.*</code>, …); only third-party ids
+carry <code>ext.</code>.</li>
+<li><strong>The breadth gap is the only difference between
+tiers.</strong> <code>host</code> exposes
+settings/workers/platform/dialogs; <code>api</code> does not. That
+asymmetry <em>is</em> the trust boundary — there is no second
+registration mechanism, no second menu builder, no second keymap.</li>
+</ol>
+<h2 id="strategy-strangler-fig-behind-characterization-tests">5.
+Strategy: strangler-fig, behind characterization tests</h2>
+<p>Never a big-bang “everything is a plugin” rewrite (§16.3). Each
+feature is moved in a self-contained, individually revertible step:</p>
+<ol type="1">
+<li><strong>Pin behavior first.</strong> Write/extend a characterization
+test that asserts the feature’s <em>current</em> observable behavior
+(command id registered, menu present, handler output for representative
+input, announcement text). The existing
+<code>test_eds_command_wiring.py</code> is the template: it reads source
+text and asserts the wiring contract without constructing the full
+frame.</li>
+<li><strong>Introduce the facade seam.</strong> Land
+<code>quill/core/contributions.py</code> + its <code>MainFrame</code>
+adapter with <strong>zero behavior change</strong> —
+<code>main_frame.py</code> keeps working; the facade just wraps what it
+already does.</li>
+<li><strong>Move one feature.</strong> Extract its handler(s) into a
+<code>register(host)</code> module; replace the inline
+registration/menu/hotkey wiring in <code>main_frame.py</code> with a
+single <code>register(module, host)</code> call.</li>
+<li><strong>Delete the old wiring.</strong> The inline command
+registration, menu append, and handler body leave
+<code>main_frame.py</code>. The line count drops; the test stays
+green.</li>
+<li><strong>Repeat.</strong> One feature (or one cohesive mixin) per
+PR.</li>
+</ol>
+<p>Rollback at any step is a single-file revert because each module is
+independent.</p>
+<h2 id="pilot-selection">6. Pilot selection</h2>
+<p>Pick first movers that are <strong>already command-shaped and already
+extracted into a mixin</strong>, so the migration is mechanical and the
+risk is near zero. The codebase hands us an ideal pilot:</p>
+<ul>
+<li><strong>Pilot 1 — EdSharp Tools (<code>eds.*</code>).</strong>
+<code>quill/ui/main_frame_edsharp_menu.py</code> already centralizes the
+commands as a <code>(id, label, handler)</code> table
+(<code>_edsharp_command_table</code>) and the handlers already live on
+one mixin (<code>EdSharpActionsMixin</code>). That table <em>is</em> a
+contribution list in all but name — converting it to
+<code>host.add_command(...)</code> calls is a near-syntactic transform,
+and <code>test_eds_command_wiring.py</code> already pins the
+contract.</li>
+<li><strong>Pilot 2 — line operations &amp; “speak …” commands.</strong>
+Self-contained, pure-ish text transforms with clear announcements and no
+dialog dependencies.</li>
+<li><strong>Pilot 3 — formatting commands</strong> that contribute under
+the <code>Format</code> menu.</li>
+</ul>
+<p>Defer: anything touching tab lifecycle, the watch service,
+AI/assistant flows, or shared mutable selection state until the facade
+has proven itself on Pilots 1–3.</p>
+<h2 id="wave-by-wave-sequencing">7. Wave-by-wave sequencing</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Wave</th>
+<th>Scope</th>
+<th>Exit criterion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Land <code>quill/core/contributions.py</code> +
+<code>MainFrame</code> adapter; no features moved</td>
+<td>Facade unit-tested; <code>main_frame.py</code> unchanged in
+behavior; public-surface fixture stable</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Pilot 1 (EdSharp <code>eds.*</code>)</td>
+<td>EdSharp table replaced by <code>register(host)</code>;
+<code>test_eds_command_wiring.py</code> green;
+<code>main_frame.py</code> net-smaller</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Line-ops + speak/status commands</td>
+<td>Each command a module; characterization tests green</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Format-menu commands</td>
+<td><code>Format</code> contributions all flow through the registry</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Navigate/View read-only commands</td>
+<td>…</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Tools utilities that already use <code>show_web_form</code></td>
+<td>Dialogs stay A11Y-4-registered; <code>dialogs.md</code> rows
+unchanged</td>
+</tr>
+<tr>
+<td>N</td>
+<td>Re-evaluate; stop when <code>main_frame.py</code> is a thin shell of
+lifecycle + surface</td>
+<td><code>quill/core</code> is the framework; remaining
+<code>main_frame.py</code> is guardrail code (§2)</td>
+</tr>
+</tbody>
+</table>
+<p>Each wave is multiple small PRs, not one large one.</p>
+<h2 id="per-feature-migration-checklist">8. Per-feature migration
+checklist</h2>
+<p>For every feature moved:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Characterization test pins current
+id(s), menu/hotkey placement, handler output, and announcement text
+<strong>before</strong> any move.</label></li>
+<li><label><input type="checkbox" />New module exposes exactly one
+top-level <code>register(host)</code>.</label></li>
+<li><label><input type="checkbox" />Logic reaches the
+editor/settings/announcer <strong>only</strong> through the host facade;
+no new direct <code>MainFrame</code> attribute reach-ins.</label></li>
+<li><label><input type="checkbox" />All writes use
+<code>host.undo_group(...)</code> so behavior stays undoable and
+announced identically.</label></li>
+<li><label><input type="checkbox" />Inline
+registration/menu/hotkey/handler code is <strong>removed</strong> from
+<code>main_frame.py</code> in the same PR (no dead
+duplicate).</label></li>
+<li><label><input type="checkbox" />Command ids and bindings still
+collide-detect via the shared registry (no silently-overridden hotkey —
+§4 rule 1).</label></li>
+<li><label><input type="checkbox" />If the feature owns a dialog:
+<code>dialog_inventory.json</code> regenerated, the A11Y-4 gate green,
+<code>dialogs.md</code> row unchanged (the dialog didn’t move for the
+user, only in code).</label></li>
+<li><label><input
+type="checkbox" /><code>ruff format</code>/<code>check</code> clean;
+strict <code>mypy</code> green on the new wx-free core facade and any
+<code>quill/core</code> touched; targeted <code>pytest</code>
+green.</label></li>
+<li><label><input type="checkbox" />If a public <code>MainFrame</code>
+method disappeared, regenerate the public-surface fixture and review the
+diff.</label></li>
+</ul>
+<h2 id="worked-example-migrating-eds.number_lines">9. Worked example —
+migrating <code>eds.number_lines</code></h2>
+<p><strong>Before</strong> (conceptually, in
+<code>main_frame_edsharp_menu.py</code> +
+<code>EdSharpActionsMixin</code>):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># table row</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>(<span class="st">&quot;eds.number_lines&quot;</span>, <span class="st">&quot;EdSharp: Number Lines&quot;</span>, <span class="va">self</span>.number_lines)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># registration loop calls self.commands.register(id, label, handler, binding)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and the menu builder appends + binds the same id</span></span></code></pre></div>
+<p><strong>After</strong>
+(<code>quill/ui/features/eds_line_ops.py</code>):</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> register(host):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    host.add_command(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span><span class="op">=</span><span class="st">&quot;eds.number_lines&quot;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">&quot;EdSharp: Number Lines&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        handler<span class="op">=</span>_number_lines,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        menu<span class="op">=</span>(<span class="st">&quot;Tools&quot;</span>, <span class="st">&quot;EdSharp Tools&quot;</span>, <span class="st">&quot;Lines&quot;</span>),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _number_lines(ctx):</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ctx.is_read_only():</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        ctx.set_status(<span class="st">&quot;Document is read-only&quot;</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    ...                       <span class="co"># same body as today&#39;s EdSharpActionsMixin.number_lines</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    ctx.announce(<span class="st">&quot;Numbered lines&quot;</span>)</span></code></pre></div>
+<p>and in <code>main_frame.py</code>, the EdSharp block collapses
+to:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> quill.ui.features <span class="im">import</span> eds_line_ops</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>eds_line_ops.register(<span class="va">self</span>._contribution_host)</span></code></pre></div>
+<p>The user sees <strong>no change</strong>: same palette entry, same
+menu path, same key-bindability, same announcement. The maintainer sees
+one fewer responsibility in the god object and a module they can read in
+isolation.</p>
+<h2 id="done-criteria-honest-limits">10. Done criteria &amp; honest
+limits</h2>
+<p><strong>Done looks like:</strong> <code>quill/core</code> carries the
+document model, command registry, keymap, event bus, feature gating, the
+announcement engine, <strong>and</strong> the shared contribution
+registry + host-facade protocol; the majority of command-shaped features
+live in self-registering modules; <code>main_frame.py</code> is a thin
+shell of lifecycle, the editor surface, and guardrail code (§2).</p>
+<p><strong>This refactor does not add user-facing capability.</strong>
+Its justification is maintainability and testability (§16.3). Feature
+profiles already deliver most of the user-visible modularity, so this is
+sequenced <strong>after</strong> user-facing wins and proceeds
+<strong>opportunistically</strong> — every wave must leave the suite
+green and the accessibility contract intact, or it does not land.</p>
+</body>
+</html>

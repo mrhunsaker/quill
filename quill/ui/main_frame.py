@@ -493,6 +493,7 @@ from quill.ui.main_frame_image import ImageCaptureMixin
 from quill.ui.main_frame_intellisense import IntellisensePopupMixin
 from quill.ui.main_frame_menu import MenuBuilderMixin
 from quill.ui.main_frame_quill_key import QuillKeyMixin
+from quill.ui.main_frame_quillins import QuillinsMenuMixin
 from quill.ui.main_frame_selection import SelectionMarksMixin
 from quill.ui.main_frame_sessions import SessionsMixin
 from quill.ui.main_frame_statusbar import StatusBarMixin, _StatusBarCell
@@ -760,6 +761,7 @@ class MainFrame(
     IntellisensePopupMixin,
     EdSharpActionsMixin,
     EdSharpMenuMixin,
+    QuillinsMenuMixin,
 ):
     _ANNOUNCEMENT_BACKEND_LABELS: dict[str, str] = {
         "auto": "Automatic (use Prism when available)",
@@ -2633,6 +2635,7 @@ class MainFrame(
             None,
         )
         self._register_edsharp_commands()
+        self._register_quillins_commands()
 
     def _apply_accelerators(self) -> None:
         wx = self._wx

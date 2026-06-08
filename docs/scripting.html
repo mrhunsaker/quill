@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>scripting</title>
   <style>
@@ -156,8 +156,12 @@
       text-decoration: none;
     }
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     /* The extra [class] is a hack that increases specificity enough to
        override a similar rule in reveal.js */
@@ -237,15 +241,102 @@
   </style>
 </head>
 <body>
-<h1 id="quill-scripting-quillins-design-plan-for-review">QUILL Scripting
-&amp; Quillins — Design Plan (for review)</h1>
-<p>Status: <strong>Draft for review</strong> · Target: <strong>QUILL
-2.0</strong> · Branch: <code>edsharp</code></p>
-<p>This document proposes how QUILL should let power users extend the
-application with custom behaviour that hooks into the <strong>menu
-system</strong>, <strong>hotkeys</strong>, and <strong>right-click /
-context menus</strong>. It is a design plan only — no runtime code in
-this document is wired into the shipping app yet.</p>
+<h1 id="quill-scripting-quillins-design-implementation">QUILL Scripting
+&amp; Quillins — Design &amp; Implementation</h1>
+<p>Status: <strong>Implemented (framework foundation)</strong> · Branch:
+<code>edsharp</code></p>
+<p>This document is both the design rationale and the authoritative
+authoring reference for <strong>Quillins</strong>, QUILL’s extension
+framework. The framework described here is <strong>implemented and
+tested in the codebase</strong> (<code>quill/core/quillins/*</code> and
+<code>quill/ui/main_frame_quillins.py</code>); see the Implementation
+Status map in §0a for the module-by-module mapping. Third-party Quillin
+<strong>execution</strong> is deliberately gated off for QUILL 1.0 by
+the SEC-8 <code>core.third_party_plugins</code> feature flag
+(<code>locked_off</code>), so a shipping 1.0 build discovers and runs no
+third-party code while the framework, the Quillins Manager, and the full
+test bar are in place.</p>
+<h2 id="a.-implementation-status-module-map">0a. Implementation status
+(module map)</h2>
+<p>Every design element below is backed by a shipping, wx-free
+<code>quill/core</code> module (plus one <code>quill/ui</code> mixin)
+and a test. The neutral technical terms (<code>extension</code>,
+<code>quill.extension/1</code>, <code>ext.*</code>,
+<code>QuillExtensionApi</code>) are the stable wire/code identifiers;
+the experience speaks of <strong>Quillins</strong>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Design element (this doc)</th>
+<th>Module</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Manifest model, capability catalogue, errors (§4, §5, §14.1)</td>
+<td><code>quill/core/quillins/model.py</code></td>
+<td><code>tests/unit/core/test_quillins_model.py</code></td>
+</tr>
+<tr>
+<td>Manifest validation (§13)</td>
+<td><code>quill/core/quillins/validation.py</code></td>
+<td><code>tests/unit/core/test_quillins_validation.py</code></td>
+</tr>
+<tr>
+<td>Published JSON Schema (§13)</td>
+<td><code>quill/core/schemas/extension.json</code></td>
+<td><code>tests/unit/core/test_quillins_protocol.py</code>
+(schema⇄validator agreement)</td>
+</tr>
+<tr>
+<td>Layer 1 snippet expansion (§14.3)</td>
+<td><code>quill/core/quillins/snippets.py</code></td>
+<td><code>tests/unit/core/test_quillins_snippets.py</code></td>
+</tr>
+<tr>
+<td>Contribution merge + conflict detection (§4, §15)</td>
+<td><code>quill/core/quillins/registry.py</code></td>
+<td><code>tests/unit/core/test_quillins_registry.py</code></td>
+</tr>
+<tr>
+<td>Discovery, enable/disable, SEC-8 gate (§6)</td>
+<td><code>quill/core/quillins/loader.py</code></td>
+<td><code>tests/unit/core/test_quillins_loader.py</code></td>
+</tr>
+<tr>
+<td>RPC framing (§3)</td>
+<td><code>quill/core/quillins/protocol.py</code></td>
+<td><code>tests/unit/core/test_quillins_protocol.py</code></td>
+</tr>
+<tr>
+<td>Out-of-process host + capability/consent gate (§5, §6)</td>
+<td><code>quill/core/quillins/host.py</code></td>
+<td><code>tests/unit/core/test_quillins_host.py</code>,
+<code>tests/integration/test_quillins_host_integration.py</code></td>
+</tr>
+<tr>
+<td>Sandboxed worker + <code>QuillExtensionApi</code> (§5, §14.4)</td>
+<td><code>quill/core/quillins/host_worker.py</code></td>
+<td><code>tests/integration/test_quillins_host_integration.py</code></td>
+</tr>
+<tr>
+<td>Tools ▸ Quillins menu, runtime, Quillins Manager dialog (§7,
+§17)</td>
+<td><code>quill/ui/main_frame_quillins.py</code></td>
+<td><code>tests/unit/ui/test_main_frame_quillins.py</code>, A11Y-4
+dialog inventory</td>
+</tr>
+</tbody>
+</table>
+<p>This document is a design plan turned reference; where it describes
+future, optional, or 2.0-scale work it says so explicitly (the QuickJS
+evaluator in §9, and the internal modularization in §16).</p>
 <h2 id="naming-quillins">Naming: Quillins</h2>
 <p>QUILL’s plugins are branded <strong>Quillins</strong>. Throughout
 this document “Quillin” and “Quillins” are the product-facing name for a
@@ -495,33 +586,50 @@ evaluator</strong> only — e.g. a “Evaluate Expression” command and
 <strong>not</strong> be the extension API. Capabilities would be granted
 explicitly, identical to the Python layer.</p>
 <h2 id="phasing-milestones">10. Phasing / milestones</h2>
+<p>Status note: <strong>M1–M3 are implemented and tested</strong> (see
+§0a). M4 remains optional future work. Third-party execution stays gated
+off for 1.0 (SEC-8).</p>
 <ol type="1">
-<li><strong>M1 — Manifest + loader (Layer 1):</strong> schema,
-validation, load/enable/disable, command/menu/context/hotkey
-registration, conflict detection, Extensions Manager dialog. No code
-execution. Highest value, lowest risk.</li>
-<li><strong>M2 — Python host (Layer 2):</strong> out-of-process worker,
-RPC bridge, <code>QuillExtensionApi v1</code> with
+<li><strong>M1 — Manifest + loader (Layer 1): <em>Done.</em></strong>
+Schema, validation, load/enable/ disable, command/menu/context/hotkey
+registration, conflict detection, Quillins Manager dialog. No code
+execution.</li>
+<li><strong>M2 — Python host (Layer 2): <em>Done.</em></strong>
+Out-of-process worker, RPC bridge, <code>QuillExtensionApi v1</code>
+with
 <code>editor.read</code>/<code>editor.write</code>/<code>announce</code>/
-<code>register_command</code>, undo/announcement integration.</li>
-<li><strong>M3 — Capabilities + consent:</strong>
+<code>register_command</code>, undo/announcement integration through the
+host services.</li>
+<li><strong>M3 — Capabilities + consent: <em>Done.</em></strong>
 <code>fs.read</code>/<code>fs.write</code>/<code>net</code>,
-install-time disclosure, per-action consent gate, audit log.</li>
+install-time disclosure, per-action consent gate. (A per-extension audit
+log remains a future enhancement.)</li>
 <li><strong>M4 (optional) — QuickJS snippet evaluator</strong> for
 EdSharp <code>.js</code> parity.</li>
 </ol>
 <h2 id="testing-strategy">11. Testing strategy</h2>
+<p>Status note: <strong>this strategy is implemented</strong> — the test
+files are listed in the §0a map. The bar below is what those tests
+enforce.</p>
 <ul>
-<li><code>quill/core</code> + <code>quill/io</code> (manifest model,
-schema validation, capability checks, conflict detection): real unit
-tests, wx-free, strict mypy.</li>
-<li>UI registration (menu/context/hotkey wiring): source-contract tests
-plus the A11Y-4 dialog-contract guard for the Quillins Manager
-dialog.</li>
-<li>Host/RPC bridge: integration tests with a fake extension exercising
-read/write/announce and a capability-denied path.</li>
+<li><code>quill/core</code> (manifest model, schema validation, snippet
+expansion, capability checks, conflict detection, loader/SEC-8 gating):
+real unit tests, wx-free, strict mypy. The schema artifact and the
+hand-rolled validator are asserted to agree (capability enum, menu
+parents, schema id).</li>
+<li>UI registration (menu/context/hotkey wiring, Manager dialog):
+source-contract tests
+(<code>tests/unit/ui/test_main_frame_quillins.py</code>) plus the A11Y-4
+dialog inventory/contract guard for the Quillins Manager dialog.</li>
+<li>Host/RPC bridge: integration tests
+(<code>tests/integration/test_quillins_host_integration.py</code>) spawn
+the real worker subprocess and exercise read/write/announce, the
+capability-denied path, the consent-denied path, network-with-consent,
+handler-error isolation, and main- module path containment.</li>
 <li>Security: explicit tests that an undeclared capability is rejected
-and that no document content crosses the bridge without consent.</li>
+(in-worker and at the dispatcher), that consent defaults to deny, and
+that diagnostic <code>log</code> output never reaches user
+announcements.</li>
 </ul>
 <h2 id="open-questions-for-review">12. Open questions for review</h2>
 <ol type="1">
@@ -1172,6 +1280,15 @@ benefit, so the refactor’s justification is
 <li>This is a <strong>2.0-scale effort</strong>, sequenced after
 user-facing wins.</li>
 </ul>
+<h3 id="the-migration-playbook">16.4 The migration playbook</h3>
+<p>The concrete, sequenced procedure for moving first-party code off the
+<code>main_frame.py</code> god object and onto this contribution grammar
+— pilot selection, the <code>register(host)</code> module shape, the
+host-facade surface, characterization-test discipline, and a
+wave-by-wave order — lives in a dedicated companion document:
+<strong><code>docs/quillin-migration-plan.md</code></strong>. Read this
+section for the <em>why</em>; read that document for the
+<em>how</em>.</p>
 <h2 id="seamless-use-transparent-governance">17. Seamless use,
 transparent governance</h2>
 <p>Extensions should be <strong>indistinguishable from built-in features

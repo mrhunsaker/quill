@@ -1289,6 +1289,7 @@ class MenuBuilderMixin:
         tools_menu.AppendSubMenu(customize_menu, "&Customize")
         tools_menu.AppendSeparator()
         tools_menu.AppendSubMenu(self._build_edsharp_menu(), "Ed&Sharp Tools")
+        tools_menu.AppendSubMenu(self._build_quillins_menu(), "&Quillins")
         menu_bar.Append(navigate_menu, "&Navigate")
         menu_bar.Append(format_menu, "F&ormat")
         menu_bar.Append(tools_menu, "&Tools")
