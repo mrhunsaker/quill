@@ -175,13 +175,13 @@ state and lists any installed Quillins read-only.
 
 - [ ] AI Model and Connection: via Tools menu
 - [ ] AI Connection Settings: via Tools menu
-- [ ] Forget API Key (confirmation): via AI menu
+- [ ] Forget API Key (confirmation): via Tools > AI Assistant
 - [ ] Ask Quill Chat: via Tools menu
 - [ ] Train Writing Style: via Tools menu
 - [ ] Writing Assistant: via Tools menu
 - [ ] Prompt Studio: via Tools menu
 - [ ] Agent Center: via Tools menu
-- [ ] Accessibility Tune-Up: via AI menu (Tools > AI > Accessibility Tune-Up...)
+- [ ] Accessibility Tune-Up: via Tools > AI Assistant (Tools > AI Assistant > Accessibility Tune-Up...)
 - [ ] AI Hub: via Tools menu
 
 ## R. Tools: BITS Whisperer (speech)
@@ -248,24 +248,27 @@ parent first.
 - [ ] Remove Quillin confirm (from Quillins Manager, Remove... button)
 - [ ] Quillin permission request (from running a third-party Quillin that requests a consent-gated capability: fs.read, fs.write, or net)
 
-## W. EdSharp Tools
+## W. Power Tools and recirculated editor conveniences
 
 EdSharp-parity conveniences (EDS-1..20). These commands carry no default
-keybinding; reach each from **Tools > EdSharp Tools** (or the command palette,
-`Ctrl+Shift+P`). Only the commands that present a dialog are listed here; the
-remaining EdSharp commands act directly on the document and announce their result.
+keybinding; reach each from its conventional menu home (or the command palette,
+`Ctrl+Shift+P`). As of the menu reorg (menus.md §3.7) these commands were
+recirculated out of the former "EdSharp Tools" monolith into their natural
+menus; the cohesive editor-behavior remainder lives under **Tools > Power
+Tools**. Only the commands that present a dialog are listed here; the remaining
+EdSharp commands act directly on the document and announce their result.
 
-- [ ] Insert Special Character (codepoint prompt): Tools > EdSharp Tools > Insert > Insert Special Character
-- [ ] Insert Calculated Date: Tools > EdSharp Tools > Insert > Insert Calculated Date
-- [ ] Insert File Content (file picker): Tools > EdSharp Tools > Insert > Insert File Content
-- [ ] Number Lines (start prompt): Tools > EdSharp Tools > Lines > Number Lines
-- [ ] Hard-Wrap Lines (width prompt): Tools > EdSharp Tools > Lines > Hard-Wrap Lines
-- [ ] Count Matches (regex prompt): Tools > EdSharp Tools > Find with Regex > Count Matches
-- [ ] Extract Matches (regex prompt): Tools > EdSharp Tools > Find with Regex > Extract Matches
-- [ ] Go to Percent (percentage prompt): Tools > EdSharp Tools > Go > Go to Percent
-- [ ] Infer Indentation (adopt-unit confirm): Tools > EdSharp Tools > Infer Indentation
-- [ ] Rename Current File (name prompt): Tools > EdSharp Tools > Rename Current File
-- [ ] Delete Current File (delete confirm): Tools > EdSharp Tools > Delete Current File
+- [ ] Insert Special Character (codepoint prompt): Insert > Insert Special Character
+- [ ] Insert Calculated Date: Insert > Insert Calculated Date
+- [ ] Insert File Content (file picker): Insert > Insert File Content
+- [ ] Number Lines (start prompt): Format > Transform Lines > Number Lines
+- [ ] Hard-Wrap Lines (width prompt): Format > Transform Lines > Hard-Wrap Lines
+- [ ] Count Matches (regex prompt): Search > Count Matches
+- [ ] Extract Matches (regex prompt): Search > Extract Matches
+- [ ] Go to Percent (percentage prompt): Navigate > Go to Percent
+- [ ] Infer Indentation (adopt-unit confirm): Tools > Power Tools > Infer Indentation
+- [ ] Rename Current File (name prompt): File > Rename Current File
+- [ ] Delete Current File (delete confirm): File > Delete Current File
 
 ## X. Startup-only dialogs
 

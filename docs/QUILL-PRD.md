@@ -101,24 +101,30 @@ The menu bar is standards-based, predictable, and exhaustive. Every menu item is
 
 Menu structure:
 
-- **File**: New/Open/Open Recent/Open from URL, **Workspace Snapshots**, Save/Save As/Save All/Save as plain text, Reload/Restore backup, print flows, close/exit.
-- **Edit**: Undo/redo, clipboard, selection helpers, link insertion/follow, and **Recent Marks (Ring)** with plain-language labels.
-- **Search**: Find/Replace flows plus Next/Previous/All matches.
-- **View**: shell behavior toggles, title style options, theme and visual controls.
-- **Navigate**: line/page/bookmark movement, heading/block/structure movement, outline, bracket match, region movement.
-- **Format**: case/comment/indent/line transforms plus rich text and heading controls.
-- **Insert**: table/list/code/footnote/tag insertion helpers.
-- **Tools**: regrouped into discoverable submenus:
+- **File**: New/Open/**New from Clipboard**/Open Recent/Open from URL, **Workspace Snapshots**, Save/Save As/Save All/Save as plain text, Reload/Restore backup, print flows, **Run current file / Open target at cursor / Rename / Delete current file**, close/exit.
+- **Edit**: Undo/redo, clipboard (including **Paste HTML as Markdown**), **Find/Replace plus Find Next/Previous/All Matches**, selection helpers, **delete-to-line/document and delete-paragraph**, link insertion/follow, and **Recent Marks (Ring)** with plain-language labels.
+- **View**: shell behavior, theme and visual controls (preference toggles such as persistent undo, spell-check-as-you-type, word prediction, dark mode, tray mode, title-path and dirty-title style now live in **Settings**).
+- **Insert**: table/list/code/footnote/tag insertion helpers plus **special character, date and time, calculated date, and file content**.
+- **Format**: case/comment/indent controls, rich text and heading controls, and a single **Transform Lines** submenu (number/hard-wrap lines plus sort/reverse/dedup/whitespace/indentation conversions).
+- **Navigate**: line/page/bookmark movement, heading/block/structure movement, outline, bracket match, region movement, and **go to percent / first / last non-blank**.
+- **Search**: in-files Find and Replace-across-files, plus **regex count/extract matches and block set-operations** (line filtering by block membership).
+- **Tools**: regrouped into discoverable submenus (≤ 2 levels deep):
+  - Sticky Notes
   - Writing and Language
   - Read Aloud
-  - Dictation and Watch Folder Automation
   - Integrations
   - Document Intake
+  - AI Assistant *(demoted from top level; promotable back via Customize Menus)*
   - Authoring and Automation
+  - GLOW
+  - Macros
   - Compare Documents
-  - Accessibility
+  - Accessibility *(includes cursor address / document status / selection-length status queries)*
   - Support
   - Customize
+  - Power Tools *(editor-behavior power toggles; the brand-neutral successor to the former "EdSharp Tools")*
+  - Quillins
+  - Dictation and Watch Folder Automation (BITS Whisperer) appears here when enabled.
 - **Window**: document/tab management actions.
 - **Help**: contextual help, onboarding docs, feature profile support, updates, and About.
 

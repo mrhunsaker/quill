@@ -245,8 +245,9 @@
 id="migrating-quills-first-party-code-onto-the-quillins-contribution-grammar">Migrating
 QUILL’s first-party code onto the Quillins contribution grammar</h1>
 <p>Status: <strong>Plan / playbook</strong> · Companion to
-<code>docs/scripting.md</code> (esp. §16) · Scope: <strong>internal
-refactor, 2.0-scale, maintainability-driven</strong></p>
+<code>docs/scripting.md</code> (esp. §16) and <code>menus.md</code>
+(§3.7 + Phase 5) · Scope: <strong>internal refactor, 2.0-scale,
+maintainability-driven</strong></p>
 <blockquote>
 <p>Read <code>docs/scripting.md</code> §16 for the <em>why</em> (one
 vocabulary, two tiers). This document is the <em>how</em>: a concrete,
@@ -450,7 +451,7 @@ independent.</p>
 extracted into a mixin</strong>, so the migration is mechanical and the
 risk is near zero. The codebase hands us an ideal pilot:</p>
 <ul>
-<li><strong>Pilot 1 — EdSharp Tools (<code>eds.*</code>).</strong>
+<li><p><strong>Pilot 1 — EdSharp Tools (<code>eds.*</code>).</strong>
 <code>quill/ui/main_frame_edsharp_menu.py</code> already centralizes the
 commands as a <code>(id, label, handler)</code> table
 (<code>_edsharp_command_table</code>) and the handlers already live on
@@ -458,12 +459,28 @@ one mixin (<code>EdSharpActionsMixin</code>). That table <em>is</em> a
 contribution list in all but name — converting it to
 <code>host.add_command(...)</code> calls is a near-syntactic transform,
 and <code>test_eds_command_wiring.py</code> already pins the
-contract.</li>
-<li><strong>Pilot 2 — line operations &amp; “speak …” commands.</strong>
-Self-contained, pure-ish text transforms with clear announcements and no
-dialog dependencies.</li>
-<li><strong>Pilot 3 — formatting commands</strong> that contribute under
-the <code>Format</code> menu.</li>
+contract.</p>
+<p><strong>This pilot and the menu-consolidation plan are the same
+work.</strong> <code>menus.md</code> §3.7 renames
+<code>EdSharp Tools</code> → <code>Power Tools</code> and
+<strong>recirculates</strong> most of its commands into their
+conventional homes (Insert/Edit/Format/Search/Navigate/File and the
+Compare/Read-Aloud Tools submenus). Done by hand against today’s inline
+<code>wx.Menu().Append(...)</code> wiring that is a fiddly, error-prone
+move across hundreds of lines. Done <em>through the contribution
+grammar</em> it is a <strong>pure data edit</strong>: each command
+already carries a <code>menu=(...)</code> placement tuple, so
+recirculating <code>eds.number_lines</code> from the EdSharp submenu to
+<code>Format</code> is changing one tuple — the registry re-files it,
+the palette and Keymap Editor are untouched, and the collision detector
+still guards it. Migrate EdSharp first (Wave 1), then the menus.md §3.7
+recirculation becomes the motivating, low-risk demonstration that “menus
+as data” works. The two plans should land together.</p></li>
+<li><p><strong>Pilot 2 — line operations &amp; “speak …”
+commands.</strong> Self-contained, pure-ish text transforms with clear
+announcements and no dialog dependencies.</p></li>
+<li><p><strong>Pilot 3 — formatting commands</strong> that contribute
+under the <code>Format</code> menu.</p></li>
 </ul>
 <p>Defer: anything touching tab lifecycle, the watch service,
 AI/assistant flows, or shared mutable selection state until the facade
@@ -492,10 +509,14 @@ behavior; public-surface fixture stable</td>
 </tr>
 <tr>
 <td>1</td>
-<td>Pilot 1 (EdSharp <code>eds.*</code>)</td>
-<td>EdSharp table replaced by <code>register(host)</code>;
-<code>test_eds_command_wiring.py</code> green;
-<code>main_frame.py</code> net-smaller</td>
+<td>Pilot 1 (EdSharp <code>eds.*</code>) — <strong>lands the menus.md
+§3.7 rename + recirculation as data</strong></td>
+<td>EdSharp table replaced by <code>register(host)</code>; each
+command’s <code>menu=(...)</code> set to its recirculated home
+(Insert/Edit/Format/Search/Navigate/File or the renamed
+<code>Power Tools</code> remainder);
+<code>test_eds_command_wiring.py</code> updated to the new placements
+and green; <code>main_frame.py</code> net-smaller</td>
 </tr>
 <tr>
 <td>2</td>
@@ -581,24 +602,30 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a hr
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span><span class="op">=</span><span class="st">&quot;eds.number_lines&quot;</span>,</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">&quot;EdSharp: Number Lines&quot;</span>,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        handler<span class="op">=</span>_number_lines,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        menu<span class="op">=</span>(<span class="st">&quot;Tools&quot;</span>, <span class="st">&quot;EdSharp Tools&quot;</span>, <span class="st">&quot;Lines&quot;</span>),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _number_lines(ctx):</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ctx.is_read_only():</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        ctx.set_status(<span class="st">&quot;Document is read-only&quot;</span>)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    ...                       <span class="co"># same body as today&#39;s EdSharpActionsMixin.number_lines</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    ctx.announce(<span class="st">&quot;Numbered lines&quot;</span>)</span></code></pre></div>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        menu<span class="op">=</span>(<span class="st">&quot;Format&quot;</span>,),         <span class="co"># recirculated home (menus.md §3.7), not a deep</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                                  <span class="co"># &quot;Tools &gt; EdSharp Tools &gt; Lines&quot; chain</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _number_lines(ctx):</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ctx.is_read_only():</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        ctx.set_status(<span class="st">&quot;Document is read-only&quot;</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    ...                       <span class="co"># same body as today&#39;s EdSharpActionsMixin.number_lines</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    ctx.announce(<span class="st">&quot;Numbered lines&quot;</span>)</span></code></pre></div>
 <p>and in <code>main_frame.py</code>, the EdSharp block collapses
 to:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> quill.ui.features <span class="im">import</span> eds_line_ops</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>eds_line_ops.register(<span class="va">self</span>._contribution_host)</span></code></pre></div>
-<p>The user sees <strong>no change</strong>: same palette entry, same
-menu path, same key-bindability, same announcement. The maintainer sees
-one fewer responsibility in the god object and a module they can read in
-isolation.</p>
+<p>The user sees the command in its <strong>new, conventional
+home</strong> (Format, per menus.md §3.7) instead of three levels deep
+under a foreign-branded “EdSharp Tools” submenu — same palette entry,
+same key-bindability, same announcement. The maintainer sees one fewer
+responsibility in the god object, a module they can read in isolation,
+<strong>and</strong> the menu recirculation expressed as one
+<code>menu=</code> tuple rather than hand-edited <code>wx.Menu</code>
+plumbing. The menu-consolidation win and the god-object-shrink win
+arrive in the same diff.</p>
 <h2 id="done-criteria-honest-limits">10. Done criteria &amp; honest
 limits</h2>
 <p><strong>Done looks like:</strong> <code>quill/core</code> carries the

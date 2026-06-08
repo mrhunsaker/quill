@@ -1,7 +1,8 @@
 # Migrating QUILL's first-party code onto the Quillins contribution grammar
 
-Status: **Plan / playbook** · Companion to `docs/scripting.md` (esp. §16) · Scope:
-**internal refactor, 2.0-scale, maintainability-driven**
+Status: **Plan / playbook** · Companion to `docs/scripting.md` (esp. §16) and
+`menus.md` (§3.7 + Phase 5) · Scope: **internal refactor, 2.0-scale,
+maintainability-driven**
 
 > Read `docs/scripting.md` §16 for the *why* (one vocabulary, two tiers). This
 > document is the *how*: a concrete, low-risk, reversible procedure for moving
@@ -157,6 +158,19 @@ hands us an ideal pilot:
   (`EdSharpActionsMixin`). That table *is* a contribution list in all but name —
   converting it to `host.add_command(...)` calls is a near-syntactic transform,
   and `test_eds_command_wiring.py` already pins the contract.
+
+  **This pilot and the menu-consolidation plan are the same work.** `menus.md`
+  §3.7 renames `EdSharp Tools` → `Power Tools` and **recirculates** most of its
+  commands into their conventional homes (Insert/Edit/Format/Search/Navigate/File
+  and the Compare/Read-Aloud Tools submenus). Done by hand against today's inline
+  `wx.Menu().Append(...)` wiring that is a fiddly, error-prone move across hundreds
+  of lines. Done *through the contribution grammar* it is a **pure data edit**:
+  each command already carries a `menu=(...)` placement tuple, so recirculating
+  `eds.number_lines` from the EdSharp submenu to `Format` is changing one tuple —
+  the registry re-files it, the palette and Keymap Editor are untouched, and the
+  collision detector still guards it. Migrate EdSharp first (Wave 1), then the
+  menus.md §3.7 recirculation becomes the motivating, low-risk demonstration that
+  "menus as data" works. The two plans should land together.
 - **Pilot 2 — line operations & "speak …" commands.** Self-contained, pure-ish
   text transforms with clear announcements and no dialog dependencies.
 - **Pilot 3 — formatting commands** that contribute under the `Format` menu.
@@ -169,7 +183,7 @@ shared mutable selection state until the facade has proven itself on Pilots 1–
 | Wave | Scope | Exit criterion |
 | --- | --- | --- |
 | 0 | Land `quill/core/contributions.py` + `MainFrame` adapter; no features moved | Facade unit-tested; `main_frame.py` unchanged in behavior; public-surface fixture stable |
-| 1 | Pilot 1 (EdSharp `eds.*`) | EdSharp table replaced by `register(host)`; `test_eds_command_wiring.py` green; `main_frame.py` net-smaller |
+| 1 | Pilot 1 (EdSharp `eds.*`) — **lands the menus.md §3.7 rename + recirculation as data** | EdSharp table replaced by `register(host)`; each command's `menu=(...)` set to its recirculated home (Insert/Edit/Format/Search/Navigate/File or the renamed `Power Tools` remainder); `test_eds_command_wiring.py` updated to the new placements and green; `main_frame.py` net-smaller |
 | 2 | Line-ops + speak/status commands | Each command a module; characterization tests green |
 | 3 | Format-menu commands | `Format` contributions all flow through the registry |
 | 4 | Navigate/View read-only commands | … |
@@ -220,7 +234,8 @@ def register(host):
         id="eds.number_lines",
         title="EdSharp: Number Lines",
         handler=_number_lines,
-        menu=("Tools", "EdSharp Tools", "Lines"),
+        menu=("Format",),         # recirculated home (menus.md §3.7), not a deep
+                                  # "Tools > EdSharp Tools > Lines" chain
     )
 
 def _number_lines(ctx):
@@ -238,9 +253,13 @@ from quill.ui.features import eds_line_ops
 eds_line_ops.register(self._contribution_host)
 ```
 
-The user sees **no change**: same palette entry, same menu path, same
-key-bindability, same announcement. The maintainer sees one fewer responsibility
-in the god object and a module they can read in isolation.
+The user sees the command in its **new, conventional home** (Format, per
+menus.md §3.7) instead of three levels deep under a foreign-branded "EdSharp
+Tools" submenu — same palette entry, same key-bindability, same announcement.
+The maintainer sees one fewer responsibility in the god object, a module they can
+read in isolation, **and** the menu recirculation expressed as one `menu=` tuple
+rather than hand-edited `wx.Menu` plumbing. The menu-consolidation win and the
+god-object-shrink win arrive in the same diff.
 
 ## 10. Done criteria & honest limits
 

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>QUILL-PRD</title>
   <style>
@@ -156,8 +156,12 @@
       text-decoration: none;
     }
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     /* The extra [class] is a hack that increases specificity enough to
        override a similar rule in reveal.js */
@@ -408,35 +412,59 @@ remain visible with a short tooltip explaining why they are disabled in
 the current context.</p>
 <p>Menu structure:</p>
 <ul>
-<li><strong>File</strong>: New/Open/Open Recent/Open from URL,
-<strong>Workspace Snapshots</strong>, Save/Save As/Save All/Save as
-plain text, Reload/Restore backup, print flows, close/exit.</li>
-<li><strong>Edit</strong>: Undo/redo, clipboard, selection helpers, link
+<li><strong>File</strong>: New/Open/<strong>New from
+Clipboard</strong>/Open Recent/Open from URL, <strong>Workspace
+Snapshots</strong>, Save/Save As/Save All/Save as plain text,
+Reload/Restore backup, print flows, <strong>Run current file / Open
+target at cursor / Rename / Delete current file</strong>,
+close/exit.</li>
+<li><strong>Edit</strong>: Undo/redo, clipboard (including <strong>Paste
+HTML as Markdown</strong>), <strong>Find/Replace plus Find
+Next/Previous/All Matches</strong>, selection helpers,
+<strong>delete-to-line/document and delete-paragraph</strong>, link
 insertion/follow, and <strong>Recent Marks (Ring)</strong> with
 plain-language labels.</li>
-<li><strong>Search</strong>: Find/Replace flows plus Next/Previous/All
-matches.</li>
-<li><strong>View</strong>: shell behavior toggles, title style options,
-theme and visual controls.</li>
+<li><strong>View</strong>: shell behavior, theme and visual controls
+(preference toggles such as persistent undo, spell-check-as-you-type,
+word prediction, dark mode, tray mode, title-path and dirty-title style
+now live in <strong>Settings</strong>).</li>
+<li><strong>Insert</strong>: table/list/code/footnote/tag insertion
+helpers plus <strong>special character, date and time, calculated date,
+and file content</strong>.</li>
+<li><strong>Format</strong>: case/comment/indent controls, rich text and
+heading controls, and a single <strong>Transform Lines</strong> submenu
+(number/hard-wrap lines plus sort/reverse/dedup/whitespace/indentation
+conversions).</li>
 <li><strong>Navigate</strong>: line/page/bookmark movement,
 heading/block/structure movement, outline, bracket match, region
-movement.</li>
-<li><strong>Format</strong>: case/comment/indent/line transforms plus
-rich text and heading controls.</li>
-<li><strong>Insert</strong>: table/list/code/footnote/tag insertion
-helpers.</li>
-<li><strong>Tools</strong>: regrouped into discoverable submenus:
+movement, and <strong>go to percent / first / last
+non-blank</strong>.</li>
+<li><strong>Search</strong>: in-files Find and Replace-across-files,
+plus <strong>regex count/extract matches and block
+set-operations</strong> (line filtering by block membership).</li>
+<li><strong>Tools</strong>: regrouped into discoverable submenus (≤ 2
+levels deep):
 <ul>
+<li>Sticky Notes</li>
 <li>Writing and Language</li>
 <li>Read Aloud</li>
-<li>Dictation and Watch Folder Automation</li>
 <li>Integrations</li>
 <li>Document Intake</li>
+<li>AI Assistant <em>(demoted from top level; promotable back via
+Customize Menus)</em></li>
 <li>Authoring and Automation</li>
+<li>GLOW</li>
+<li>Macros</li>
 <li>Compare Documents</li>
-<li>Accessibility</li>
+<li>Accessibility <em>(includes cursor address / document status /
+selection-length status queries)</em></li>
 <li>Support</li>
 <li>Customize</li>
+<li>Power Tools <em>(editor-behavior power toggles; the brand-neutral
+successor to the former “EdSharp Tools”)</em></li>
+<li>Quillins</li>
+<li>Dictation and Watch Folder Automation (BITS Whisperer) appears here
+when enabled.</li>
 </ul></li>
 <li><strong>Window</strong>: document/tab management actions.</li>
 <li><strong>Help</strong>: contextual help, onboarding docs, feature
