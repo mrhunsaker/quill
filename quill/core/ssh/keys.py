@@ -40,6 +40,9 @@ def load_private_key(key_path: str, passphrase: str | None = None):
     if looks_like_ppk(text):
         return load_ppk(text, passphrase)
     if looks_like_sshcom(text):
+        # Follow-up #153: parse the proprietary VanDyke/ssh.com binary format
+        # natively once a validating fixture is available. For now SecureCRT
+        # users export OpenSSH or .ppk (both read above), and we guide them here.
         raise KeyFormatError(
             "This looks like a SecureCRT / ssh.com key. In SecureCRT, export the "
             "key as OpenSSH or PuTTY (.ppk) format (Tools > Export Public Key / "
