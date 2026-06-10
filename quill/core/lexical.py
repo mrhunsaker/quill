@@ -16,6 +16,7 @@ falls back to the offline answer. No provider requires an API key.
 from __future__ import annotations
 
 import json
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
@@ -24,6 +25,8 @@ from urllib.request import Request, urlopen
 
 from quill.core import thesaurus
 from quill.core.net import verified_ssl_context
+
+logger = logging.getLogger(__name__)
 
 FREE_DICTIONARY_HOST = "https://freedictionaryapi.com"
 DATAMUSE_HOST = "https://api.datamuse.com"
@@ -281,7 +284,8 @@ class LexicalService:
             for provider in self._online:
                 try:
                     online_result = provider.lookup(normalized)
-                except Exception:  # noqa: BLE001 - a provider failure must not break lookup
+                except Exception as error:  # noqa: BLE001 - a provider failure must not break lookup
+                    logger.debug("Lexical provider %s failed: %s", provider.name, error)
                     online_result = None
                 if online_result is not None:
                     result = _union_results(result, online_result)

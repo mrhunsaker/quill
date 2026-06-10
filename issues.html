@@ -52,19 +52,19 @@ severity tally of <strong>remaining open items</strong> is:</p>
 </tr>
 <tr>
 <td>MEDIUM</td>
-<td style="text-align: right;">32</td>
-<td>All open — tracked below</td>
+<td style="text-align: right;">31</td>
+<td>1 closed (M-27); rest open — tracked below</td>
 </tr>
 <tr>
 <td>LOW</td>
-<td style="text-align: right;">~19</td>
-<td>Open — tracked below (3 closed items moved to
+<td style="text-align: right;">~9</td>
+<td>Open — tracked below (14 closed items moved to
 <code>CHANGELOG.md</code>)</td>
 </tr>
 <tr>
 <td>NIT</td>
-<td style="text-align: right;">~5</td>
-<td>Open — tracked below (11 closed items moved to
+<td style="text-align: right;">~3</td>
+<td>Open — tracked below (13 closed items moved to
 <code>CHANGELOG.md</code>)</td>
 </tr>
 <tr>
@@ -677,24 +677,6 @@ acknowledges this.</li>
 scope). Add a <code>"_next_target_main_frame": 15000</code> entry to
 make the trajectory explicit. No code change required.</li>
 </ul>
-<h4
-id="m-27-pyproject.toml19-only-operating-system-microsoft-windows-classifier">M-27
-— <code>pyproject.toml:19</code> — only
-<code>Operating System :: Microsoft :: Windows</code> classifier</h4>
-<ul>
-<li><strong>File / Category:</strong> <code>pyproject.toml:19</code> /
-DOC</li>
-<li><strong>Symptom:</strong> README says “Runs on Windows and macOS”
-four times. <code>pyproject.toml</code> classifiers list only Windows.
-The <code>[macos]</code> extra and <code>scripts/setup_macos.py</code>
-are present, so the feature is real — the classifier is stale.</li>
-<li><strong>Suggested fix:</strong> Add
-<code>"Operating System :: MacOS"</code> (or <code>:: MacOS :: X</code>)
-to the classifiers. Update <code>docs/engineering/macos-build.md</code>
-if it references classifiers.</li>
-<li><strong>Regression test:</strong> CI check that the classifiers
-include macOS.</li>
-</ul>
 <h3 id="ui-lifecycle-threading">5.6 UI lifecycle &amp; threading</h3>
 <h4
 id="m-28-uimain_frame.py4547-crash_recovery-re-show-loop-leaks-focus">M-28
@@ -784,57 +766,6 @@ tracked in the CQ / DOC / GATE backlog.</p>
 </blockquote>
 <h3 id="core-io">6.1 Core / IO</h3>
 <h4
-id="l-1-corepaths.py29-hidden-.quill-fallback-when-appdata-missing">L-1
-— <code>core/paths.py:29</code> — hidden <code>~/.quill</code> fallback
-when <code>APPDATA</code> missing</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/core/paths.py:29</code> / UX</li>
-<li><strong>Symptom:</strong> If <code>APPDATA</code> is unset (rare but
-possible in service contexts), Quill silently switches to
-<code>~/.quill</code>, a hidden Unix-style directory. Windows users will
-not see it in Explorer.</li>
-<li><strong>Suggested fix:</strong> Raise a clear
-<code>RuntimeError("Could not determine the Quill data directory; please set QUILL_DATA_DIR or APPDATA.")</code>
-rather than silently picking a hidden dir.</li>
-</ul>
-<h4
-id="l-2-corelexical.py284-except-exception-around-online-provider-lookup">L-2
-— <code>core/lexical.py:284</code> — <code>except Exception</code>
-around online provider lookup</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/core/lexical.py:284</code> / CODE_QUALITY</li>
-<li><strong>Symptom:</strong> Broad catch hides bugs in provider
-implementations. The <code>BLE001</code> noqa is acknowledged but the
-catch should still log at debug level so provider regressions show up in
-<code>diagnostics.py</code> logs.</li>
-<li><strong>Suggested fix:</strong> Add
-<code>logger.debug("Lexical provider %s failed: %s", provider.name, error)</code>
-inside the except.</li>
-</ul>
-<h4
-id="l-3-coreaiassistant.py139-except-exception-in-the-default-backend-probe">L-3
-— <code>core/ai/assistant.py:139</code> — <code>except Exception</code>
-in the default-backend probe</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/core/ai/assistant.py:139</code> / CODE_QUALITY</li>
-<li><strong>Suggested fix:</strong> Log the exception via
-<code>logger.warning(...)</code> so it appears in the user’s diagnostic
-bundle.</li>
-</ul>
-<h4
-id="l-4-corelexical_preload.py21-except-exception-around-preload-start">L-4
-— <code>core/lexical_preload.py:21</code> —
-<code>except Exception</code> around preload start</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/core/lexical_preload.py:21</code> / CODE_QUALITY</li>
-<li><strong>Suggested fix:</strong> <code>logger.debug(...)</code>
-inside the except.</li>
-</ul>
-<h4
 id="l-5-coreaiassistant_ai.py535-555-dpapi-fallback-to-file-based-encrypted-store">L-5
 — <code>core/ai/assistant_ai.py:535-555</code> — DPAPI fallback to
 file-based encrypted store</h4>
@@ -851,28 +782,6 @@ fails on a portable install moved between machines, the fallback
 error: “The saved API key is encrypted for a different Windows user.
 Please re-enter it in Settings.”</li>
 </ul>
-<h4 id="l-6-corewatch_queue.py148-threading.rlock-instead-of-lock">L-6 —
-<code>core/watch_queue.py:148</code> — <code>threading.RLock</code>
-instead of <code>Lock</code></h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/core/watch_queue.py:148</code> / CODE_QUALITY</li>
-<li><strong>Symptom:</strong> <code>RLock</code> is used because some
-methods call other locked methods. This works but adds overhead and
-creates a foot-gun for reentrancy bugs.</li>
-<li><strong>Suggested fix:</strong> Refactor or document why RLock is
-required.</li>
-</ul>
-<h4
-id="l-7-coreglow.py485499505524562574-multiple-except-exception-in-glow-backend-detection">L-7
-— <code>core/glow.py:485,499,505,524,562,574</code> — multiple
-<code>except Exception</code> in GLOW backend detection</h4>
-<ul>
-<li><strong>File / Category:</strong> <code>quill/core/glow.py</code> (6
-sites) / CODE_QUALITY</li>
-<li><strong>Suggested fix:</strong> Narrow the exceptions and add
-<code>logger.warning(...)</code>.</li>
-</ul>
 <h4 id="l-9-corestorage_mode.py12-quill_portable_root-env-var">L-9 —
 <code>core/storage_mode.py:12</code> — <code>QUILL_PORTABLE_ROOT</code>
 env var</h4>
@@ -883,24 +792,6 @@ env var</h4>
 flag.</li>
 </ul>
 <h3 id="io">6.2 IO</h3>
-<h4
-id="l-10-ioocr.py141-_import_windows_ocr-swallows-all-exceptions">L-10 —
-<code>io/ocr.py:141</code> — <code>_import_windows_ocr</code> swallows
-all exceptions</h4>
-<ul>
-<li><strong>File / Category:</strong> <code>quill/io/ocr.py:141</code> /
-CODE_QUALITY</li>
-<li><strong>Suggested fix:</strong> Catch <code>ImportError</code> only;
-for any other exception, log a warning and re-raise as
-<code>OcrUnavailableError</code> so callers can decide.</li>
-</ul>
-<h4
-id="l-11-iostructured.py244-same-as-m-11-low-because-there-is-a-fallback">L-11
-— <code>io/structured.py:244</code> — same as M-11 (low because there is
-a fallback)</h4>
-<ul>
-<li>Same shape; see M-11 for the fix.</li>
-</ul>
 <h3 id="stability-tools">6.3 Stability / tools</h3>
 <h4
 id="l-13-stabilitytask_manager.py42-44-quilltask-dataclass-has-no-started_at-or-result-snapshot">L-13
@@ -914,29 +805,6 @@ snapshot</h4>
 and
 <code>result_summary: Literal["ok","cancelled","failed","pending"]</code>
 to <code>QuillTask</code>. Include them in the bundle.</li>
-</ul>
-<h4
-id="l-14-toolsdialog_inventory.py99-107-_classify-returns-none-for-unrecognized-dialogs">L-14
-— <code>tools/dialog_inventory.py:99-107</code> — <code>_classify</code>
-returns <code>None</code> for unrecognized dialogs</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/tools/dialog_inventory.py:99-107</code> / CODE_QUALITY</li>
-<li><strong>Suggested fix:</strong> Enrich the violation message in
-<code>_check_dialog_registry</code> with a hint: “If wx.<Name> is a
-stock dialog, add it to <code>quill/tools/dialog_inventory.py</code>
-<code>_NATIVE_WX_DIALOGS</code>.”</li>
-</ul>
-<h4
-id="l-16-toolsui_surface.py34-42-next...-raises-stopiteration-if-mainframe-is-missing">L-16
-— <code>tools/ui_surface.py:34-42</code> — <code>next(...)</code> raises
-<code>StopIteration</code> if <code>MainFrame</code> is missing</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>quill/tools/ui_surface.py:33-35</code> / UX</li>
-<li><strong>Suggested fix:</strong> Wrap in a <code>try</code> and emit
-“Could not find class MainFrame in quill/ui/main_frame.py. Has it been
-renamed?” with non-zero exit.</li>
 </ul>
 <h4 id="l-17-testsstabilitytest_stability.py-coverage-gaps">L-17 —
 <code>tests/stability/test_stability.py</code> — coverage gaps</h4>
@@ -988,30 +856,6 @@ stable version/commit only</h4>
 <code>module_size_budgets.json</code> <code>_rebaseline_*</code> key,
 and the <code>wxPython</code> runtime version.</li>
 </ul>
-<h4
-id="l-21-roadmap.md-references-sec-1..17-etc.-but-stability-modules-dont-link-back">L-21
-— <code>ROADMAP.md</code> references SEC-1..17 etc. but stability
-modules don’t link back</h4>
-<ul>
-<li><strong>File / Category:</strong> all
-<code>quill/stability/*.py</code> / DOC</li>
-<li><strong>Suggested fix:</strong> Add a one-line
-<code>"""Implements: ROADMAP SEC-NN — &lt;title&gt;."""</code> to each
-stability module’s docstring.</li>
-</ul>
-<h4
-id="l-22-testsunittoolstest_bundled_quillin_lint.py-no-negative-test">L-22
-— <code>tests/unit/tools/test_bundled_quillin_lint.py</code> — no
-negative test</h4>
-<ul>
-<li><strong>File / Category:</strong>
-<code>tests/unit/tools/test_bundled_quillin_lint.py</code> /
-TEST_GAP</li>
-<li><strong>Suggested fix:</strong> Add a fixture directory
-<code>tests/unit/tools/fixtures/bad_quillin/</code> with a manifest that
-fails one of the four lenses; assert the linter returns non-zero and
-emits an error.</li>
-</ul>
 <hr />
 <h2 id="nit">7. NIT</h2>
 <blockquote>
@@ -1019,23 +863,12 @@ emits an error.</li>
 <code>CHANGELOG.md</code>.</p>
 </blockquote>
 <ul>
-<li><p><strong>N-3</strong>
-<code>quill/stability/crash_report.py:34</code> — 🔵 OPEN.
-<code>time.time_ns()</code> is 19 digits; consider ISO-8601 for human
-inspection of the bundle filename. Deferred to the bundle-naming
-sweep.</p></li>
-<li><p><strong>N-5</strong> <code>quill/tools/ui_surface.py:30</code> —
-🔵 OPEN. <code>main_frame_public_methods</code> does not handle
-<code>MainFrame</code> being defined inside a wrapper. The
-<code>next()</code> is a sharp edge.</p></li>
 <li><p><strong>N-6</strong>
 <code>tests/performance/test_budgets.py:35-37</code> — 🔵 OPEN.
 <code>spellcheck._WORDLIST_CACHE</code> is a private attribute; reaching
 into another module’s privates is fragile. Add a public
 <code>reset_caches()</code> test helper to <code>spellcheck</code> /
 <code>thesaurus</code>.</p></li>
-<li><p><strong>N-10</strong> <code>dialogs.md</code> — 🔵 OPEN. Does not
-yet reference the “safe mode” flag.</p></li>
 <li><p><strong>N-13</strong> <code>quill/core/bookmarks.py:12</code> —
 🔵 OPEN. Module is ~12 lines and could be inlined.</p></li>
 <li><p><strong>N-14</strong>
@@ -1125,8 +958,8 @@ table</h2>
 </tr>
 <tr>
 <td><code>quill/core/paths.py</code></td>
-<td>✅ FIXED (H-1-core)</td>
-<td>dev-only gate + home constraint; L-1</td>
+<td>✅ FIXED (H-1-core, L-1)</td>
+<td>dev-only gate + home constraint; Windows APPDATA guard</td>
 </tr>
 <tr>
 <td><code>quill/core/recovery.py</code></td>
@@ -1170,8 +1003,8 @@ table</h2>
 </tr>
 <tr>
 <td><code>quill/core/glow.py</code></td>
-<td>LOW</td>
-<td>L-7 (6 sites)</td>
+<td>✅ FIXED (L-7)</td>
+<td>logger.warning at all 6 broad-except sites</td>
 </tr>
 <tr>
 <td><code>quill/core/updates.py</code></td>
@@ -1270,8 +1103,8 @@ table</h2>
 </tr>
 <tr>
 <td><code>quill/io/ocr.py</code></td>
-<td>LOW</td>
-<td>L-10</td>
+<td>✅ FIXED (L-10)</td>
+<td>except ImportError only</td>
 </tr>
 <tr>
 <td><code>quill/stability/safe_subprocess.py</code></td>
@@ -1405,8 +1238,8 @@ table</h2>
 </tr>
 <tr>
 <td><code>pyproject.toml</code></td>
-<td>MEDIUM</td>
-<td>M-27</td>
+<td>✅ FIXED (M-27)</td>
+<td>macOS classifier added</td>
 </tr>
 <tr>
 <td><code>dialogs.md</code></td>
@@ -1788,36 +1621,37 @@ hard-coded secrets.</td>
 <tr>
 <td>MEDIUM</td>
 <td style="text-align: right;">32</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">31</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">32</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td>All OPEN. Tier B (defense-in-depth, 1.0 → 1.1).</td>
+<td>M-27 closed; 31 remain open. Tier B (defense-in-depth, 1.0 →
+1.1).</td>
 </tr>
 <tr>
 <td>LOW</td>
 <td style="text-align: right;">22</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">19</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">9</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td>L-8, L-12, L-15 closed (see CHANGELOG.md); ~19 remain open.</td>
+<td>L-1,2,3,4,6,7,8,10,12,14,15,16,21,22 closed (see CHANGELOG.md); ~9
+remain open.</td>
 </tr>
 <tr>
 <td>NIT</td>
 <td style="text-align: right;">16</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">5</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td>11 closed (see CHANGELOG.md); N-3, N-5, N-6, N-10, N-13, N-14
-open.</td>
+<td>13 closed (see CHANGELOG.md); N-3, N-6, N-13, N-14 open.</td>
 </tr>
 <tr>
 <td><strong>Sub-total (defects)</strong></td>
 <td style="text-align: right;"><strong>83</strong></td>
-<td style="text-align: right;"><strong>27</strong></td>
-<td style="text-align: right;"><strong>56</strong></td>
+<td style="text-align: right;"><strong>40</strong></td>
+<td style="text-align: right;"><strong>43</strong></td>
 <td style="text-align: right;"><strong>0</strong></td>
 <td style="text-align: right;"><strong>0</strong></td>
 <td>—</td>
@@ -1834,8 +1668,8 @@ open.</td>
 <tr>
 <td><strong>Total findings</strong></td>
 <td style="text-align: right;"><strong>99</strong></td>
+<td style="text-align: right;"><strong>57</strong></td>
 <td style="text-align: right;"><strong>43</strong></td>
-<td style="text-align: right;"><strong>56</strong></td>
 <td style="text-align: right;"><strong>0</strong></td>
 <td style="text-align: right;"><strong>0</strong></td>
 <td>—</td>
@@ -1920,6 +1754,24 @@ session)</h3>
 <td style="text-align: right;"><strong>16 / 16</strong></td>
 <td>2098 passed, 0 failed</td>
 </tr>
+<tr>
+<td>Sweep 7 (§6/§7 easiest: L-2,3,4,6,14,16 + N-5 + M-27)</td>
+<td style="text-align: right;">13 / 13</td>
+<td style="text-align: right;"><strong>1 / 32</strong></td>
+<td style="text-align: right;"><strong>9 / 22</strong></td>
+<td style="text-align: right;"><strong>12 / 16</strong></td>
+<td style="text-align: right;">16 / 16</td>
+<td>73 tools tests passed, 0 failed</td>
+</tr>
+<tr>
+<td>Sweep 8 (§6/§7 continued: L-1,7,10,21,22 + N-10)</td>
+<td style="text-align: right;">13 / 13</td>
+<td style="text-align: right;">1 / 32</td>
+<td style="text-align: right;"><strong>14 / 22</strong></td>
+<td style="text-align: right;"><strong>13 / 16</strong></td>
+<td style="text-align: right;">16 / 16</td>
+<td>5 paths + 12 quillin lint tests passed, 0 failed</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
@@ -1933,15 +1785,14 @@ coverage.</p>
 <h3 id="whats-still-on-the-runway-ordered-by-tier">13.3 What’s still on
 the runway (ordered by tier)</h3>
 <p><strong>Tier A — release blockers (HIGH): ALL CLOSED ✅</strong></p>
-<p><strong>Tier B — defense-in-depth (MEDIUM, 1.0 → 1.1):</strong> All
-32 open. Sorted by impact: M-1 (8 watch-action sites), M-4, M-5 (asyncio
-loop reuse), M-6 (update manifest signing), M-7 (sandbox hardening),
-M-9..M-13 (IO-format robustness), M-14/M-15 (read-aloud), M-16..M-23
-(stability lifecycle), M-24..M-32 (UI dialog / menu contract, image
-capture, sticky notes, csv grid).</p>
-<p><strong>Tier C — UI polish (LOW, 1.0 → 1.1):</strong> L-1, L-2, L-3,
-L-4, L-5, L-6, L-7, L-9, L-10, L-11, L-13, L-14, L-16, L-17, L-18, L-19,
-L-20, L-21, L-22, L-23.</p>
+<p><strong>Tier B — defense-in-depth (MEDIUM, 1.0 → 1.1):</strong> 31
+open (M-27 closed). Sorted by impact: M-1 (8 watch-action sites), M-4,
+M-5 (asyncio loop reuse), M-6 (update manifest signing), M-7 (sandbox
+hardening), M-9..M-13 (IO-format robustness), M-14/M-15 (read-aloud),
+M-16..M-23 (stability lifecycle), M-24..M-26, M-28..M-32 (UI dialog /
+menu contract, image capture, sticky notes, csv grid).</p>
+<p><strong>Tier C — UI polish (LOW, 1.0 → 1.1):</strong> L-5, L-9, L-11,
+L-13, L-17, L-18, L-19, L-20, L-23.</p>
 <p><strong>Tier D — magic / delight (§8): ALL CLOSED ✅</strong> All 16
 UX delight items implemented. See <code>CHANGELOG.md</code> for full
 details.</p>

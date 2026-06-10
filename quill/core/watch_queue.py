@@ -145,6 +145,8 @@ class WatchQueue:
         self._base_backoff = max(0.0, float(base_backoff_seconds))
         self._listener = listener
         self._clock = clock
+        # RLock required: _dequeue_item calls _release_slot which re-enters
+        # _try_flush under the same lock. A plain Lock would deadlock.
         self._lock = threading.RLock()
         self._items: dict[str, QueueItem] = {}
         self._order: list[str] = []

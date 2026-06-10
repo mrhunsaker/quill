@@ -27,6 +27,46 @@ OUTCOME_FAILED = "failed"
 OUTCOME_SKIPPED = "skipped"
 
 
+def _humanize_action_error(action_id: str, error: BaseException) -> str:
+    """Return a plain-language, screen-reader-friendly message for ``error``.
+
+    Centralizes the M-1 humanization rule so every watch action surfaces an
+    actionable message instead of a raw ``"[Errno 13] Permission denied: ..."``
+    string. Falls back to ``str(error)`` for unrecognized categories so a new
+    exception type is never hidden; the original is still logged via
+    ``logger.exception`` at the call site.
+    """
+    if isinstance(error, PermissionError):
+        return (
+            f"Quill cannot complete the {action_id or 'watch'} action because it "
+            "does not have permission to read or write the file or its folder. "
+            "Try saving to a folder you own, or close the file if another "
+            "program has it open."
+        )
+    if isinstance(error, FileNotFoundError):
+        return (
+            f"The file disappeared before the {action_id or 'watch'} action "
+            "could finish. The watch will pick it up again if it reappears."
+        )
+    if isinstance(error, NotADirectoryError):
+        return (
+            f"A folder in the path is missing for the {action_id or 'watch'} "
+            "action. Check that the destination folder still exists."
+        )
+    if isinstance(error, IsADirectoryError):
+        return (
+            f"The {action_id or 'watch'} action expected a file but found a "
+            "folder. Remove the folder or pick a different destination."
+        )
+    if isinstance(error, OSError):
+        # Disk full, path too long, sharing violation, etc. - keep the OS
+        # message because it carries the actionable detail (e.g. Errno 28).
+        return (
+            f"The {action_id or 'watch'} action could not finish: {error.strerror or str(error)}."
+        )
+    return str(error)
+
+
 @dataclass(frozen=True, slots=True)
 class WatchItem:
     """One file claimed by a profile, handed to an action's ``run``."""
@@ -141,7 +181,7 @@ class OpenAction(_BaseAction):
             self.on_open(item.source_path)
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("Open watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         return WatchActionOutcome.done(f"Opened {item.source_path.name}")
 
 
@@ -171,7 +211,7 @@ class MoveAction(_BaseAction):
             moved = shutil.move(str(item.source_path), str(target))
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("Move watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         return WatchActionOutcome.done(f"Moved to {target.name}", result_path=Path(moved))
 
     def preview(self, item: WatchItem, options: Mapping[str, object]) -> str:
@@ -211,7 +251,7 @@ class CopyAction(_BaseAction):
             copied = shutil.copy2(str(item.source_path), str(target))
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("Copy watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         return WatchActionOutcome.done(f"Copied to {target.name}", result_path=Path(copied))
 
 
@@ -252,7 +292,7 @@ class ConvertAction(_BaseAction):
             result = self.on_convert(item.source_path, target_format)
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("Convert watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         result_path = Path(result) if result else None
         name = result_path.name if result_path else target_format
         return WatchActionOutcome.done(f"Converted to {name}", result_path=result_path)
@@ -293,7 +333,7 @@ class RunMacroAction(_BaseAction):
             self.on_run_macro(item.source_path, macro_name)
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("Run-macro watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         return WatchActionOutcome.done(f"Ran macro '{macro_name}' on {item.source_path.name}")
 
 
@@ -347,7 +387,7 @@ class RunPythonTransformAction(_BaseAction):
             result = runner(code, document_text=text, timeout_seconds=timeout_seconds)
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("Python transform watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         if not getattr(result, "succeeded", False):
             message = (
                 getattr(result, "error", "")
@@ -412,7 +452,7 @@ class AiAction(_BaseAction):
             outcome = self.on_ai(item.source_path, options)
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("AI watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         if not isinstance(outcome, WatchActionOutcome):
             return WatchActionOutcome.failed("AI handler returned an invalid result.")
         return outcome
@@ -450,7 +490,7 @@ class OcrAction(_BaseAction):
             text = self.on_ocr(item.source_path)
         except Exception as error:  # surfaced as a failed outcome
             logger.exception("OCR watch action failed for %s", item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(self.action_id, error))
         target = item.source_path.with_suffix(self.output_suffix)
         body = text if text.endswith("\n") else text + "\n"
         try:
@@ -553,7 +593,7 @@ class WatchActionRegistry:
             return action.run(item, opts)
         except Exception as error:  # last-resort guard so one file never crashes the loop
             logger.exception("Watch action %s crashed for %s", action_id, item.source_path)
-            return WatchActionOutcome.failed(str(error))
+            return WatchActionOutcome.failed(_humanize_action_error(action_id, error))
 
     def dry_run(
         self,

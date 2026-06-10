@@ -26,18 +26,32 @@ def isolated_data_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_default_returns_home_quill(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """H-1-core: with no env vars, app_data_dir falls back to $HOME/.quill."""
+    """L-1: on non-Windows, app_data_dir falls back to $HOME/.quill when APPDATA missing."""
     monkeypatch.delenv("QUILL_DATA_DIR", raising=False)
     monkeypatch.delenv("APPDATA", raising=False)
     monkeypatch.delenv("QUILL_PORTABLE_ROOT", raising=False)
     monkeypatch.setattr(paths, "Path", paths.Path)  # ensure no stub
     monkeypatch.setattr(paths, "_DEV_BUILD", False)
+    monkeypatch.setattr(paths.sys, "platform", "linux")
     # Force Path.home() to a known value for determinism.
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setattr(paths.Path, "home", classmethod(lambda cls: fake_home))
     result = paths.app_data_dir()
     assert result == fake_home / ".quill"
+
+
+def test_windows_raises_when_appdata_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """L-1: on Windows, missing APPDATA raises RuntimeError instead of using a hidden dir."""
+    monkeypatch.delenv("QUILL_DATA_DIR", raising=False)
+    monkeypatch.delenv("APPDATA", raising=False)
+    monkeypatch.delenv("QUILL_PORTABLE_ROOT", raising=False)
+    monkeypatch.setattr(paths, "_DEV_BUILD", False)
+    monkeypatch.setattr(paths.sys, "platform", "win32")
+    with pytest.raises(RuntimeError, match="APPDATA is not set"):
+        paths.app_data_dir()
 
 
 def test_release_build_ignores_quill_data_dir(
@@ -51,6 +65,7 @@ def test_release_build_ignores_quill_data_dir(
     monkeypatch.setenv("QUILL_DATA_DIR", str(tmp_path / "override"))
     monkeypatch.delenv("APPDATA", raising=False)
     monkeypatch.delenv("QUILL_PORTABLE_ROOT", raising=False)
+    monkeypatch.setattr(paths.sys, "platform", "linux")
     result = paths.app_data_dir()
     assert result == fake_home / ".quill"
 
@@ -90,6 +105,7 @@ def test_dev_build_rejects_override_outside_home(
     monkeypatch.setenv("QUILL_DATA_DIR", str(outside))
     monkeypatch.delenv("APPDATA", raising=False)
     monkeypatch.delenv("QUILL_PORTABLE_ROOT", raising=False)
+    monkeypatch.setattr(paths.sys, "platform", "linux")
     result = paths.app_data_dir()
     # We must NOT return the outside path; we fall back to $HOME/.quill.
     assert result == fake_home / ".quill"

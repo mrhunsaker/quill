@@ -262,3 +262,63 @@ def test_manager_dedup_across_overlapping_profiles(tmp_path: Path) -> None:
         assert matching[0].state == STATE_QUEUED
     finally:
         manager.stop()
+
+
+# --- M-4: per-profile error tracking ---------------------------------------
+
+
+def test_manager_records_prescan_error_for_profile(tmp_path: Path, monkeypatch) -> None:
+    """M-4: a prescan failure must be attributable to a specific profile_id."""
+    queue = WatchQueue()
+    manager = WatchManager(queue)
+    profile = WatchProfile(
+        profile_id="p1",
+        enabled=True,
+        folder_path=str(tmp_path),
+        suffixes=(".txt",),
+        process_existing=False,
+        poll_interval_seconds=2,
+    )
+
+    def boom(_profile):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr("quill.core.watch_profiles.iter_matching_files", boom)
+    manager.start([profile])
+    try:
+        assert _wait_until(lambda: manager.last_error("p1") is not None, timeout=3.0)
+        assert "PermissionError" in (manager.last_error("p1") or "")
+        assert manager.consecutive_error_count("p1") >= 1
+    finally:
+        manager.stop()
+
+
+def test_manager_records_scan_error_and_clears_on_recovery(tmp_path: Path, monkeypatch) -> None:
+    """M-4: scan errors accumulate; a successful scan clears the counter."""
+    queue = WatchQueue()
+    manager = WatchManager(queue)
+    profile = WatchProfile(
+        profile_id="p1",
+        enabled=True,
+        folder_path=str(tmp_path),
+        suffixes=(".txt",),
+        process_existing=True,
+        poll_interval_seconds=2,
+    )
+
+    calls = {"n": 0}
+
+    def flaky(_profile):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise OSError(22, "Invalid argument")
+        return iter([])
+
+    monkeypatch.setattr("quill.core.watch_profiles.iter_matching_files", flaky)
+    manager.start([profile])
+    try:
+        assert _wait_until(lambda: manager.consecutive_error_count("p1") >= 2, timeout=5.0)
+        assert _wait_until(lambda: manager.consecutive_error_count("p1") == 0, timeout=5.0)
+        assert manager.last_error("p1") is None
+    finally:
+        manager.stop()

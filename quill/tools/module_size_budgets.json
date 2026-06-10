@@ -5,6 +5,8 @@
   "_rebaseline_2026_06_09b": "main_frame.py grew by ~590 lines for §8 Magic/UX delight features: 16 UX features including go_to_line_number, _show_error_with_hint, announce_contrast_ratio, magic_paste, open_key_cheatsheet, open_go_to_anything, show_context_help, show_document_summary, explain_unavailable_feature, and supporting startup checks. Budget re-baselined to current size; CQ-1 decomposition is the path to lower it.",
   "_rebaseline_2026_06_09c": "main_frame.py grew by ~74 lines total across two ChapterForge-parity improvements: (1) thread the update-check network calls off the UI thread with _on_update_fetch_done callback and screen-reader announcements; (2) integrate feedback_hub for direct GitHub issue submission in report_bug(), with _feedback_hub_available() gate and _report_bug_legacy() fallback when the library is absent.",
   "_rebaseline_2026_06_09d": "main_frame.py +3 lines from lint-fix pass: docstring wrapped for E501, ruff format, removed unused variable.",
+  "_rebaseline_2026_06_09e": "glow.py +11 lines for the L-7 fix (logger.warning in the six broad-except GLOW backend sites). Budget re-baselined to current size.",
+  "_rebaseline_2026_06_09f": "watch_actions.py +59 lines for the M-1 fix (add _humanize_action_error helper and route the 8 broad except sites + the registry's last-resort guard through it). Budget re-baselined to current size.",
   "_default_cap": 600,
   "budgets": {
     "quill/ui/main_frame.py": 20354,
@@ -14,10 +16,10 @@
     "quill/core/read_aloud.py": 1240,
     "quill/core/assistant_ai.py": 1230,
     "quill/core/features.py": 1113,
-    "quill/core/glow.py": 799,
+    "quill/core/glow.py": 810,
     "quill/core/settings_registry.py": 158,
     "quill/core/settings_specs.py": 922,
-    "quill/core/watch_actions.py": 643,
+    "quill/core/watch_actions.py": 700,
     "quill/io/structured.py": 643,
     "quill/core/settings.py": 620
   }

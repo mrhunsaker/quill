@@ -17,6 +17,7 @@ from quill.tools.quillin_lint import discover_quillins, lint_quillin
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _BUNDLED_ROOT = _REPO_ROOT / "quill" / "quillins_bundled"
+_FIXTURES_ROOT = Path(__file__).parent / "fixtures"
 
 _BUNDLED_QUILLINS = discover_quillins(_BUNDLED_ROOT)
 
@@ -33,6 +34,17 @@ def test_bundled_quillins_are_discovered() -> None:
 def test_bundled_quillin_passes_strict_lint(quillin_dir: Path) -> None:
     report = lint_quillin(quillin_dir)
     assert report.ok(strict=True), report.render(strict=True)
+
+
+def test_bad_quillin_fixture_is_rejected() -> None:
+    """L-22: the linter must return a non-ok report for a manifest that fails schema validation."""
+    bad_dir = _FIXTURES_ROOT / "bad_quillin"
+    report = lint_quillin(bad_dir)
+    assert not report.ok(strict=False), (
+        f"Expected linter to reject the bad_quillin fixture but it passed:\n{report.render()}"
+    )
+    rendered = report.render()
+    assert rendered, "Expected at least one error line in the rendered report"
 
 
 @pytest.mark.parametrize(

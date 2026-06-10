@@ -30,9 +30,16 @@ SNAPSHOT_PATH = _REPO_ROOT / "tests" / "unit" / "ui" / "fixtures" / "main_frame_
 def main_frame_public_methods(source_path: Path = _MAIN_FRAME) -> list[str]:
     """Return the sorted public (non-underscore) method names of ``MainFrame``."""
     tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
-    main_frame = next(
-        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "MainFrame"
-    )
+    try:
+        main_frame = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "MainFrame"
+        )
+    except StopIteration:
+        raise SystemExit(
+            f"Could not find class MainFrame in {source_path}. Has it been renamed?"
+        ) from None
     names = {
         member.name
         for member in main_frame.body

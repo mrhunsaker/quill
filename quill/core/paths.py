@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 from quill.core.storage_mode import load_storage_mode, portable_root_dir
@@ -49,12 +50,22 @@ def app_data_dir() -> Path:
             appdata = os.environ.get("APPDATA")
             if appdata:
                 return Path(appdata) / "Quill"
+            if sys.platform == "win32":
+                raise RuntimeError(
+                    "Could not determine the Quill data directory: APPDATA is not set. "
+                    "Please set QUILL_DATA_DIR (dev) or APPDATA in your environment."
+                )
             return Path.home() / ".quill"
 
     appdata = os.environ.get("APPDATA")
     if appdata:
         return Path(appdata) / "Quill"
 
+    if sys.platform == "win32":
+        raise RuntimeError(
+            "Could not determine the Quill data directory: APPDATA is not set. "
+            "Please set QUILL_DATA_DIR (dev) or APPDATA in your environment."
+        )
     return Path.home() / ".quill"
 
 

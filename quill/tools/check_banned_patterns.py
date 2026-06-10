@@ -286,7 +286,9 @@ def _check_dialog_registry() -> list[Violation]:
                     surface.line,
                     f"unregistered dialog surface '{surface.key}'; run "
                     "'python -m quill.tools.dialog_inventory --write' to "
-                    "register and classify it (A11Y-4 dialog registry)",
+                    "register and classify it (A11Y-4 dialog registry). "
+                    "If this is a stock wx dialog, add it to "
+                    "_NATIVE_WX_DIALOGS in quill/tools/dialog_inventory.py first.",
                 )
             )
         elif registered != surface.surface:

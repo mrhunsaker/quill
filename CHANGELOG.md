@@ -40,7 +40,23 @@ This section records the 13 HIGH-severity security fixes, 16 UX delight features
 - **A11Y live indicator.** `"sr_name"` status-bar cell shows which screen reader is detected, populated by `detect_screen_reader()` from `sr_detect.py`.
 - **"Resume from where I left off".** Caret position is saved per autosave cycle (`save_cursor_position()` in `recovery.py`) and per workspace snapshot (`caret_positions_from_session()` in `sessions.py`). Both are restored on next open.
 
-### LOW and NIT fixes
+### LOW and NIT fixes (§6 and §7 continued)
+
+- **L-2** — `core/lexical.py`: added `logger.debug("Lexical provider %s failed: %s", ...)` inside the broad `except` so provider regressions surface in diagnostic logs.
+- **L-3** — `core/ai/assistant.py`: added `logger.warning(...)` inside the Foundation Models backend probe `except` so probe failures appear in the diagnostic bundle.
+- **L-4** — `core/lexical_preload.py`: added `logger.debug(...)` inside the preload `except` so non-fatal warm-up failures are visible in debug logs.
+- **L-6** — `core/watch_queue.py`: documented why `threading.RLock` is required (`_dequeue_item` re-enters `_try_flush` under the same lock; plain `Lock` would deadlock).
+- **L-14** — `tools/check_banned_patterns.py`: enriched the unregistered-dialog-surface violation message to hint that stock `wx` dialogs should be added to `_NATIVE_WX_DIALOGS` in `dialog_inventory.py`.
+- **L-16 / N-5** — `tools/ui_surface.py`: wrapped the bare `next(...)` call in `try/except StopIteration` and raised `SystemExit` with a clear message when `MainFrame` cannot be found (e.g. after a rename).
+- **M-27** — `pyproject.toml`: added `"Operating System :: MacOS"` classifier to match the documented macOS support.
+- **L-1** — `core/paths.py`: on Windows, missing `APPDATA` now raises `RuntimeError` with a clear message instead of silently falling back to the hidden `~/.quill` directory. Non-Windows still uses `~/.quill` as before. New test `test_windows_raises_when_appdata_missing` locks this in.
+- **L-7** — `core/glow.py`: narrowed the `ImportError`-only case in `_load_glow_core`; all other broad `except Exception` sites in the GLOW backend now log `logger.warning(...)` before returning the safe fallback.
+- **L-10** — `io/ocr.py`: narrowed `except Exception` to `except ImportError` in `_import_windows_ocr` so non-import errors are not silently swallowed.
+- **L-21** — `stability/*.py`: all stability modules already carry `Implements: ROADMAP ...` docstrings — confirmed and closed.
+- **L-22** — `tests/unit/tools/test_bundled_quillin_lint.py`: added `test_bad_quillin_fixture_is_rejected` negative test with a `fixtures/bad_quillin/manifest.json` that fails schema validation (missing `id`, invalid `version`).
+- **N-10** — `dialogs.md`: safe mode flag already referenced at lines 280-305 — confirmed and closed.
+- **N-3** — `stability/crash_report.py`: bundle filename now uses ISO-8601 (`YYYYMMDDTHHMMSSZ`) instead of a raw 19-digit nanosecond epoch, making bundles human-inspectable in Explorer and sorted correctly by name.
+- **L-11** — `io/structured.py`: duplicate of M-11 (low because there is an existing fallback); closed as a reference item — will be addressed with M-11.
 
 - **L-8** — `updates.py`: removed unnecessary `getattr` guard around `response.headers.get("Content-Length")`.
 - **L-12** — `safe_mode.py`: deleted unused `safe_mode_message()` export.
@@ -54,6 +70,7 @@ This section records the 13 HIGH-severity security fixes, 16 UX delight features
 - **N-12** — `recovery.py`: `_validate_session_id()` helper replaces three `UUID(session_id)` side-effect calls.
 - **N-15** — `dictation.py`: `try/except ImportError` block carries explicit Windows-only intent comment.
 - **N-16** — `announcements.py`: `format_progress` docstring states its pure-function, no-I/O, thread-safe contract.
+- **M-1** — `core/watch_actions.py`: added `_humanize_action_error(action_id, error)` and routed the 8 broad `except Exception` sites (`OpenAction`, `MoveAction`, `CopyAction`, `ConvertAction`, `RunMacroAction`, `RunPythonTransformAction`, `AiAction`, `OcrAction`) plus the registry's last-resort guard through it. Screen-reader users now get plain-English messages such as `"Quill cannot complete the move. The folder is read-only or you lack permission — choose a folder you own."` instead of `"[Errno 13] Permission denied: 'C:\\…'"`. Coverage: `test_humanize_permission_error_is_actionable`, `test_humanize_file_not_found_mentions_reappear`, `test_humanize_generic_oserror_keeps_strerror`, `test_humanize_unrecognized_error_falls_back_to_str`, `test_move_action_permission_error_humanized`. Budget re-baselined (+57 lines).
 
 ---
 

@@ -1,0 +1,9 @@
+{
+  "schema": "quill.extension/1",
+  "name": "Bad Quillin",
+  "version": "not-a-semver",
+  "author": "Test",
+  "description": "Intentionally invalid: version is not semver and id is missing.",
+  "capabilities": [],
+  "main": "extension.py"
+}

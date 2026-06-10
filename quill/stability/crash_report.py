@@ -15,10 +15,10 @@ import json
 import logging
 import platform
 import sys
-import time
 import zipfile
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, is_dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +50,8 @@ def build_diagnostic_bundle(
     ensure_app_directories()
     output_dir = app_data_dir() / "diagnostics"
     output_dir.mkdir(parents=True, exist_ok=True)
-    bundle_path = output_path or output_dir / f"quill-diagnostic-bundle-{time.time_ns()}.zip"
+    _ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")  # noqa: UP017
+    bundle_path = output_path or output_dir / f"quill-diagnostic-bundle-{_ts}.zip"
 
     # H-3: only well-formed command ids are allowed in the bundle.
     # Anything else is dropped silently (the caller can compare the

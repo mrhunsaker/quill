@@ -8,6 +8,7 @@ Calls are blocking — the UI should run them off the main thread.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING
 
@@ -16,6 +17,8 @@ from quill.core.ai.tools import AITool, build_tools_from_registry, run_tool
 
 if TYPE_CHECKING:
     from quill.core.ai.agent import AgentDecision
+
+logger = logging.getLogger(__name__)
 
 # Max characters of input we send in one call; larger inputs are chunked.
 _CHUNK_CHARS = 4000
@@ -136,8 +139,8 @@ def make_default_backend() -> AIBackend:
             fm = FoundationModelsBackend()
             if fm.is_available()[0]:
                 return fm
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as error:  # noqa: BLE001
+            logger.warning("Foundation Models backend probe failed: %s", error)
     from quill.core.ai.llama_cpp_backend import LlamaCppBackend
 
     return LlamaCppBackend()

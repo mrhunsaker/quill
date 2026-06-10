@@ -138,7 +138,7 @@ def _import_windows_ocr() -> Callable[[Path, str | None], tuple[str, list[OcrLin
     """
     try:  # pragma: no cover - platform/runtime dependent
         from quill.platform.windows.windows_ocr import recognize_with_windows_ocr
-    except Exception:
+    except ImportError:
         return None
     return recognize_with_windows_ocr  # pragma: no cover
 

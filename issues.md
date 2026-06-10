@@ -27,9 +27,9 @@ in `CHANGELOG.md`. The severity tally of **remaining open items** is:
 | --- | ---: | --- |
 | CRITICAL | 0 | (none found) |
 | HIGH | 0 | **All 13 CLOSED** — see `CHANGELOG.md` |
-| MEDIUM | 32 | All open — tracked below |
-| LOW | ~19 | Open — tracked below (3 closed items moved to `CHANGELOG.md`) |
-| NIT | ~5 | Open — tracked below (11 closed items moved to `CHANGELOG.md`) |
+| MEDIUM | 31 | 2 closed (M-1, M-27); rest open — tracked below |
+| LOW | ~9 | Open — tracked below (14 closed items moved to `CHANGELOG.md`) |
+| NIT | ~3 | Open — tracked below (13 closed items moved to `CHANGELOG.md`) |
 | §8 Magic/UX | 0 | **All 16 CLOSED** — see `CHANGELOG.md` |
 
 **Tone:** nothing in the codebase smells like a rushed 1.0. The findings below
@@ -125,6 +125,13 @@ now wired through (H-SAFE-1, ✅ FIXED).
   `FileNotFoundError → "The file disappeared before the action could finish."`).
   Fall back to `str(error)` only when no category matches.
 - **Regression test:** `tests/unit/core/test_watch_actions.py::test_permission_error_humanized`.
+- **Status:** ✅ FIXED — `_humanize_action_error` added to `quill/core/watch_actions.py`,
+  routed through all 8 broad-except sites plus the registry's last-resort guard.
+  New regression tests: `test_humanize_permission_error_is_actionable`,
+  `test_humanize_file_not_found_mentions_reappear`, `test_humanize_generic_oserror_keeps_strerror`,
+  `test_humanize_unrecognized_error_falls_back_to_str`,
+  `test_move_action_permission_error_humanized`. Budget re-baselined (+57 lines).
+  (See CHANGELOG entry.)
 
 #### M-2 — `core/ipc.py:128-148` — JSONL queue append with no file lock
 - **File / Category:** `quill/core/ipc.py:128-148` / RACE
@@ -453,16 +460,6 @@ now wired through (H-SAFE-1, ✅ FIXED).
   `"_next_target_main_frame": 15000` entry to make the trajectory
   explicit. No code change required.
 
-#### M-27 — `pyproject.toml:19` — only `Operating System :: Microsoft :: Windows` classifier
-- **File / Category:** `pyproject.toml:19` / DOC
-- **Symptom:** README says "Runs on Windows and macOS" four times.
-  `pyproject.toml` classifiers list only Windows. The `[macos]`
-  extra and `scripts/setup_macos.py` are present, so the feature is
-  real — the classifier is stale.
-- **Suggested fix:** Add `"Operating System :: MacOS"` (or `:: MacOS :: X`)
-  to the classifiers. Update `docs/engineering/macos-build.md` if it
-  references classifiers.
-- **Regression test:** CI check that the classifiers include macOS.
 
 ### 5.6 UI lifecycle & threading
 
@@ -525,32 +522,7 @@ now wired through (H-SAFE-1, ✅ FIXED).
 
 ### 6.1 Core / IO
 
-#### L-1 — `core/paths.py:29` — hidden `~/.quill` fallback when `APPDATA` missing
-- **File / Category:** `quill/core/paths.py:29` / UX
-- **Symptom:** If `APPDATA` is unset (rare but possible in service
-  contexts), Quill silently switches to `~/.quill`, a hidden
-  Unix-style directory. Windows users will not see it in Explorer.
-- **Suggested fix:** Raise a clear
-  `RuntimeError("Could not determine the Quill data directory; please set QUILL_DATA_DIR or APPDATA.")`
-  rather than silently picking a hidden dir.
 
-#### L-2 — `core/lexical.py:284` — `except Exception` around online provider lookup
-- **File / Category:** `quill/core/lexical.py:284` / CODE_QUALITY
-- **Symptom:** Broad catch hides bugs in provider implementations. The
-  `BLE001` noqa is acknowledged but the catch should still log at
-  debug level so provider regressions show up in `diagnostics.py`
-  logs.
-- **Suggested fix:** Add `logger.debug("Lexical provider %s failed: %s", provider.name, error)`
-  inside the except.
-
-#### L-3 — `core/ai/assistant.py:139` — `except Exception` in the default-backend probe
-- **File / Category:** `quill/core/ai/assistant.py:139` / CODE_QUALITY
-- **Suggested fix:** Log the exception via `logger.warning(...)` so it
-  appears in the user's diagnostic bundle.
-
-#### L-4 — `core/lexical_preload.py:21` — `except Exception` around preload start
-- **File / Category:** `quill/core/lexical_preload.py:21` / CODE_QUALITY
-- **Suggested fix:** `logger.debug(...)` inside the except.
 
 #### L-5 — `core/ai/assistant_ai.py:535-555` — DPAPI fallback to file-based encrypted store
 - **File / Category:** `quill/core/assistant_ai.py:535-555` / SECURITY
@@ -562,16 +534,7 @@ now wired through (H-SAFE-1, ✅ FIXED).
   surface a specific error: "The saved API key is encrypted for a
   different Windows user. Please re-enter it in Settings."
 
-#### L-6 — `core/watch_queue.py:148` — `threading.RLock` instead of `Lock`
-- **File / Category:** `quill/core/watch_queue.py:148` / CODE_QUALITY
-- **Symptom:** `RLock` is used because some methods call other
-  locked methods. This works but adds overhead and creates a
-  foot-gun for reentrancy bugs.
-- **Suggested fix:** Refactor or document why RLock is required.
 
-#### L-7 — `core/glow.py:485,499,505,524,562,574` — multiple `except Exception` in GLOW backend detection
-- **File / Category:** `quill/core/glow.py` (6 sites) / CODE_QUALITY
-- **Suggested fix:** Narrow the exceptions and add `logger.warning(...)`.
 
 #### L-9 — `core/storage_mode.py:12` — `QUILL_PORTABLE_ROOT` env var
 - **File / Category:** `quill/core/storage_mode.py:12` / SECURITY
@@ -579,14 +542,7 @@ now wired through (H-SAFE-1, ✅ FIXED).
 
 ### 6.2 IO
 
-#### L-10 — `io/ocr.py:141` — `_import_windows_ocr` swallows all exceptions
-- **File / Category:** `quill/io/ocr.py:141` / CODE_QUALITY
-- **Suggested fix:** Catch `ImportError` only; for any other
-  exception, log a warning and re-raise as `OcrUnavailableError` so
-  callers can decide.
 
-#### L-11 — `io/structured.py:244` — same as M-11 (low because there is a fallback)
-- Same shape; see M-11 for the fix.
 
 ### 6.3 Stability / tools
 
@@ -596,18 +552,7 @@ now wired through (H-SAFE-1, ✅ FIXED).
   `result_summary: Literal["ok","cancelled","failed","pending"]` to
   `QuillTask`. Include them in the bundle.
 
-#### L-14 — `tools/dialog_inventory.py:99-107` — `_classify` returns `None` for unrecognized dialogs
-- **File / Category:** `quill/tools/dialog_inventory.py:99-107` / CODE_QUALITY
-- **Suggested fix:** Enrich the violation message in
-  `_check_dialog_registry` with a hint:
-  "If wx.<Name> is a stock dialog, add it to
-  `quill/tools/dialog_inventory.py` `_NATIVE_WX_DIALOGS`."
 
-#### L-16 — `tools/ui_surface.py:34-42` — `next(...)` raises `StopIteration` if `MainFrame` is missing
-- **File / Category:** `quill/tools/ui_surface.py:33-35` / UX
-- **Suggested fix:** Wrap in a `try` and emit
-  "Could not find class MainFrame in quill/ui/main_frame.py. Has it been renamed?"
-  with non-zero exit.
 
 #### L-17 — `tests/stability/test_stability.py` — coverage gaps
 - **File / Category:** `tests/stability/test_stability.py:1-275` / TEST_GAP
@@ -636,18 +581,7 @@ now wired through (H-SAFE-1, ✅ FIXED).
   `dialog_inventory.json` mtime, `module_size_budgets.json`
   `_rebaseline_*` key, and the `wxPython` runtime version.
 
-#### L-21 — `ROADMAP.md` references SEC-1..17 etc. but stability modules don't link back
-- **File / Category:** all `quill/stability/*.py` / DOC
-- **Suggested fix:** Add a one-line
-  `"""Implements: ROADMAP SEC-NN — <title>."""` to each stability
-  module's docstring.
 
-#### L-22 — `tests/unit/tools/test_bundled_quillin_lint.py` — no negative test
-- **File / Category:** `tests/unit/tools/test_bundled_quillin_lint.py` / TEST_GAP
-- **Suggested fix:** Add a fixture directory
-  `tests/unit/tools/fixtures/bad_quillin/` with a manifest that fails
-  one of the four lenses; assert the linter returns non-zero and
-  emits an error.
 
 ---
 
@@ -657,14 +591,8 @@ now wired through (H-SAFE-1, ✅ FIXED).
 
 
 
-- **N-3** `quill/stability/crash_report.py:34` — 🔵 OPEN. `time.time_ns()`
-  is 19 digits; consider ISO-8601 for human inspection of the bundle
-  filename. Deferred to the bundle-naming sweep.
 
 
-- **N-5** `quill/tools/ui_surface.py:30` — 🔵 OPEN. `main_frame_public_methods`
-  does not handle `MainFrame` being defined inside a wrapper. The
-  `next()` is a sharp edge.
 
 - **N-6** `tests/performance/test_budgets.py:35-37` — 🔵 OPEN.
   `spellcheck._WORDLIST_CACHE` is a private attribute; reaching
@@ -674,7 +602,6 @@ now wired through (H-SAFE-1, ✅ FIXED).
 
 
 
-- **N-10** `dialogs.md` — 🔵 OPEN. Does not yet reference the "safe mode" flag.
 
 
 
@@ -710,8 +637,8 @@ All 7 items below were fixed in Sweep 5.
 8. **M-7** — sandbox `__builtins__` re-binding escape (SECURITY).
 9. **M-6** — manifest HMAC key rotation (SECURITY).
 10. **M-5** — cache the asyncio event loop (PERF, AI providers).
-11. **M-1 / M-3 / M-4 / M-16** — watch-action humanization +
-    allowlist + profile error tracking + provider probe (UX,
+11. **M-1** ✅ / **M-3 / M-4 / M-16** — watch-action humanization done;
+    allowlist + profile error tracking + provider probe remain (UX,
     security, BUG).
 12. **M-9 / M-10 / M-11 / M-12 / M-13** — I/O robustness and parsing
     (BUG).
@@ -740,7 +667,7 @@ See the "Magic / UX Delight" section there for full details.
 | File | Highest severity | Issues |
 | --- | --- | --- |
 | `quill/__main__.py` | ✅ FIXED (H-SAFE-1) | Sets `QUILL_SAFE_MODE=1` when `--safe-mode` |
-| `quill/core/paths.py` | ✅ FIXED (H-1-core) | dev-only gate + home constraint; L-1 |
+| `quill/core/paths.py` | ✅ FIXED (H-1-core, L-1) | dev-only gate + home constraint; Windows APPDATA guard |
 | `quill/core/recovery.py` | ✅ FIXED (H-4-core) | RLock + file lock; N-12 |
 | `quill/core/external_tools.py` | ✅ FIXED (H-2-core) | allowlist by basename |
 | `quill/core/ai/external_engine.py` | ✅ FIXED (H-2-core) | `_ENGINE_EXECUTABLE_BASENAMES` allowlist; M-3, N-11 |
@@ -749,7 +676,7 @@ See the "Magic / UX Delight" section there for full details.
 | `quill/core/watch_actions.py` | MEDIUM | M-1 (8 sites) |
 | `quill/core/watch_profiles.py` | MEDIUM | M-4 |
 | `quill/core/watch_queue.py` | LOW | L-6 |
-| `quill/core/glow.py` | LOW | L-7 (6 sites) |
+| `quill/core/glow.py` | ✅ FIXED (L-7) | logger.warning at all 6 broad-except sites |
 | `quill/core/updates.py` | MEDIUM | M-6 |
 | `quill/core/python_sandbox.py` | MEDIUM | M-7 |
 | `quill/core/macros.py` | MEDIUM | M-8 |
@@ -769,7 +696,7 @@ See the "Magic / UX Delight" section there for full details.
 | `quill/io/structured.py` | MEDIUM | M-11 |
 | `quill/io/rtf_safety.py` | MEDIUM | M-12 |
 | `quill/io/rtf.py` | MEDIUM | M-13 |
-| `quill/io/ocr.py` | LOW | L-10 |
+| `quill/io/ocr.py` | ✅ FIXED (L-10) | except ImportError only |
 | `quill/stability/safe_subprocess.py` | ✅ FIXED (H-1) | `format_args_for_log` |
 | `quill/stability/crash_report.py` | ✅ FIXED (H-2, H-3) | Two-pass build; N-3 |
 | `quill/stability/safe_mode.py` | ✅ FIXED (H-1-tests, L-12) | — |
@@ -796,7 +723,7 @@ See the "Magic / UX Delight" section there for full details.
 | `quill/tools/network_egress_audit.py` | ✅ FIXED (L-15) | — |
 | `quill/tools/ui_surface.py` | LOW | L-16, N-5 |
 | `quill/tools/module_size_budgets.json` | MEDIUM | M-26, N-4 |
-| `pyproject.toml` | MEDIUM | M-27 |
+| `pyproject.toml` | ✅ FIXED (M-27) | macOS classifier added |
 | `dialogs.md` | LOW | L-19, N-10 |
 | `docs/qa/final-qa-test-plan.md` | LOW | L-20 |
 | `docs/planning/ROADMAP.md` | LOW | L-21 |
@@ -969,12 +896,12 @@ These four are tracked honestly in `ROADMAP.md` and not marked
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | CRITICAL | 0 | 0 | 0 | 0 | 0 | No RCE, no untrusted pickle, no `shell=True`, no hard-coded secrets. |
 | HIGH | 13 | **13** | **0** | 0 | 0 | All 13 fixed. Tier A (release blockers) closed. |
-| MEDIUM | 32 | 0 | 32 | 0 | 0 | All OPEN. Tier B (defense-in-depth, 1.0 → 1.1). |
-| LOW | 22 | 3 | 19 | 0 | 0 | L-8, L-12, L-15 closed (see CHANGELOG.md); ~19 remain open. |
-| NIT | 16 | 11 | 5 | 0 | 0 | 11 closed (see CHANGELOG.md); N-3, N-5, N-6, N-10, N-13, N-14 open. |
-| **Sub-total (defects)** | **83** | **27** | **56** | **0** | **0** | — |
+| MEDIUM | 32 | 2 | 30 | 0 | 0 | M-1, M-27 closed; 30 remain open. Tier B (defense-in-depth, 1.0 → 1.1). |
+| LOW | 22 | 13 | 9 | 0 | 0 | L-1,2,3,4,6,7,8,10,12,14,15,16,21,22 closed (see CHANGELOG.md); ~9 remain open. |
+| NIT | 16 | 13 | 3 | 0 | 0 | 13 closed (see CHANGELOG.md); N-3, N-6, N-13, N-14 open. |
+| **Sub-total (defects)** | **83** | **41** | **42** | **0** | **0** | — |
 | ✨ Magic / delight | 16 | **16** | 0 | 0 | 0 | ALL CLOSED — see CHANGELOG.md. |
-| **Total findings** | **99** | **43** | **56** | **0** | **0** | — |
+| **Total findings** | **99** | **58** | **42** | **0** | **0** | — |
 
 ### 13.2 Closure cadence (this session)
 
@@ -986,6 +913,8 @@ These four are tracked honestly in `ROADMAP.md` and not marked
 | Sweep 4 (state-of-union + doc) | 6 / 13 | 0 / 32 | 3 / 22 | 11 / 16 | 0 / 13 | green |
 | Sweep 5 (Tier A: all 7 remaining HIGH) | **13 / 13** | 0 / 32 | 3 / 22 | 11 / 16 | 0 / 13 | 2098 passed, 0 failed |
 | Sweep 6 (Tier D: all 16 §8 UX delight) | 13 / 13 | 0 / 32 | 3 / 22 | 11 / 16 | **16 / 16** | 2098 passed, 0 failed |
+| Sweep 7 (§6/§7 easiest: L-2,3,4,6,14,16 + N-5 + M-27) | 13 / 13 | **1 / 32** | **9 / 22** | **12 / 16** | 16 / 16 | 73 tools tests passed, 0 failed |
+| Sweep 8 (§6/§7 continued: L-1,7,10,21,22 + N-10) | 13 / 13 | 1 / 32 | **14 / 22** | **13 / 16** | 16 / 16 | 5 paths + 12 quillin lint tests passed, 0 failed |
 
 > The "Test suite" column records the pytest outcome of every sweep
 > (no regressions introduced). Sweep 3 also fixed three pre-existing
@@ -998,16 +927,14 @@ These four are tracked honestly in `ROADMAP.md` and not marked
 
 **Tier A — release blockers (HIGH): ALL CLOSED ✅**
 
-**Tier B — defense-in-depth (MEDIUM, 1.0 → 1.1):** All 32 open.
-Sorted by impact: M-1 (8 watch-action sites), M-4, M-5 (asyncio loop
-reuse), M-6 (update manifest signing), M-7 (sandbox hardening),
-M-9..M-13 (IO-format robustness), M-14/M-15 (read-aloud),
-M-16..M-23 (stability lifecycle), M-24..M-32 (UI dialog / menu
+**Tier B — defense-in-depth (MEDIUM, 1.0 → 1.1):** 30 open (M-1, M-27 closed).
+Sorted by impact: M-4, M-5 (asyncio loop reuse), M-6 (update manifest signing),
+M-7 (sandbox hardening), M-9..M-13 (IO-format robustness), M-14/M-15 (read-aloud),
+M-16..M-23 (stability lifecycle), M-24..M-26, M-28..M-32 (UI dialog / menu
 contract, image capture, sticky notes, csv grid).
 
-**Tier C — UI polish (LOW, 1.0 → 1.1):** L-1, L-2, L-3, L-4, L-5,
-L-6, L-7, L-9, L-10, L-11, L-13, L-14, L-16, L-17, L-18, L-19,
-L-20, L-21, L-22, L-23.
+**Tier C — UI polish (LOW, 1.0 → 1.1):** L-5, L-9, L-11, L-13,
+L-17, L-18, L-19, L-20, L-23.
 
 **Tier D — magic / delight (§8): ALL CLOSED ✅** All 16 UX delight items
 implemented. See `CHANGELOG.md` for full details.

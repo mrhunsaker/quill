@@ -23,6 +23,7 @@ from quill.core.watch_actions import (
     WatchActionOutcome,
     WatchActionRegistry,
     WatchItem,
+    _humanize_action_error,
     default_registry,
 )
 
@@ -437,3 +438,45 @@ def test_ocr_action_without_handler_fails() -> None:
     outcome = registry.run("ocr", _item(Path("scan.png")))
     assert outcome.status == OUTCOME_FAILED
     assert "ocr engine" in outcome.message.lower()
+
+
+# --- M-1: action-error humanization -----------------------------------------
+
+
+def test_humanize_permission_error_is_actionable() -> None:
+    message = _humanize_action_error("move", PermissionError(13, "Permission denied"))
+    assert "permission" in message.lower()
+    assert "Quill" in message
+    assert "Errno" not in message
+
+
+def test_humanize_file_not_found_mentions_reappear() -> None:
+    message = _humanize_action_error("copy", FileNotFoundError(2, "No such file"))
+    assert "disappeared" in message.lower()
+
+
+def test_humanize_generic_oserror_keeps_strerror() -> None:
+    message = _humanize_action_error("move", OSError(28, "No space left on device"))
+    assert "No space left on device" in message
+
+
+def test_humanize_unrecognized_error_falls_back_to_str() -> None:
+    message = _humanize_action_error("open", ValueError("bad token"))
+    assert message == "bad token"
+
+
+def test_move_action_permission_error_humanized(tmp_path: Path) -> None:
+    source = tmp_path / "x.txt"
+    source.write_text("x")
+    destination = tmp_path / "sub"  # does not exist
+    registry = WatchActionRegistry()
+    action = MoveAction()
+    registry.register(action)
+    outcome = registry.run(
+        "move",
+        _item(source),
+        {"destination": str(destination)},
+    )
+    assert outcome.status == OUTCOME_FAILED
+    assert "permission" in outcome.message.lower() or "folder" in outcome.message.lower()
+    assert "Errno" not in outcome.message

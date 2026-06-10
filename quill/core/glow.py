@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from quill.core.plain_language import lint_plain_language
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -482,7 +485,10 @@ def _load_glow_core() -> Any:
     """Return the imported ``quill_glow_core`` module, or ``None`` when absent."""
     try:
         import quill_glow_core
-    except Exception:
+    except ImportError:
+        return None
+    except Exception as error:  # noqa: BLE001
+        logger.warning("quill_glow_core import failed unexpectedly: %s", error)
         return None
     return quill_glow_core
 
@@ -496,13 +502,15 @@ def _backend_name(core: Any) -> str:
     """Report the active shared-core backend ("glow", "safe-mode", ...)."""
     try:
         telemetry = core.get_startup_telemetry()
-    except Exception:
+    except Exception as error:  # noqa: BLE001
+        logger.warning("GLOW get_startup_telemetry failed: %s", error)
         telemetry = None
     if telemetry is None:
         try:
             core.configure_default_services()
             telemetry = core.get_startup_telemetry()
-        except Exception:
+        except Exception as error:  # noqa: BLE001
+            logger.warning("GLOW configure_default_services/telemetry failed: %s", error)
             telemetry = None
     if telemetry is not None:
         return str(getattr(telemetry, "backend", "") or "unknown")
@@ -521,7 +529,8 @@ def get_glow_services() -> Any:
         return None
     try:
         return core.get_services()
-    except Exception:
+    except Exception as error:  # noqa: BLE001
+        logger.warning("GLOW get_services failed: %s", error)
         return None
 
 
@@ -559,7 +568,8 @@ def glow_engine_versions() -> GlowEngineVersions:
     backend = _backend_name(core)
     try:
         manifest = core.get_component_versions()
-    except Exception:
+    except Exception as error:  # noqa: BLE001
+        logger.warning("GLOW get_component_versions failed: %s", error)
         manifest = None
     if manifest is None:
         return GlowEngineVersions(
@@ -571,7 +581,8 @@ def glow_engine_versions() -> GlowEngineVersions:
     raw_components = getattr(manifest, "components", {}) or {}
     try:
         components = tuple((str(key), str(value)) for key, value in sorted(raw_components.items()))
-    except Exception:
+    except Exception as error:  # noqa: BLE001
+        logger.warning("GLOW component version parsing failed: %s", error)
         components = ()
     return GlowEngineVersions(
         backend=backend,

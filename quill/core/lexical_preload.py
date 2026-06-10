@@ -9,7 +9,10 @@ idempotent, thread-safe ``preload`` helpers.
 
 from __future__ import annotations
 
+import logging
 import threading
+
+logger = logging.getLogger(__name__)
 
 
 def _worker() -> None:
@@ -18,10 +21,10 @@ def _worker() -> None:
 
         spellcheck.preload()
         thesaurus.preload()
-    except Exception:
+    except Exception as error:  # noqa: BLE001
         # A preload failure must never affect the running app; the lazy
         # loaders remain the source of truth on first use.
-        pass
+        logger.debug("Lexical preload failed (non-fatal): %s", error)
 
 
 def start_lexical_preload() -> threading.Thread:

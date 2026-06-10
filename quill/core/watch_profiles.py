@@ -321,6 +321,8 @@ class WatchManager:
         self._threads: dict[str, threading.Thread] = {}
         self._stop_events: dict[str, threading.Event] = {}
         self._running = False
+        self._last_error: dict[str, str] = {}
+        self._consecutive_errors: dict[str, int] = {}
 
     @property
     def is_running(self) -> bool:
@@ -374,6 +376,35 @@ class WatchManager:
         for _profile_id, thread in threads:
             thread.join(timeout=5.0)
 
+    def last_error(self, profile_id: str) -> str | None:
+        """Return the most recent error message for ``profile_id``, or ``None``.
+
+        Maps a recurring polling failure to a specific profile_id so the UI can
+        surface "Profile X failed N times: <reason>" (M-4). Thread-safe.
+        """
+        with self._lock:
+            return self._last_error.get(profile_id)
+
+    def consecutive_error_count(self, profile_id: str) -> int:
+        """Return the running count of consecutive polling errors for ``profile_id``.
+
+        Reset to 0 on the first successful scan after a failure, so a transient
+        blip does not make a profile look permanently broken (M-4).
+        """
+        with self._lock:
+            return self._consecutive_errors.get(profile_id, 0)
+
+    def _record_error(self, profile_id: str, exc: BaseException) -> None:
+        message = f"{type(exc).__name__}: {exc}" if str(exc) else type(exc).__name__
+        with self._lock:
+            self._last_error[profile_id] = message
+            self._consecutive_errors[profile_id] = self._consecutive_errors.get(profile_id, 0) + 1
+
+    def _clear_error(self, profile_id: str) -> None:
+        with self._lock:
+            self._last_error.pop(profile_id, None)
+            self._consecutive_errors.pop(profile_id, None)
+
     def _poll_loop(self, profile: WatchProfile, stop_event: threading.Event) -> None:
         if not profile.process_existing:
             # Reserve the de-dup slot for files present at startup so they are
@@ -381,15 +412,18 @@ class WatchManager:
             try:
                 for path in iter_matching_files(profile):
                     self._queue.prime(path)
-            except Exception:  # never let prescan crash the poller
+            except Exception as error:  # never let prescan crash the poller
                 logger.exception("Watch prescan failed for profile %s", profile.profile_id)
+                self._record_error(profile.profile_id, error)
         while not stop_event.is_set():
             try:
                 if profile_is_active(profile):
                     for path in iter_matching_files(profile):
                         self._queue.enqueue(path, profile.profile_id, profile.action_id)
-            except Exception:  # isolated failure: log and keep polling
+                self._clear_error(profile.profile_id)
+            except Exception as error:  # isolated failure: log and keep polling
                 logger.exception("Watch scan failed for profile %s", profile.profile_id)
+                self._record_error(profile.profile_id, error)
             stop_event.wait(float(profile.poll_interval_seconds))
 
 
