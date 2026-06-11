@@ -1,0 +1,86 @@
+<h1 id="leasey-advanced-integration-proposal">Leasey Advanced
+Integration Proposal</h1>
+<p><strong>To:</strong> Brian Hartgen, Hartgen Consultancy<br />
+<strong>Subject:</strong> QUILL + Leasey Advanced — a text-editing
+integration proposal</p>
+<p>Dear Brian,</p>
+<p>My name is Jeff Bishop. I am the developer of QUILL, an accessible
+desktop text editor built specifically for screen reader users on
+Windows. QUILL is a wxPython application designed around the needs of
+blind and low-vision writers — it prioritises keyboard access, clean
+speech output, and a workflow that does not get in the way of a screen
+reader.</p>
+<p>I have been an admirer of Leasey Advanced for some time. The
+text-adjacent features you have built — the category-based notes system,
+the 12-slot LeaseyClips clipboard, the guided LeaseyWord menu, and the
+letter-composition workflow — represent a depth of accessibility
+thinking that is genuinely rare. These are features that work the way a
+screen reader user actually thinks, not features retrofitted from a
+sighted workflow.</p>
+<p>I am writing because I believe there is a natural and low-friction
+way for QUILL and Leasey to complement each other, and I would like your
+blessing before proceeding.</p>
+<hr />
+<h2 id="what-i-would-like-to-build">What I would like to build</h2>
+<p>I am proposing three integrations, all of which are one-directional
+additions on QUILL’s side. None of them require any changes to Leasey or
+to your code.</p>
+<h3 id="leaseynotes-editing-in-quill">1. LeaseyNotes editing in
+QUILL</h3>
+<p>When Leasey opens a note for editing, it calls Notepad with the note
+file path. Because notes are stored as plain UTF-8 text files under
+<code>C:\LeaseyData\text\</code>, a QUILL user could register QUILL as
+their default <code>.txt</code> handler and receive those Notepad calls
+in QUILL instead. QUILL saves the file back as plain text, so Leasey
+reads it transparently. The entire integration works by virtue of
+Leasey’s own clean file-based design.</p>
+<h3 id="leaseyclips-panel-in-quill">2. LeaseyClips panel in QUILL</h3>
+<p>Leasey stores the 12 LeaseyClip slots as plain text files named
+<code>JClipOne</code> through <code>JClipTwelve</code>. QUILL could
+expose these as a named snippet panel — browse the slots, paste one into
+the current document, or write new content back to a slot — all from
+within QUILL. Users who work in both applications would have their clips
+available in either place without any manual copying.</p>
+<h3 id="leaseydata-document-browser-opt-in-plugin">3. LeaseyData
+document browser (opt-in plugin)</h3>
+<p>QUILL has an extension system. I am considering a plugin that reads
+your <code>LeaseyCategories.ini</code> and <code>MyDocuments.ini</code>
+index files and presents a browseable list of notes and documents.
+Selecting an item would open it in QUILL for editing and save it back to
+the same location. No data is moved, duplicated, or reformatted.
+Leasey’s LeaseyCloud sync folder path is respected wherever you have
+configured it.</p>
+<hr />
+<h2 id="what-i-am-not-trying-to-do">What I am not trying to do</h2>
+<p>I am not trying to replace any Leasey feature, compete with Leasey
+Advanced, or take users away from Leasey. QUILL is a writing tool;
+Leasey is a comprehensive productivity layer on top of JAWS. They serve
+different primary purposes and the overlap is narrow.</p>
+<p>I am also not proposing to reverse-engineer or modify any Leasey
+code. The integrations above are possible entirely because of the clean,
+file-based design you chose for Leasey’s data storage. That design
+decision is what makes this interoperability practical.</p>
+<hr />
+<h2 id="what-i-am-asking-for">What I am asking for</h2>
+<p>Primarily, your blessing. I want to make sure you are comfortable
+with a third-party application interacting with Leasey’s data files in
+the way I have described, and that this does not conflict with anything
+in your plans for Leasey Advanced.</p>
+<p>Beyond that, I would welcome any guidance you are willing to offer —
+particularly if there are aspects of the data format or expected usage
+that are not obvious from the outside, or if there are integration
+approaches you would prefer I avoid.</p>
+<p>If at some point you felt that a closer collaboration was worthwhile
+— for example, noting QUILL as a compatible editor in Leasey’s
+documentation, or coordinating on a more formal integration — I would be
+very open to that conversation. But I want to be clear that I am not
+presuming on your time or your product. A straightforward “yes, go
+ahead” is all I am asking for at this stage.</p>
+<p>Thank you for the work you have put into Leasey Advanced over the
+years. It is one of the more thoughtfully designed pieces of
+accessibility software I have encountered, and I am grateful it
+exists.</p>
+<p>Warm regards,</p>
+<p>Jeff Bishop<br />
+Developer, QUILL<br />
+jeff@jeffbishop.com</p>

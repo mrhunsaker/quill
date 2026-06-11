@@ -11,8 +11,8 @@ DEFAULT_KEYMAP: dict[str, str] = {
     "file.open": "Ctrl+O",
     "file.save": "Ctrl+S",
     "file.save_as": "Ctrl+Shift+S",
-    "file.open_from_remote": "Ctrl+Shift+Grave, R",  # QUILL-key chord
-    "file.save_to_remote": "Ctrl+Shift+Grave, Shift+R",  # QUILL-key chord
+    "file.open_from_remote": "Ctrl+Shift+Grave, Shift+O",  # QUILL-key chord (R taken by read-aloud)
+    "file.save_to_remote": "Ctrl+Shift+Grave, W",  # QUILL-key chord
     "file.manage_remote_sites": "Ctrl+Shift+Grave, Shift+M",  # QUILL-key chord
     "file.close_document": "Ctrl+W",
     "file.print": "Ctrl+P",
@@ -74,7 +74,7 @@ DEFAULT_KEYMAP: dict[str, str] = {
     "edit.follow_link": "Ctrl+Enter",
     "edit.word_prediction": "Ctrl+Space",
     "view.preview": "Ctrl+Shift+V",
-    "view.browser_preview": "Ctrl+Shift+Grave, B",  # §10.8.2: V→B (V freed for magic paste)
+    "view.browser_preview": "Ctrl+Shift+Grave, V",  # §10.8.2: QUILL-key chord
     "view.split_preview": "Ctrl+Shift+Backslash",
     "view.focus_preview": "Ctrl+F6",
     "view.switch_editing_lens": "Ctrl+Shift+Grave, K",

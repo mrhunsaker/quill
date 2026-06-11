@@ -39,12 +39,6 @@ def app_data_dir() -> Path:
         resolved = Path(override).expanduser().resolve()
         if _is_constrained_to_home(resolved):
             return resolved
-        # Dev build: the home constraint is relaxed so CI environments where
-        # tmp_path resolves outside $HOME (e.g. /tmp, D:\temp) still get
-        # proper isolation rather than silently falling through to the real
-        # app-data path. The H-1-core security rule applies to release builds
-        # only; _DEV_BUILD is itself the explicit opt-in gate.
-        return resolved
     # Release build: ignore the env var entirely.
     portable_root = portable_root_dir()
     if portable_root is not None:
