@@ -240,9 +240,11 @@ def is_known_word(token: str, extra: set[str] | None = None) -> bool:
                 return True
             if enchant_dict.check(lowered):  # type: ignore[attr-defined]
                 return True
-            return False
         except Exception:
             pass
+        # If enchant returned False without raising, fall through to the
+        # bundled wordlist as a secondary check. Enchant's installed
+        # dictionary may be incomplete or minimal in some environments.
     wordlist = _load_wordlist()
     if wordlist:
         return lowered in wordlist

@@ -180,6 +180,10 @@ class Settings:
     language: str = ""
     # WIZARD: True once the first-run setup wizard has completed.
     setup_wizard_completed: bool = False
+    # QDC: Developer Console settings.
+    console_enabled: bool = True
+    console_python_timeout: int = 30
+    console_typescript_timeout: int = 30
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Settings:
@@ -496,6 +500,15 @@ class Settings:
         ai_prompt_default_model = str(data.get("ai_prompt_default_model", ""))
         language = str(data.get("language", "")).strip()
         setup_wizard_completed = bool(data.get("setup_wizard_completed", False))
+        console_enabled = bool(data.get("console_enabled", True))
+        try:
+            console_python_timeout = int(data.get("console_python_timeout", 30))
+        except (TypeError, ValueError):
+            console_python_timeout = 30
+        try:
+            console_typescript_timeout = int(data.get("console_typescript_timeout", 30))
+        except (TypeError, ValueError):
+            console_typescript_timeout = 30
         abbreviation_expansion = bool(data.get("abbreviation_expansion", True))
         abbreviation_expansion_sound = bool(data.get("abbreviation_expansion_sound", False))
         abbreviation_expansion_sound_file = str(data.get("abbreviation_expansion_sound_file", ""))
@@ -648,6 +661,9 @@ class Settings:
             multi_press_window_ms=multi_press_window_ms,
             language=language,
             setup_wizard_completed=setup_wizard_completed,
+            console_enabled=console_enabled,
+            console_python_timeout=console_python_timeout,
+            console_typescript_timeout=console_typescript_timeout,
         )
 
 

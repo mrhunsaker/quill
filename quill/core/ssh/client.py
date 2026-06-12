@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import stat as stat_module
 from dataclasses import dataclass
+from typing import Any
 
 from quill.core.ssh.sites import AUTH_AGENT, AUTH_KEY, DEFAULT_PORT
 from quill.core.ssh.transfer import backup_name
@@ -60,7 +61,7 @@ class SftpFileService:
 
     def read_file(self, path: str) -> bytes:
         with self._sftp.open(path, "rb") as handle:  # type: ignore[attr-defined]
-            return handle.read()
+            return bytes(handle.read())
 
     def write_file(self, path: str, data: bytes, *, make_backup: bool = True) -> str | None:
         """Write ``data`` to ``path``, backing up any existing file as ``path~``.
@@ -120,9 +121,9 @@ class SftpConnection:
         self.close()
 
 
-def _import_paramiko():
+def _import_paramiko() -> Any:
     try:
-        import paramiko  # type: ignore[import-not-found]
+        import paramiko  # type: ignore[import-untyped]
     except Exception as exc:  # noqa: BLE001
         raise SshDependencyError(_INSTALL_HINT) from exc
     return paramiko

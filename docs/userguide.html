@@ -308,6 +308,7 @@ spreadsheets (.xlsx and .xls)</a></li>
 text</a></li>
 <li><a href="#remote-files-ftp-sftp-https-webdav-s3">Remote files (FTP,
 SFTP, HTTPS, WebDAV, S3)</a></li>
+<li><a href="#github-remote-files">GitHub Remote Files</a></li>
 </ul></li>
 <li><a href="#help-learning-and-daily-confidence">Help, Learning, and
 Daily Confidence</a>
@@ -2414,6 +2415,95 @@ an external-entity expansion through a crafted listing.</li>
 from remote; <strong>QUILL key, then <code>Shift+R</code></strong> saves
 to remote; <strong>QUILL key, then <code>M</code></strong> opens the
 site manager. All are remappable from Preferences &gt; Keyboard.</p>
+<h3 id="github-remote-files">GitHub Remote Files</h3>
+<p>QUILL can browse GitHub repositories, open files from them, and save
+changes back to GitHub — all without installing Git, the GitHub CLI, or
+GitHub Desktop.</p>
+<p><strong>Getting started</strong></p>
+<p>The first time you open a GitHub feature, QUILL asks you to confirm
+that it may connect to GitHub. This is a one-time prompt. After that,
+QUILL remembers your choice.</p>
+<p>You do not need a GitHub account to browse public repositories. For
+private repositories, you need a Personal Access Token (PAT).</p>
+<p><strong>Creating a Personal Access Token</strong></p>
+<ol type="1">
+<li>Go to github.com and sign in.</li>
+<li>Open Settings &gt; Developer settings &gt; Personal access tokens
+&gt; Tokens (classic).</li>
+<li>Click Generate new token.</li>
+<li>Give it a name such as "QUILL" and select the <code>repo</code>
+scope (or <code>public_repo</code> if you only need public
+repositories).</li>
+<li>Copy the token. You will only see it once.</li>
+</ol>
+<p>QUILL stores your token securely in <strong>Windows Credential
+Manager</strong>. It is never saved in a text file.</p>
+<p><strong>Opening the repository browser</strong></p>
+<p>Open <strong>File &gt; Open from Remote &gt; GitHub
+Repository...</strong></p>
+<p>The browser has these parts:</p>
+<ul>
+<li><strong>Account</strong> — shows your GitHub username, or
+"Anonymous" if no token is stored.</li>
+<li><strong>Repository</strong> — type an owner/repo name such as
+<code>microsoft/vscode</code> and press Enter or click Load.</li>
+<li><strong>Branch or tag</strong> — choose which version of the
+repository to browse. Defaults to the repository's default branch.</li>
+<li><strong>Current path</strong> — shows where you are in the folder
+tree.</li>
+<li><strong>File list</strong> — lists folders and files. Folders appear
+first.</li>
+<li><strong>Status</strong> — shows progress messages and item
+counts.</li>
+</ul>
+<p>Navigation:</p>
+<ul>
+<li>Press Enter on a folder to open it.</li>
+<li>Press Enter on a file to open it (same as clicking Open File).</li>
+<li>Press Backspace to go up one level.</li>
+<li>Press F5 to refresh the current folder.</li>
+<li>Tab through the buttons: <strong>Open File</strong>, <strong>Go
+Up</strong>, <strong>Refresh</strong>, <strong>Copy URL</strong>,
+<strong>Cancel</strong>.</li>
+</ul>
+<p><strong>Opening a file by URL</strong></p>
+<p>If you have a GitHub file URL (for example from a colleague), use
+<strong>File &gt; Open from Remote &gt; GitHub File URL...</strong></p>
+<p>Paste a URL in the form
+<code>https://github.com/owner/repo/blob/branch/path/to/file</code> and
+press Enter. QUILL fetches the file directly.</p>
+<p><strong>Saving back to GitHub</strong></p>
+<p>After you have opened a file from GitHub and made edits, use
+<strong>File &gt; Open from Remote &gt; Save to GitHub...</strong></p>
+<p>QUILL will ask for a commit message. Type a short description of your
+changes and press Enter. QUILL commits your changes to the same
+repository, branch, and file path using the GitHub API.</p>
+<p>Notes:</p>
+<ul>
+<li>You need a token with write permission (<code>repo</code> scope) to
+save back.</li>
+<li>If the file was changed on GitHub since you opened it, QUILL will
+tell you to refresh and try again.</li>
+<li>This command does not run automatically when you press Save. You
+must choose it deliberately.</li>
+</ul>
+<p><strong>Managing your GitHub account</strong></p>
+<p>Use <strong>File &gt; Open from Remote &gt; Manage GitHub
+Accounts...</strong> to:</p>
+<ul>
+<li>See your current GitHub identity.</li>
+<li>Add or replace a token.</li>
+<li>Sign out and clear your stored token.</li>
+</ul>
+<p><strong>File size limit</strong></p>
+<p>GitHub's file API is limited to 1 MB. Files larger than that must be
+downloaded manually from github.com.</p>
+<p><strong>Enabling the feature</strong></p>
+<p>GitHub remote access is controlled by the feature flag
+<code>core.github_remote</code>. If it is not visible, open <strong>File
+&gt; Open from Remote</strong> and check whether the GitHub items
+appear. If PyGithub is not installed, QUILL shows a message explaining
+how to install it: <code>pip install "quill[github]"</code>.</p>
 <h2 id="help-learning-and-daily-confidence">Help, Learning, and Daily
 Confidence</h2>
 <p>Quill includes several layers of help because confidence does not

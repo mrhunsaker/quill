@@ -195,11 +195,20 @@ class ContextHelpMixin:
 
     Binds ``EVT_CHILD_FOCUS`` so focus moves away when menus open do not
     clear the remembered last-focused control.
+
+    For classes that are wx.Window subclasses, ``_help_frame`` returns
+    ``self``.  MainFrame (which wraps a ``self.frame`` rather than
+    inheriting from wx.Frame) overrides this property to return
+    ``self.frame``.
     """
+
+    @property
+    def _help_frame(self) -> wx.Window:
+        return self  # type: ignore[return-value]
 
     def _init_context_help(self) -> None:
         self._last_focused_ctrl: wx.Window | None = None
-        self.Bind(wx.EVT_CHILD_FOCUS, self._on_child_focus_for_help)
+        self._help_frame.Bind(wx.EVT_CHILD_FOCUS, self._on_child_focus_for_help)
 
     def _on_child_focus_for_help(self, event: wx.ChildFocusEvent) -> None:
         win = event.GetWindow()
@@ -217,7 +226,7 @@ class ContextHelpMixin:
         ctrl = wx.Window.FindFocus() or self._last_focused_ctrl  # type: ignore[attr-defined]
         dialog_topic, ctrl_topic = describe_focused(ctrl)
         dlg = ContextHelpDialog(
-            self,  # type: ignore[arg-type]
+            self._help_frame,
             dialog_topic=dialog_topic,
             ctrl_topic=ctrl_topic,
             user_guide_opener=user_guide_opener,

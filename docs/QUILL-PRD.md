@@ -4497,3 +4497,132 @@ Completeness thresholds: 90% for established languages, 70% for a language's fir
 ### §24.7 Implementation Status
 
 **Phase 1 infrastructure complete:** `quill/core/i18n.py`, `babel.cfg`, `check_translation.py` gate, `language` setting, and `init_locale()` call are all in production. **Phase 2 (string marking sprint)** is in progress — sweeping all user-visible strings in `quill/ui/` and `quill/core/` to wrap them with `_()`. Pilot languages (fr, de, es) are pending community formation and a named Translation Coordinator.
+
+---
+
+## §25. GitHub Remote File Access
+
+### §25.1 Overview
+
+QUILL provides first-class GitHub repository browsing, remote file opening, and file commit-back through **File > Open from Remote > GitHub Repository...** This lets users open files from any public or private GitHub repository without requiring the GitHub CLI, GitHub Desktop, local Git, VS Code, or command-line interaction.
+
+The implementation uses **PyGithub** behind QUILL's own `RemoteProvider` abstraction (`quill/core/github/provider.py`), which keeps the UI layer stable if the backend changes (e.g. direct REST, GitLab, Bitbucket).
+
+### §25.2 Menu Structure
+
+Added to the existing **File > Open from Remote** submenu:
+
+```
+File > Open from Remote
+  ...FTP / SFTP / WebDAV / S3 items (existing)...
+  ---
+  GitHub Repository...
+  GitHub File URL...
+  Save to GitHub...
+  ---
+  Manage Remote Sites...   (existing)
+  Manage GitHub Accounts...
+```
+
+All four GitHub commands are also available through the Command Palette.
+
+### §25.3 Feature Flag
+
+Feature ID: `core.github_remote`  
+Category: `core`  
+Privacy: `network after confirmation`  
+Dependencies: `core.remote`  
+Optional dep: `pip install "quill[github]"` (installs PyGithub >= 2.0)
+
+When the flag is off, all four GitHub menu items are absent. When PyGithub is not installed, QUILL shows a friendly message with the install command.
+
+### §25.4 Authentication
+
+**First-run consent.** The first time the user opens a GitHub feature, a one-time consent dialog explains that QUILL will connect to api.github.com for the user's chosen repositories. Consent is stored in `github_consent.json` in the user data directory.
+
+**Anonymous access.** Public repositories are browsable without a token. Rate limits are lower (60 requests/hour vs 5,000 with auth).
+
+**Personal Access Token.** The user pastes a token with at minimum `public_repo` scope (add `repo` for private repositories). The token is stored in **Windows Credential Manager** under the target name `quill-github-token` using DPAPI. Never stored in `settings.json` or any plaintext file.
+
+**Token management.** File > Open from Remote > Manage GitHub Accounts... lets the user view the stored identity, add/replace the token, and sign out (deletes the stored token).
+
+### §25.5 Repository Browser
+
+A native `wx.Dialog` with:
+
+- **Account label** (signed-in identity or "Anonymous").
+- **Repository field** (`owner/repo` text entry) + **Load** button. Enter key also triggers Load.
+- **Branch/tag choice** (populated after Load; defaults to the repository's default branch).
+- **Current path label** (breadcrumb).
+- **File list** (`wx.ListCtrl`, single-select, columns: Name / Type / Size). Directories appear first, sorted A-Z; files follow, sorted A-Z.
+- **Status label** (loading state, error messages, item count).
+- **Buttons**: Open File, Go Up, Refresh, Copy URL, Cancel.
+
+Keyboard shortcuts:
+- Enter on a folder: navigates into it.
+- Enter on a file: same as Open File.
+- Backspace: go up one level (when not at root).
+- F5: refresh.
+
+All controls have accessible names. Long operations (repository load, directory listing, file fetch) run on daemon threads; the dialog remains interactive during loading.
+
+### §25.6 GitHub File URL
+
+**File > Open from Remote > GitHub File URL...** accepts a pasted `https://github.com/owner/repo/blob/branch/path` URL and opens the file directly without requiring the user to navigate the browser. Useful for sharing links.
+
+### §25.7 Save to GitHub
+
+**File > Open from Remote > Save to GitHub...** is available when the active document was opened from GitHub. QUILL prompts for a commit message, then commits the current document text to the same repository, branch, and path using the GitHub API (`update_file`). The file SHA is tracked for optimistic concurrency; if the file has changed remotely since it was opened, GitHub returns a 409 and QUILL shows a clear error.
+
+Requirements: the stored token must have `repo` (write) scope on the target repository.
+
+This command is intentionally not wired to the regular Save shortcut. The user must invoke it explicitly from the menu or Command Palette to avoid accidental commits.
+
+### §25.8 Remote Origin Metadata
+
+When a file is opened from GitHub, QUILL stores a `RemoteOrigin` dataclass keyed by the local temp path:
+
+```python
+RemoteOrigin(
+    provider="github",
+    account_id="github:login",
+    repository="owner/repo",
+    ref="main",
+    path="docs/example.md",
+    sha="abc123...",
+    url="https://github.com/owner/repo/blob/main/docs/example.md",
+    opened_at="2026-06-12T..."
+)
+```
+
+The tab's `source_label` is set to `GitHub: owner/repo (branch)` and shown in the title bar.
+
+### §25.9 Security Properties
+
+- No network access until the user explicitly opens a GitHub feature and accepts the consent dialog.
+- Tokens stored via DPAPI; never logged, never in diagnostic bundles.
+- File size limit: 1 MB (GitHub API limit for the contents endpoint). Files exceeding this are rejected with a clear error.
+- Save-back requires explicit user action and a commit message.
+- No silent background syncing or polling.
+
+### §25.10 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `quill/core/github/__init__.py` | Package marker |
+| `quill/core/github/models.py` | `RemoteAccount`, `RemoteRepository`, `RemoteRef`, `RemoteNode`, `RemoteFile`, `RemoteOrigin`, `BrowseResult` |
+| `quill/core/github/provider.py` | Abstract `RemoteProvider` interface |
+| `quill/core/github/github_provider.py` | `GitHubRemoteProvider` (PyGithub) |
+| `quill/core/github/token_store.py` | Credential Manager token storage |
+| `quill/core/github/consent.py` | One-time consent state |
+| `quill/ui/github_dialogs.py` | Consent, sign-in, manage-accounts, repository browser dialogs |
+| `quill/ui/main_frame_github.py` | `GitHubRemoteMixin` — orchestration and threading |
+
+### §25.11 Implementation Status
+
+**SHIPPED** (2026-06-12). All five implementation phases complete:
+- Phase 1: Core service layer and models.
+- Phase 2: Authentication (token + anonymous).
+- Phase 3: Repository browser dialog.
+- Phase 4: Remote document integration (origin metadata, title, save-back).
+- Phase 5: Gate compliance (banned patterns, dialog inventory, module size budget, mypy overrides).

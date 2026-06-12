@@ -234,6 +234,14 @@ def _read_legacy_office_via_libreoffice(
 
 
 def _format_spreadsheet(path: Path) -> tuple[str, dict[str, object]]:
+    # Detect ZIP-level corruption before attempting openpyxl so the "corrupted"
+    # message reaches the user regardless of whether openpyxl is installed.
+    try:
+        with zipfile.ZipFile(path):
+            pass
+    except zipfile.BadZipFile:
+        return _corrupt_spreadsheet_text(path)
+
     try:
         from openpyxl import load_workbook  # type: ignore[import-not-found]
     except ImportError:

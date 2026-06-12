@@ -14,6 +14,7 @@ connect time and held only in memory.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from pathlib import Path
 
 from quill.core.paths import app_data_dir
 from quill.core.storage import read_json, write_json_atomic
@@ -54,7 +55,7 @@ class SiteConfig:
         )
 
 
-def _sites_path():
+def _sites_path() -> Path:
     return app_data_dir() / _SITES_FILENAME
 
 

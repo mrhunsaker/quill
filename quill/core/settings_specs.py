@@ -75,6 +75,11 @@ SETTING_GROUPS: tuple[SettingGroup, ...] = (
         "Security and Privacy",
         "Host-key trust, network consent, and other safety toggles.",
     ),
+    SettingGroup(
+        "developer",
+        "Developer Console",
+        "Python and TypeScript consoles for developers and power users.",
+    ),
 )
 
 _GROUP_IDS = {group.id for group in SETTING_GROUPS}
@@ -1012,6 +1017,41 @@ SETTING_SPECS: tuple[SettingSpec, ...] = (
         keywords=("multi press", "double press", "copy tray", "keyboard", "timer"),
     ),
     # --- Security and privacy ----------------------------------------------
+    # --- Developer Console -------------------------------------------------
+    SettingSpec(
+        "console_enabled",
+        "Enable Developer Console",
+        "developer",
+        "bool",
+        "When on, the Python and TypeScript developer consoles are available "
+        "under Tools > Advanced > Developer Console. Off by default for "
+        "Essential and Writer profiles.",
+        keywords=("developer console", "qdc", "scripting", "python", "automation"),
+        feature_id="core.developer_console",
+    ),
+    SettingSpec(
+        "console_python_timeout",
+        "Python console execution timeout (seconds)",
+        "developer",
+        "int",
+        "Maximum seconds a Python console command may run before QUILL interrupts it. Default: 30.",
+        minimum=5,
+        maximum=300,
+        keywords=("developer console", "python", "timeout"),
+        feature_id="core.developer_console",
+    ),
+    SettingSpec(
+        "console_typescript_timeout",
+        "TypeScript console execution timeout (seconds)",
+        "developer",
+        "int",
+        "Maximum seconds a TypeScript console command may run before the "
+        "Node worker is restarted. Default: 30.",
+        minimum=5,
+        maximum=300,
+        keywords=("developer console", "typescript", "node", "timeout"),
+        feature_id="core.developer_console.typescript",
+    ),
     SettingSpec(
         "ssh_trust_first_use",
         "Trust SSH hosts on first connection",

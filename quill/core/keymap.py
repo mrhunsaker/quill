@@ -584,6 +584,60 @@ def import_keymap(source: Path) -> dict[str, str]:
     return merged
 
 
+KQP_EXTENSION = ".kqp"
+_KQP_VERSION = 1
+
+
+def export_keyboard_pack(
+    target: Path,
+    keymap: dict[str, str],
+    name: str,
+    description: str,
+    author: str = "",
+    version: str = "1.0",
+) -> None:
+    """Write a .kqp (Keyboard Quill Pack) file.
+
+    Only bindings that differ from DEFAULT_KEYMAP are stored so the file
+    captures intent rather than a snapshot of defaults that may change.
+    """
+    delta: dict[str, str] = {k: v for k, v in keymap.items() if v != DEFAULT_KEYMAP.get(k)}
+    payload: dict[str, object] = {
+        "kqp_version": _KQP_VERSION,
+        "name": name.strip(),
+        "description": description.strip(),
+        "author": author.strip(),
+        "version": version.strip(),
+        "bindings": delta,
+    }
+    write_json_atomic(target, payload)
+
+
+def import_keyboard_pack(source: Path) -> tuple[str, str, dict[str, str]]:
+    """Read a .kqp file. Return (name, description, merged_keymap).
+
+    Raises ValueError if the file is missing, malformed, or uses an
+    unsupported kqp_version.  The merged keymap is persisted via save_keymap.
+    """
+    raw = read_json(source, default=None)
+    if not isinstance(raw, dict):
+        raise ValueError(f"{source.name} is not a valid Keyboard Quill Pack (expected JSON object)")
+    file_version = raw.get("kqp_version")
+    if file_version != _KQP_VERSION:
+        raise ValueError(
+            f"{source.name}: unsupported kqp_version {file_version!r} "
+            f"(this build supports version {_KQP_VERSION})"
+        )
+    name = str(raw.get("name", source.stem)) or source.stem
+    description = str(raw.get("description", ""))
+    bindings = raw.get("bindings", {})
+    if not isinstance(bindings, dict):
+        raise ValueError(f"{source.name}: 'bindings' must be a JSON object")
+    merged = merge_keymaps(bindings)
+    save_keymap(merged)
+    return name, description, merged
+
+
 def reset_keymap() -> dict[str, str]:
     defaults = DEFAULT_KEYMAP.copy()
     save_keymap(defaults)

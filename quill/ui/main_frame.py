@@ -211,9 +211,12 @@ from quill.core.keymap import (
     DEFAULT_KEYMAP,
     KEYBOARD_PACK_CUSTOM,
     KEYBOARD_PACK_DEFAULT,
+    KQP_EXTENSION,
     build_keymap_for_pack,
+    export_keyboard_pack,
     export_keymap,
     find_keymap_conflict,
+    import_keyboard_pack,
     import_keymap,
     keyboard_pack_description,
     keyboard_pack_names,
@@ -482,6 +485,8 @@ from quill.ui.main_frame_abbreviations import AbbreviationsMixin
 from quill.ui.main_frame_ai_actions import AiActionsMixin
 from quill.ui.main_frame_browse import BrowseModeMixin
 from quill.ui.main_frame_copy_tray import CopyTrayMixin
+from quill.ui.main_frame_devtools import DevToolsMixin
+from quill.ui.main_frame_github import GitHubRemoteMixin
 from quill.ui.main_frame_image import ImageCaptureMixin
 from quill.ui.main_frame_intellisense import IntellisensePopupMixin
 from quill.ui.main_frame_line_commands import LineCommandsMixin
@@ -785,6 +790,8 @@ class MainFrame(
     CopyTrayMixin,
     ProfilePickerMixin,
     SshEditingMixin,
+    GitHubRemoteMixin,
+    DevToolsMixin,
     PowerToolsActionsMixin,
     PowerToolsMenuMixin,
     QuillinsMenuMixin,
@@ -1048,7 +1055,6 @@ class MainFrame(
         )
         self._snippet_expansion_guard = False
         self._init_abbreviations()
-        self._init_context_help()
         self._intellisense_popup: _IntellisensePopup | None = None
         self._intellisense_context: IntellisenseContext | None = None
         self._intellisense_fragment_text = ""
@@ -1103,6 +1109,7 @@ class MainFrame(
         self._apply_accelerators()
         self._reload_global_hotkeys()
         self._bind_events()
+        self._init_context_help()
         self._apply_startup_document_preference()
         self._apply_announcement_trace_setting()
 
@@ -1118,6 +1125,10 @@ class MainFrame(
             self._refresh_title()
         except Exception:
             self._report_startup_task_failure("startup finalization")
+
+    @property
+    def _help_frame(self) -> object:
+        return self.frame
 
     def show(self) -> None:
         self.frame.Show(True)
@@ -1259,6 +1270,54 @@ class MainFrame(
             "Open over SSH: Site Manager...",
             self.open_ssh_site_manager,
             self._binding_for("file.ssh_site_manager"),
+        )
+        self.commands.register(
+            "file.open_github_repository",
+            "Open Remote GitHub Repository...",
+            self.open_github_repository,
+            None,
+        )
+        self.commands.register(
+            "file.open_github_file_url",
+            "Open Remote GitHub File URL...",
+            self.open_github_file_url,
+            None,
+        )
+        self.commands.register(
+            "file.github_save_back",
+            "Save to GitHub...",
+            self.github_save_back,
+            None,
+        )
+        self.commands.register(
+            "file.github_manage_accounts",
+            "Manage GitHub Accounts...",
+            self.manage_github_accounts,
+            None,
+        )
+        self.commands.register(
+            "tools.open_python_console",
+            "Open Python Console...",
+            self.open_python_console,
+            None,
+        )
+        self.commands.register(
+            "tools.open_typescript_console",
+            "Open TypeScript Console...",
+            self.open_typescript_console,
+            None,
+        )
+        self.commands.register(
+            "tools.copy_diagnostic_summary",
+            "Copy Diagnostic Summary",
+            self.copy_diagnostic_summary,
+            None,
+        )
+        self.commands.register(
+            "tools.restart_typescript_worker",
+            "Restart TypeScript Worker",
+            self.restart_typescript_worker,
+            None,
         )
         self.commands.register(
             "file.save",
@@ -2103,6 +2162,18 @@ class MainFrame(
             "tools.import_keymap",
             "Import Keymap...",
             self.import_keymap_file,
+            None,
+        )
+        self.commands.register(
+            "tools.export_keyboard_pack",
+            "Export Keyboard Pack (.kqp)...",
+            self.export_keyboard_pack_file,
+            None,
+        )
+        self.commands.register(
+            "tools.import_keyboard_pack",
+            "Import Keyboard Pack (.kqp)...",
+            self.import_keyboard_pack_file,
             None,
         )
         self.commands.register(
@@ -7991,6 +8062,7 @@ class MainFrame(
     #: Wildcard for exported QUILL settings files (SET-7).
     QSF_WILDCARD = "QUILL settings file (*.qsf)|*.qsf|All files (*.*)|*.*"
     QPF_WILDCARD = "QUILL profile file (*.qpf)|*.qpf|All files (*.*)|*.*"
+    KQP_WILDCARD = "Keyboard Quill Pack (*.kqp)|*.kqp|All files (*.*)|*.*"
 
     def _settings_dialog_apply_refresh(self, status: str) -> None:
         """Persist ``self.settings`` and re-run every UI side effect.
@@ -9808,6 +9880,74 @@ class MainFrame(
         self._mark_keyboard_pack_custom()
         self._reload_shortcuts_from_keymap()
         self._set_status(f"Imported keymap from {source.name}")
+
+    def export_keyboard_pack_file(self) -> None:
+        wx = self._wx
+        pack_name = self.settings.keyboard_pack
+        pack_desc = keyboard_pack_description(pack_name)
+
+        # Collect name and description via a simple dialog before the file picker.
+        dlg = wx.Dialog(self.frame, title="Export Keyboard Pack", size=(480, 220))
+        root = wx.BoxSizer(wx.VERTICAL)
+        root.Add(wx.StaticText(dlg, label="Pack &name:"), 0, wx.ALL, 8)
+        name_ctrl = wx.TextCtrl(dlg, value=pack_name)
+        root.Add(name_ctrl, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 8)
+        root.Add(
+            wx.StaticText(dlg, label="&Description (optional):"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 8
+        )
+        desc_ctrl = wx.TextCtrl(dlg, value=pack_desc if pack_desc else "")
+        root.Add(desc_ctrl, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 8)
+        buttons = dlg.CreateButtonSizer(wx.OK | wx.CANCEL)
+        if buttons is not None:
+            root.Add(buttons, 0, wx.EXPAND | wx.ALL, 8)
+        apply_modal_ids(dlg, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
+        dlg.SetSizer(root)
+
+        if self._show_modal_dialog(dlg, "Export Keyboard Pack") != wx.ID_OK:
+            return
+        name = name_ctrl.GetValue().strip() or pack_name
+        description = desc_ctrl.GetValue().strip()
+
+        default_file = name.replace(" ", "-").lower() + KQP_EXTENSION
+        with wx.FileDialog(
+            self.frame,
+            "Export keyboard pack",
+            defaultFile=default_file,
+            wildcard=self.KQP_WILDCARD,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as file_dlg:
+            if self._show_modal_dialog(file_dlg, "Export keyboard pack") != wx.ID_OK:
+                return
+            target = Path(file_dlg.GetPath())
+        if target.suffix.lower() != KQP_EXTENSION:
+            target = target.with_suffix(KQP_EXTENSION)
+        export_keyboard_pack(target, self.keymap, name=name, description=description)
+        self._set_status(f"Exported keyboard pack to {target.name}")
+
+    def import_keyboard_pack_file(self) -> None:
+        wx = self._wx
+        with wx.FileDialog(
+            self.frame,
+            "Import keyboard pack",
+            wildcard=self.KQP_WILDCARD,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dialog:
+            if self._show_modal_dialog(dialog, "Import keyboard pack") != wx.ID_OK:
+                return
+            source = Path(dialog.GetPath())
+        try:
+            name, description, merged = import_keyboard_pack(source)
+        except ValueError as exc:
+            self._show_message_box(str(exc), "Import Failed", wx.ICON_ERROR | wx.OK)
+            return
+        self.keymap = merged
+        self._mark_keyboard_pack_custom()
+        self._reload_shortcuts_from_keymap()
+        summary = f"Imported keyboard pack: {name}"
+        if description:
+            summary += f". {description}"
+        self._set_status(summary)
+        self._announce(summary)
 
     def reset_keymap_defaults(self) -> None:
         wx = self._wx

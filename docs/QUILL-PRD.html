@@ -9560,5 +9560,193 @@ user-visible strings in <code>quill/ui/</code> and
 <code>quill/core/</code> to wrap them with <code>_()</code>. Pilot
 languages (fr, de, es) are pending community formation and a named
 Translation Coordinator.</p>
+<hr />
+<h2 id="25-github-remote-file-access">§25. GitHub Remote File
+Access</h2>
+<h3 id="251-overview">§25.1 Overview</h3>
+<p>QUILL provides first-class GitHub repository browsing, remote file
+opening, and file commit-back through <strong>File &gt; Open from Remote
+&gt; GitHub Repository...</strong> This lets users open files from any
+public or private GitHub repository without requiring the GitHub CLI,
+GitHub Desktop, local Git, VS Code, or command-line interaction.</p>
+<p>The implementation uses <strong>PyGithub</strong> behind QUILL's own
+<code>RemoteProvider</code> abstraction
+(<code>quill/core/github/provider.py</code>), which keeps the UI layer
+stable if the backend changes (e.g. direct REST, GitLab, Bitbucket).</p>
+<h3 id="252-menu-structure">§25.2 Menu Structure</h3>
+<p>Added to the existing <strong>File &gt; Open from Remote</strong>
+submenu:</p>
+<pre><code>File &gt; Open from Remote
+  ...FTP / SFTP / WebDAV / S3 items (existing)...
+  ---
+  GitHub Repository...
+  GitHub File URL...
+  Save to GitHub...
+  ---
+  Manage Remote Sites...   (existing)
+  Manage GitHub Accounts...</code></pre>
+<p>All four GitHub commands are also available through the Command
+Palette.</p>
+<h3 id="253-feature-flag">§25.3 Feature Flag</h3>
+<p>Feature ID: <code>core.github_remote</code><br />
+Category: <code>core</code><br />
+Privacy: <code>network after confirmation</code><br />
+Dependencies: <code>core.remote</code><br />
+Optional dep: <code>pip install "quill[github]"</code> (installs
+PyGithub &gt;= 2.0)</p>
+<p>When the flag is off, all four GitHub menu items are absent. When
+PyGithub is not installed, QUILL shows a friendly message with the
+install command.</p>
+<h3 id="254-authentication">§25.4 Authentication</h3>
+<p><strong>First-run consent.</strong> The first time the user opens a
+GitHub feature, a one-time consent dialog explains that QUILL will
+connect to api.github.com for the user's chosen repositories. Consent is
+stored in <code>github_consent.json</code> in the user data
+directory.</p>
+<p><strong>Anonymous access.</strong> Public repositories are browsable
+without a token. Rate limits are lower (60 requests/hour vs 5,000 with
+auth).</p>
+<p><strong>Personal Access Token.</strong> The user pastes a token with
+at minimum <code>public_repo</code> scope (add <code>repo</code> for
+private repositories). The token is stored in <strong>Windows Credential
+Manager</strong> under the target name <code>quill-github-token</code>
+using DPAPI. Never stored in <code>settings.json</code> or any plaintext
+file.</p>
+<p><strong>Token management.</strong> File &gt; Open from Remote &gt;
+Manage GitHub Accounts... lets the user view the stored identity,
+add/replace the token, and sign out (deletes the stored token).</p>
+<h3 id="255-repository-browser">§25.5 Repository Browser</h3>
+<p>A native <code>wx.Dialog</code> with:</p>
+<ul>
+<li><strong>Account label</strong> (signed-in identity or
+"Anonymous").</li>
+<li><strong>Repository field</strong> (<code>owner/repo</code> text
+entry) + <strong>Load</strong> button. Enter key also triggers
+Load.</li>
+<li><strong>Branch/tag choice</strong> (populated after Load; defaults
+to the repository's default branch).</li>
+<li><strong>Current path label</strong> (breadcrumb).</li>
+<li><strong>File list</strong> (<code>wx.ListCtrl</code>, single-select,
+columns: Name / Type / Size). Directories appear first, sorted A-Z;
+files follow, sorted A-Z.</li>
+<li><strong>Status label</strong> (loading state, error messages, item
+count).</li>
+<li><strong>Buttons</strong>: Open File, Go Up, Refresh, Copy URL,
+Cancel.</li>
+</ul>
+<p>Keyboard shortcuts:</p>
+<ul>
+<li>Enter on a folder: navigates into it.</li>
+<li>Enter on a file: same as Open File.</li>
+<li>Backspace: go up one level (when not at root).</li>
+<li>F5: refresh.</li>
+</ul>
+<p>All controls have accessible names. Long operations (repository load,
+directory listing, file fetch) run on daemon threads; the dialog remains
+interactive during loading.</p>
+<h3 id="256-github-file-url">§25.6 GitHub File URL</h3>
+<p><strong>File &gt; Open from Remote &gt; GitHub File URL...</strong>
+accepts a pasted
+<code>https://github.com/owner/repo/blob/branch/path</code> URL and
+opens the file directly without requiring the user to navigate the
+browser. Useful for sharing links.</p>
+<h3 id="257-save-to-github">§25.7 Save to GitHub</h3>
+<p><strong>File &gt; Open from Remote &gt; Save to GitHub...</strong> is
+available when the active document was opened from GitHub. QUILL prompts
+for a commit message, then commits the current document text to the same
+repository, branch, and path using the GitHub API
+(<code>update_file</code>). The file SHA is tracked for optimistic
+concurrency; if the file has changed remotely since it was opened,
+GitHub returns a 409 and QUILL shows a clear error.</p>
+<p>Requirements: the stored token must have <code>repo</code> (write)
+scope on the target repository.</p>
+<p>This command is intentionally not wired to the regular Save shortcut.
+The user must invoke it explicitly from the menu or Command Palette to
+avoid accidental commits.</p>
+<h3 id="258-remote-origin-metadata">§25.8 Remote Origin Metadata</h3>
+<p>When a file is opened from GitHub, QUILL stores a
+<code>RemoteOrigin</code> dataclass keyed by the local temp path:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>RemoteOrigin(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    provider<span class="op">=</span><span class="st">&quot;github&quot;</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    account_id<span class="op">=</span><span class="st">&quot;github:login&quot;</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    repository<span class="op">=</span><span class="st">&quot;owner/repo&quot;</span>,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    ref<span class="op">=</span><span class="st">&quot;main&quot;</span>,</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    path<span class="op">=</span><span class="st">&quot;docs/example.md&quot;</span>,</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    sha<span class="op">=</span><span class="st">&quot;abc123...&quot;</span>,</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    url<span class="op">=</span><span class="st">&quot;https://github.com/owner/repo/blob/main/docs/example.md&quot;</span>,</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    opened_at<span class="op">=</span><span class="st">&quot;2026-06-12T...&quot;</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>The tab's <code>source_label</code> is set to
+<code>GitHub: owner/repo (branch)</code> and shown in the title bar.</p>
+<h3 id="259-security-properties">§25.9 Security Properties</h3>
+<ul>
+<li>No network access until the user explicitly opens a GitHub feature
+and accepts the consent dialog.</li>
+<li>Tokens stored via DPAPI; never logged, never in diagnostic
+bundles.</li>
+<li>File size limit: 1 MB (GitHub API limit for the contents endpoint).
+Files exceeding this are rejected with a clear error.</li>
+<li>Save-back requires explicit user action and a commit message.</li>
+<li>No silent background syncing or polling.</li>
+</ul>
+<h3 id="2510-implementation-files">§25.10 Implementation Files</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>quill/core/github/__init__.py</code></td>
+<td>Package marker</td>
+</tr>
+<tr>
+<td><code>quill/core/github/models.py</code></td>
+<td><code>RemoteAccount</code>, <code>RemoteRepository</code>,
+<code>RemoteRef</code>, <code>RemoteNode</code>,
+<code>RemoteFile</code>, <code>RemoteOrigin</code>,
+<code>BrowseResult</code></td>
+</tr>
+<tr>
+<td><code>quill/core/github/provider.py</code></td>
+<td>Abstract <code>RemoteProvider</code> interface</td>
+</tr>
+<tr>
+<td><code>quill/core/github/github_provider.py</code></td>
+<td><code>GitHubRemoteProvider</code> (PyGithub)</td>
+</tr>
+<tr>
+<td><code>quill/core/github/token_store.py</code></td>
+<td>Credential Manager token storage</td>
+</tr>
+<tr>
+<td><code>quill/core/github/consent.py</code></td>
+<td>One-time consent state</td>
+</tr>
+<tr>
+<td><code>quill/ui/github_dialogs.py</code></td>
+<td>Consent, sign-in, manage-accounts, repository browser dialogs</td>
+</tr>
+<tr>
+<td><code>quill/ui/main_frame_github.py</code></td>
+<td><code>GitHubRemoteMixin</code> — orchestration and threading</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2511-implementation-status">§25.11 Implementation Status</h3>
+<p><strong>SHIPPED</strong> (2026-06-12). All five implementation phases
+complete:</p>
+<ul>
+<li>Phase 1: Core service layer and models.</li>
+<li>Phase 2: Authentication (token + anonymous).</li>
+<li>Phase 3: Repository browser dialog.</li>
+<li>Phase 4: Remote document integration (origin metadata, title,
+save-back).</li>
+<li>Phase 5: Gate compliance (banned patterns, dialog inventory, module
+size budget, mypy overrides).</li>
+</ul>
 </body>
 </html>

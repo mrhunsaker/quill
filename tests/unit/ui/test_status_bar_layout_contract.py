@@ -25,7 +25,8 @@ def test_status_bar_layout_dialog_parents_controls_to_dialog() -> None:
     assert "panel.SetSizer(root)" not in body
     assert "SetSizerAndFit(outer)" not in body
     # Controls and buttons are all children of the dialog.
-    assert "wx.CheckListBox(\n            dialog," in body
+    assert "wx.CheckListBox(" in body  # parented to dialog (A11Y-SR-1-OK exemption present)
+    assert "\n            dialog," in body
     assert 'wx.Button(dialog, label="Move Up")' in body
     assert "buttons = dialog.CreateButtonSizer(wx.OK | wx.CANCEL)" in body
     assert "dialog.SetSizer(root)" in body

@@ -26,8 +26,8 @@ prismatoid>=0.16.5; sys_platform == "win32"
 
 # macOS platform integration (VoiceOver announcements, Keychain) and the
 # Apple Foundation Models backend used by Ask Quill on macOS.
-pyobjc>=10; sys_platform == "darwin"
-apple-fm-sdk>=0.1; sys_platform == "darwin"
+pyobjc>=12.2; sys_platform == "darwin"
+apple-fm-sdk>=0.2.0; sys_platform == "darwin"
 
 # Spell check (optional)
 pyenchant>=3.3.0
@@ -37,7 +37,7 @@ pyenchant>=3.3.0
 # (e.g. Phi-4-mini Q4) into <app data>/models or set QUILL_LLAMA_MODEL.
 # Use llama-cpp-python CPU wheels to avoid source builds and Windows long-path failures.
 --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-llama-cpp-python>=0.3.23
+llama-cpp-python>=0.3.28
 
 # Dictation / voice input (mic permission required).
 SpeechRecognition>=3.16.1
@@ -55,5 +55,5 @@ SpeechRecognition>=3.16.1
 # transcription (pydub/SpeechRecognition), youtube-transcript-api, and the
 # Azure Document Intelligence / Content Understanding SDKs, none of which Quill
 # uses — excluding them keeps the installed surface small.
-keynote-parser>=1.0
-markitdown[docx,pptx,xlsx,xls,pdf]>=0.1.0
+keynote-parser>=1.14.4.0
+markitdown[docx,pptx,xlsx,xls,pdf]>=0.1.6

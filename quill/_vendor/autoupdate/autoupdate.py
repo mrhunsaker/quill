@@ -18,6 +18,14 @@ from platform_utils import paths
 logger = getLogger("autoupdate")
 
 
+def _version_tuple(v: object) -> tuple[int, ...]:
+    """Parse a version string into a comparable integer tuple."""
+    try:
+        return tuple(int(x) for x in str(v).split("."))
+    except ValueError:
+        return (0,)
+
+
 def perform_update(
     endpoint,
     current_version,
@@ -33,7 +41,7 @@ def perform_update(
         return
     available_version = available_update["current_version"]
     if (
-        not str(available_version) > str(current_version)
+        not _version_tuple(available_version) > _version_tuple(current_version)
         or platform.system() not in available_update["downloads"]
     ):
         return

@@ -29,6 +29,13 @@ msg.txt
 zfix*
 /Status
 keys.txt
+docs/leasey.md
 
 # Claude Code local state (jobs, worktrees, memory)
 .claude/
+
+# Bootstrapper binaries (downloaded at release build time by scripts/fetch_bootstrappers.py)
+quill/_vendor/autoupdate/bootstrappers/bootstrap.exe
+quill/_vendor/autoupdate/bootstrappers/bootstrap-lin.sh
+quill/_vendor/autoupdate/bootstrappers/bootstrap-mac.sh
+quill/_vendor/autoupdate/bootstrappers/bootstrap.pb

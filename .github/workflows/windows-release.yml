@@ -60,6 +60,22 @@ jobs:
       - name: Generate SBOM
         run: |
           cyclonedx-py environment --of JSON --output-file release-artifacts/sbom.json
+      - name: Fetch bootstrapper binaries
+        run: python scripts/fetch_bootstrappers.py
+      - name: Generate file manifest
+        run: |
+          python scripts/generate_file_manifest.py --version ${{ github.ref_name }}
+      - name: Build delta update ZIP (Windows)
+        run: |
+          python scripts/build_update_zip.py `
+            --version ${{ github.ref_name }} `
+            --platform windows `
+            --output release-artifacts/quill-${{ github.ref_name }}-update-windows.zip
+      - name: Upload update ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: quill-update-windows
+          path: release-artifacts/quill-*-update-windows.zip
       - name: Upload portable bundle
         uses: actions/upload-artifact@v7
         with:
@@ -102,6 +118,11 @@ jobs:
         with:
           name: quill-release-artifacts
           path: release-assets/metadata
+      - name: Download update ZIP
+        uses: actions/download-artifact@v8
+        with:
+          name: quill-update-windows
+          path: release-assets/update
       - name: Archive portable bundle
         run: |
           VERSION="${{ github.ref_name }}"
@@ -116,4 +137,5 @@ jobs:
             release-assets/installer/Quill-Setup-*.exe
             release-assets/Quill-Portable-*.zip
             release-assets/metadata/*.json
+            release-assets/update/*.zip
           prerelease: true

@@ -46,12 +46,12 @@ class AIModel:
     provider: str
 
 
-def _post_json(url: str, payload: dict, headers: dict, timeout: int) -> dict:
+def _post_json(url: str, payload: dict, headers: dict, timeout: int) -> dict:  # type: ignore[type-arg]
     data = json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout, context=_VERIFIED_CTX) as r:
-            return json.loads(r.read())
+            return json.loads(r.read())  # type: ignore[no-any-return]
     except urllib.error.HTTPError as exc:
         body = ""
         try:
@@ -65,12 +65,12 @@ def _post_json(url: str, payload: dict, headers: dict, timeout: int) -> dict:
         raise AIChatError(str(exc)) from exc
 
 
-def _get_json(url: str, headers: dict, timeout: int) -> dict:
+def _get_json(url: str, headers: dict, timeout: int) -> dict:  # type: ignore[type-arg]
     req = urllib.request.Request(url, headers=headers)
     try:
         ctx = _VERIFIED_CTX if url.startswith("https://") else None
         with urllib.request.urlopen(req, timeout=timeout, context=ctx) as r:
-            return json.loads(r.read())
+            return json.loads(r.read())  # type: ignore[no-any-return]
     except urllib.error.HTTPError as exc:
         body = ""
         try:
@@ -175,7 +175,7 @@ def send_prompt(
     if mode == "ollama":
         payload = {"model": model_id, "messages": messages, "stream": False}
         data = _post_json(f"{url}/api/chat", payload, {}, TIMEOUT_CHAT_S)
-        return data.get("message", {}).get("content", "")
+        return data.get("message", {}).get("content", "")  # type: ignore[no-any-return]
     else:
         # OpenAI-compatible
         if not api_key and pdef["needs_key"]:
@@ -192,4 +192,4 @@ def send_prompt(
         choices = data.get("choices", [])
         if not choices:
             raise AIChatProviderError("No choices in response")
-        return choices[0].get("message", {}).get("content", "")
+        return choices[0].get("message", {}).get("content", "")  # type: ignore[no-any-return]

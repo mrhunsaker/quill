@@ -251,6 +251,42 @@ FEATURE_DEFINITIONS: dict[str, FeatureDefinition] = {
         category="core",
         dependencies=("core.file",),
     ),
+    "core.github_remote": FeatureDefinition(
+        "core.github_remote",
+        "GitHub Remote Access",
+        aliases=("github", "github remote", "open from github"),
+        description=(
+            "Browse GitHub repositories, open remote files, and commit changes "
+            "back to GitHub (File > Open Remote > GitHub). Requires PyGithub "
+            "(pip install quill[github]). Disabling this hides the GitHub items "
+            "in the Open from Remote submenu."
+        ),
+        category="core",
+        privacy="network after confirmation",
+        dependencies=("core.remote",),
+    ),
+    "core.developer_console": FeatureDefinition(
+        "core.developer_console",
+        "Developer Console",
+        aliases=("developer console", "qdc", "scripting", "python console", "automation"),
+        description=(
+            "Embedded Python and TypeScript consoles for developers, power users, "
+            "and accessibility professionals. Exposes the q scripting API. "
+            "Gated by profile; hidden for Essential and Writer profiles."
+        ),
+        category="developer",
+        dependencies=("core.app",),
+    ),
+    "core.developer_console.typescript": FeatureDefinition(
+        "core.developer_console.typescript",
+        "Developer Console TypeScript",
+        aliases=("typescript console", "ts console"),
+        description=(
+            "TypeScript console via a Node.js subprocess bridge. Requires Node.js on PATH."
+        ),
+        category="developer",
+        dependencies=("core.developer_console",),
+    ),
     "core.ocr": FeatureDefinition(
         "core.ocr", "OCR", category="accessibility", dependencies=("core.file",)
     ),

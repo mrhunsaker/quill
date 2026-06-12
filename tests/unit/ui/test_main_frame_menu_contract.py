@@ -12,6 +12,10 @@ def _menu_source() -> str:
         + (ui / "main_frame_menu.py").read_text(encoding="utf-8")
         + "\n"
         + (ui / "main_frame_ssh.py").read_text(encoding="utf-8")
+        + "\n"
+        + (ui / "main_frame_github.py").read_text(encoding="utf-8")
+        + "\n"
+        + (ui / "main_frame_devtools.py").read_text(encoding="utf-8")
     )
 
 

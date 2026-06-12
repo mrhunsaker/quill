@@ -205,7 +205,8 @@ def synthesize_with_piper(
         except OSError:
             pass
     if completed.returncode != 0:
-        detail = (completed.stderr or completed.stdout or "").strip()
+        raw = completed.stderr or completed.stdout or b""
+        detail = (raw.decode(errors="replace") if isinstance(raw, bytes) else str(raw)).strip()
         if detail:
             raise ReadAloudUnavailableError(f"Piper failed: {detail}")
         raise ReadAloudUnavailableError(

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.29.0"]
+requires = ["hatchling>=1.30.1"]
 build-backend = "hatchling.build"
 
 [project]
@@ -49,7 +49,7 @@ spellcheck = ["pyenchant>=3.3.0"]
 ssh = ["paramiko>=3.4"]
 # On-device AI for the Ask Quill chat. Windows/Linux use llama.cpp (CPU, GGUF);
 # a GGUF model (e.g. Phi-4-mini Q4) goes in <app data>/models or QUILL_LLAMA_MODEL.
-ai = ["llama-cpp-python>=0.3.23"]
+ai = ["llama-cpp-python>=0.3.28"]
 dictation = ["SpeechRecognition>=3.16.1"]
 # Native Windows OCR (OCR-1): a thin pip wheel projecting the Windows.Media.Ocr
 # WinRT APIs that ship inside Windows 10/11. The OCR engine itself is a built-in
@@ -57,7 +57,7 @@ dictation = ["SpeechRecognition>=3.16.1"]
 # the zero-install Windows backend available; Tesseract (OCR-2) stays a separate
 # opt-in install for users who choose it.
 ocr = ["winsdk>=1.0.0b10; sys_platform == 'win32'"]
-pages = ["keynote-parser>=1.0", "markitdown[docx,pptx,xlsx,xls,pdf]>=0.1.0"]
+pages = ["keynote-parser>=1.14.4.0", "markitdown[docx,pptx,xlsx,xls,pdf]>=0.1.6"]
 # GLOW document accessibility engine (audit / fix / convert for docx, pptx,
 # xlsx, pdf, epub, md). quill-glow-core is the thin, stable service contract
 # Quill imports; its [glow] extra pulls in the acb-large-print backend. The
@@ -66,22 +66,26 @@ pages = ["keynote-parser>=1.0", "markitdown[docx,pptx,xlsx,xls,pdf]>=0.1.0"]
 # the vendored, drive-independent pure-Python wheels with a repo-relative path:
 #   pip install --find-links vendor/wheels "quill-glow-core[glow]"
 glow = ["quill-glow-core[glow]>=0.1.1"]
-# macOS build + runtime. py2app 0.28.x is incompatible with setuptools >= 80
+# macOS build + runtime. py2app 0.28.x is incompatible with setuptools >= 83
 # (the build aborts with "install_requires is no longer supported"), so pin it.
 # pyobjc powers the macOS platform layer; apple-fm-sdk is the Foundation Models
 # backend used by Ask Quill on macOS.
 macos = [
-    "py2app>=0.28",
-    "setuptools<80",
-    "pyobjc>=10; sys_platform == 'darwin'",
-    "apple-fm-sdk>=0.1; sys_platform == 'darwin'",
+    "py2app>=0.28.10",
+    "setuptools<83",
+    "pyobjc>=12.2; sys_platform == 'darwin'",
+    "apple-fm-sdk>=0.2.0; sys_platform == 'darwin'",
+]
+github = [
+    # GitHub repository browser and remote file open/save (File > Open Remote > GitHub).
+    "PyGithub>=2.0",
 ]
 dev = [
   "pytest>=9.0.3",
   "pytest-xdist>=3.6",
   "pytest-timeout>=2.4.0",
-  "pytest-cov>=5.0",
-  "ruff>=0.6",
+  "pytest-cov>=7.1.0",
+  "ruff>=0.15.17",
   "mypy>=2.1.0",
   # I18N: string extraction, .po update, .mo compile
   "Babel>=2.14",
@@ -191,5 +195,8 @@ module = [
     # gate must not depend on the extra being installed.
     "quill_glow_core",
     "quill_glow_core.*",
+    # Optional GitHub integration (quill[github]); imported lazily in github_provider.py.
+    "github",
+    "github.*",
 ]
 ignore_missing_imports = true

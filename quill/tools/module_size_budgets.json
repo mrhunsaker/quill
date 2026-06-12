@@ -23,20 +23,21 @@
   "_next_target_main_frame": 15000,
   "_default_cap": 600,
   "budgets": {
-    "quill/ui/main_frame.py": 21261,
+    "quill/ui/main_frame.py": 21401,
     "quill/ui/assistant_tools.py": 1809,
     "quill/ui/assistant_panel.py": 646,
     "quill/ui/main_frame_power_tools.py": 777,
-    "quill/ui/main_frame_menu.py": 2785,
-    "quill/core/read_aloud.py": 1243,
+    "quill/ui/main_frame_menu.py": 2850,
+    "quill/core/read_aloud.py": 1244,
     "quill/core/assistant_ai.py": 1230,
-    "quill/core/features.py": 980,
+    "quill/core/features.py": 1020,
+    "quill/ui/github_dialogs.py": 610,
     "quill/core/glow.py": 810,
     "quill/core/settings_registry.py": 158,
-    "quill/core/settings_specs.py": 1034,
+    "quill/core/settings_specs.py": 1070,
     "quill/core/watch_actions.py": 700,
-    "quill/io/structured.py": 656,
-    "quill/core/settings.py": 673,
+    "quill/io/structured.py": 664,
+    "quill/core/settings.py": 690,
     "quill/core/copy_tray.py": 139,
     "quill/ui/main_frame_copy_tray.py": 332,
     "quill/ui/copy_tray_dialog.py": 267,
@@ -52,7 +53,7 @@
     "quill/ui/prompt_library_dialog.py": 485,
     "quill/ui/skill_library_dialog.py": 539,
     "quill/ui/setup_wizard_pages.py": 619,
-    "quill/core/keymap.py": 606
+    "quill/core/keymap.py": 660
   },
   "_rebaseline_2026_06_11c": "Phase 1+2 abbreviations and multi-press: main_frame.py +15 for AbbreviationsMixin MRO/init/hook; main_frame_menu.py +31 for abbreviation menu items; settings_specs.py +24 for 4 specs; settings.py +11 for 3 fields; main_frame_copy_tray.py +55 for MultiPressDispatcher (peek double, dialog triple); main_frame_statusbar.py +6 for abbreviations cell. New files: abbreviations.py (205), multi_press.py (59), main_frame_abbreviations.py (147), abbreviation_manager_dialog.py (250).",
   "_rebaseline_2026_06_11d": "Phase 1+2 gap closure: abbreviations.py +49 for AbbreviationLibrary class API (add/remove/enable/disable/update/all/enabled_only/find_by_trigger) and builtins update; copy_tray.py +28 for pinned field, pin/unpin methods, first_empty_slot, search_slots; main_frame_copy_tray.py +163 for copy_to_next_slot, search dialog, paste-label refresh, 12-slot binding fix; abbreviation_manager_dialog.py +152 for search field and Import/Export buttons; main_frame.py +66 for copy_tray_slots status bar, new commands, Command Palette multi-press dispatcher; main_frame_menu.py +21 for 10-12 slot bindings fix and new tray commands; settings.py +2 for multi_press_window_ms; settings_specs.py +12 for multi_press_window_ms spec; main_frame_statusbar.py +9 for copy_tray_slots cell.",
@@ -66,5 +67,9 @@
   "_rebaseline_2026_06_11x2": "x2.md Phase 1-3: Translation infrastructure (i18n.py, babel.cfg), Context-Sensitive Help (core/help/, ui/context_help.py), Startup Wizard (setup_wizard.py + setup_wizard_pages.py 619 lines), new settings (language + setup_wizard_completed +8), features.py +12 for core.remote, settings_specs.py +9 for language spec. main_frame.py +16 for first-run wizard auto-launch in _maybe_run_first_run_onboarding. Budget re-baselined to current measured sizes.",
   "_rebaseline_2026_06_11x2b": "main_frame.py +1 line from ruff format pass (trailing newline normalization in x2 diff). Budget updated to 21239.",
   "_rebaseline_2026_06_12a": "main_frame.py +22 for fix #161: replace CheckListBox with individual CheckBox controls in open_individual_feature_toggles (SR state announcement fix) and filter locked_off features from list.",
-  "_rebaseline_2026_06_12b": "features.py +11 for core.rich_text_lens locked_off definition (RTF native lens hidden pending SR testing)."
+  "_rebaseline_2026_06_12b": "features.py +11 for core.rich_text_lens locked_off definition (RTF native lens hidden pending SR testing).",
+  "_rebaseline_2026_06_12c": "KQP keyboard-pack feature: keymap.py +54 for export_keyboard_pack/import_keyboard_pack/KQP_EXTENSION/merge_keymaps additions; main_frame.py +82 for export_keyboard_pack_file/import_keyboard_pack_file dialogs and KQP command registrations; read_aloud.py +1 for str-bytes safety fix; structured.py +8 for zipfile.BadZipFile pre-check before openpyxl. Budget re-baselined to current measured sizes.",
+  "_rebaseline_2026_06_12d": "GitHub remote feature (File > Open Remote > GitHub): main_frame.py +28 for GitHubRemoteMixin MRO, import, and 4 command registrations; main_frame_menu.py +18 for 4 GitHub IDs, menu items, and _bind_github_menu call; features.py +13 for core.github_remote definition; feature_command_map.py +4 for 4 GitHub command entries. New files: quill/core/github/ package (5 files) and quill/ui/github_dialogs.py + main_frame_github.py (all new, under default 600 cap except github_dialogs.py which is tracked). Budget re-baselined to current measured sizes.",
+  "_rebaseline_2026_06_12e": "QDC (Developer Console): features.py +19 for core.developer_console + core.developer_console.typescript; settings.py +15 for 3 console fields; settings_specs.py +33 for 3 specs + developer group; main_frame_menu.py +17 for 4 IDs + Developer Console submenu. New files: quill/core/script_results.py, quill/core/scripting.py, quill/devtools/ package (5 files), quill/ui/main_frame_devtools.py, quill/tools/ts_worker/ (worker.js + d.ts). Budget re-baselined to current measured sizes.",
+  "_rebaseline_2026_06_12f": "main_frame.py +1 line from ruff import-sort normalization (I001 auto-fix on commit). Budget updated to 21401."
 }

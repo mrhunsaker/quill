@@ -29,6 +29,10 @@ class MenuBuilderMixin:
         self._id_save_to_remote = wx.NewIdRef()
         self._id_save_copy_to_remote = wx.NewIdRef()
         self._id_manage_remote_sites = wx.NewIdRef()
+        self._id_github_repository = wx.NewIdRef()
+        self._id_github_file_url = wx.NewIdRef()
+        self._id_github_save_back = wx.NewIdRef()
+        self._id_github_manage_accounts = wx.NewIdRef()
         self._id_ssh_quick_connect = wx.NewIdRef()
         self._id_ssh_site_manager = wx.NewIdRef()
         self._id_close_document = wx.NewIdRef()
@@ -84,8 +88,25 @@ class MenuBuilderMixin:
         )
         remote_menu.AppendSeparator()
         remote_menu.Append(
+            self._id_github_repository,
+            self._menu_label("&GitHub Repository...", "file.open_github_repository"),
+        )
+        remote_menu.Append(
+            self._id_github_file_url,
+            self._menu_label("GitHub File &URL...", "file.open_github_file_url"),
+        )
+        remote_menu.Append(
+            self._id_github_save_back,
+            self._menu_label("&Save to GitHub...", "file.github_save_back"),
+        )
+        remote_menu.AppendSeparator()
+        remote_menu.Append(
             self._id_manage_remote_sites,
             self._menu_label("&Manage Remote Sites...", "file.manage_remote_sites"),
+        )
+        remote_menu.Append(
+            self._id_github_manage_accounts,
+            self._menu_label("Manage &GitHub Accounts...", "file.github_manage_accounts"),
         )
         file_menu.AppendSubMenu(remote_menu, "Open from &Remote")
         file_menu.AppendSubMenu(self._sessions_menu, "&Snapshots")
@@ -1011,6 +1032,10 @@ class MenuBuilderMixin:
         self._id_accessibility_audit = wx.NewIdRef()
         self._id_yaml_structure_editor = wx.NewIdRef()
         self._id_whisperer_about = wx.NewIdRef()
+        self._id_dev_console_python = wx.NewIdRef()
+        self._id_dev_console_ts = wx.NewIdRef()
+        self._id_dev_copy_diagnostic = wx.NewIdRef()
+        self._id_dev_restart_ts_worker = wx.NewIdRef()
         tools_menu = wx.Menu()
         tools_menu.Append(
             self._id_palette,
@@ -1391,6 +1416,26 @@ class MenuBuilderMixin:
         )
         power_tools_menu.AppendSubMenu(macro_menu, "&Macros")
         power_tools_menu.AppendSeparator()
+        dev_console_menu = wx.Menu()
+        dev_console_menu.Append(
+            self._id_dev_console_python,
+            self._menu_label("Open &Python Console...", "tools.open_python_console"),
+        )
+        dev_console_menu.Append(
+            self._id_dev_console_ts,
+            self._menu_label("Open &TypeScript Console...", "tools.open_typescript_console"),
+        )
+        dev_console_menu.AppendSeparator()
+        dev_console_menu.Append(
+            self._id_dev_copy_diagnostic,
+            self._menu_label("&Copy Diagnostic Summary", "tools.copy_diagnostic_summary"),
+        )
+        dev_console_menu.Append(
+            self._id_dev_restart_ts_worker,
+            self._menu_label("&Restart TypeScript Worker", "tools.restart_typescript_worker"),
+        )
+        power_tools_menu.AppendSubMenu(dev_console_menu, "&Developer Console")
+        power_tools_menu.AppendSeparator()
         power_tools_menu.Append(
             self._id_regex_helper,
             self._menu_label("Regex &Helper...", "tools.regex_helper"),
@@ -1617,6 +1662,8 @@ class MenuBuilderMixin:
             id=self._id_manage_remote_sites,
         )
         self._bind_ssh_file_menu()
+        self._bind_github_menu()
+        self._dt_bind_devtools_menu()
         self.frame.Bind(wx.EVT_MENU, lambda _e: self.save_file(), id=self._id_save)
         self.frame.Bind(wx.EVT_MENU, lambda _e: self.save_file_as(), id=self._id_save_as)
         self.frame.Bind(

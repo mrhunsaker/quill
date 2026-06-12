@@ -29,7 +29,7 @@ def looks_like_sshcom(text: str) -> bool:
     return any(marker in text for marker in _SSHCOM_MARKERS)
 
 
-def load_private_key(key_path: str, passphrase: str | None = None):
+def load_private_key(key_path: str, passphrase: str | None = None) -> object:
     """Return a ``paramiko`` private key from ``key_path`` in any supported format."""
     path = Path(key_path)
     try:
@@ -51,8 +51,8 @@ def load_private_key(key_path: str, passphrase: str | None = None):
     return _load_openssh(str(path), passphrase)
 
 
-def _load_openssh(key_path: str, passphrase: str | None):
-    import paramiko
+def _load_openssh(key_path: str, passphrase: str | None) -> object:
+    import paramiko  # type: ignore[import-untyped]
 
     last_error: Exception | None = None
     for key_class_name in ("Ed25519Key", "ECDSAKey", "RSAKey", "DSSKey"):

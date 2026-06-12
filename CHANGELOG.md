@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.5.0 — Developer Console, GitHub Integration, Keyboard Packs, Autoupdate (2026-06-12)
+
+### New features
+
+- **QUILL Developer Console (QDC).** Python and TypeScript consoles with session
+  history, output capture, and a `q.*` host API for reading/writing document
+  content. Opened from the Developer menu. Covered by `tests/unit/devtools/`.
+- **GitHub Remote Files.** Open, browse, and save files directly from/to GitHub
+  repositories (File > Open Remote > GitHub). Token stored in Windows Credential
+  Manager; first-use consent dialog before any network call.
+- **Keyboard packs (.kqp).** Export and import complete keybinding sets as
+  self-contained `.kqp` zip archives (File > Keyboard Pack). Validated on import;
+  atomic write on export.
+- **Autoupdate pipeline.** Vendored `accessibleapps/app_updater` under
+  `quill/_vendor/autoupdate`; release scripts (`build_update_zip.py`,
+  `fetch_bootstrappers.py`, `generate_file_manifest.py`) produce
+  installer-compatible update ZIPs with SHA-256 manifests.
+- **Context-sensitive help.** `Alt+H` announces the most relevant shortcuts for
+  the current focus context. Implemented in `quill/ui/context_help.py`.
+- **Setup wizard.** First-run nine-page wizard guides new users through screen
+  reader, AI, SSH, and cloud configuration.
+- **Translation infrastructure.** Babel-based i18n scaffolding; all user-facing
+  strings in new modules wrapped with `_()`.
+- **Per-provider model memory.** AI chat remembers the last selected model per
+  provider and restores it on next open.
+
+### Bug fixes and security
+
+- Python console `compile()` now appends trailing `\n` before single-mode
+  compile, fixing `SyntaxError` on compound statements (`for`, `with`, `if`).
+- Nuitka build dependency removed entirely (was unreliable; took 44+ min and
+  stalled). Purged from `pyproject.toml`, CI, and scripts.
+- Stray `leasey.html` at repo root removed.
+
 ## Security Hardening and UX Delight (1.0 Release Pass)
 
 This section records the 13 HIGH-severity security fixes, 16 UX delight features, and the LOW/NIT fixes applied during the pre-1.0 code review. All items below were open in `issues.md` before this pass and are now closed.

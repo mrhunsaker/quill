@@ -16,6 +16,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed25519, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -133,7 +134,7 @@ def _derive_v3(headers: dict[str, str], passphrase: bytes) -> tuple[bytes, bytes
     return out[:32], out[32:48], out[48:80]
 
 
-def load_ppk(text: str, passphrase: str | None = None):
+def load_ppk(text: str, passphrase: str | None = None) -> object:
     """Parse a ``.ppk`` file's text and return a ``paramiko`` private key."""
     headers, _order = _parse_headers(text)
     version_key = next((name for name in headers if name.startswith("PuTTY-User-Key-File-")), None)
@@ -180,7 +181,7 @@ def load_ppk(text: str, passphrase: str | None = None):
     return _to_paramiko(algorithm, crypto_key)
 
 
-def _build_crypto_key(algorithm: str, public: bytes, private: bytes):
+def _build_crypto_key(algorithm: str, public: bytes, private: bytes) -> Any:
     pub = _Reader(public)
     pub_algorithm = pub.read_string().decode()
     if pub_algorithm != algorithm:
@@ -231,11 +232,11 @@ def _build_crypto_key(algorithm: str, public: bytes, private: bytes):
     raise PuttyKeyError(f"Unsupported key algorithm {algorithm!r}")
 
 
-def _to_paramiko(algorithm: str, crypto_key):
+def _to_paramiko(algorithm: str, crypto_key: Any) -> object:
     import io
 
-    import paramiko
-    from cryptography.hazmat.primitives import serialization
+    import paramiko  # type: ignore[import-untyped]
+    from cryptography.hazmat.primitives import serialization  # type: ignore[import-not-found]
 
     if algorithm == "ssh-ed25519":
         pem = crypto_key.private_bytes(
