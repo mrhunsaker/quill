@@ -316,7 +316,7 @@ def render_dependency_notice_table(rows: Iterable[dict[str, str]]) -> str:
                 _escape_table_cell(row["name"]),
                 _escape_table_cell(row["scope"]),
                 _escape_table_cell(row["version"]),
-                _escape_table_cell(row["license"]),
+                _escape_table_cell(row["license"], max_length=48),
                 _escape_table_cell(link_md),
                 _escape_table_cell(row["declared"]),
             ])
@@ -343,7 +343,7 @@ def render_bundled_component_table(rows: Iterable[dict[str, str]]) -> str:
                 _escape_table_cell(row["name"]),
                 _escape_table_cell(row["scope"]),
                 _escape_table_cell(row["version"]),
-                _escape_table_cell(row["license"]),
+                _escape_table_cell(row["license"], max_length=48),
                 _escape_table_cell(link_md),
                 _escape_table_cell(source_path),
             ])
@@ -478,12 +478,15 @@ def _load_local_license_texts(
     return output
 
 
-def _escape_table_cell(text: str, *, max_length: int = 80) -> str:
+def _escape_table_cell(text: str, *, max_length: int | None = None) -> str:
     # Collapse all whitespace (a raw newline ends a GFM table row, which is what
     # broke the About dependency table when a package exposes its full license
-    # text instead of an SPDX id), escape pipes, and cap the length so one giant
-    # cell cannot dominate the table. The full text is in Third-Party Notices.
+    # text instead of an SPDX id) and escape pipes. Truncation is opt-in via
+    # ``max_length`` and must only be applied to plain-text cells: truncating a
+    # cell that carries Markdown (e.g. ``[upstream](url)``) would leave invalid
+    # syntax that renders as raw text. The full license text is in Third-Party
+    # Notices.
     collapsed = " ".join(str(text).split())
-    if len(collapsed) > max_length:
+    if max_length is not None and len(collapsed) > max_length:
         collapsed = collapsed[: max_length - 3].rstrip() + "..."
     return collapsed.replace("|", "\\|")

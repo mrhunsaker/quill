@@ -100,10 +100,8 @@ def test_dependency_table_cells_stay_single_line_and_bounded() -> None:
             "name": "platform_utils",
             "scope": "runtime",
             "version": "1.6.2",
-            "license": (
-                "Copyright (c) 2019\n\nPermission is hereby granted | free of charge\nto deal"
-            ),
-            "homepage": "https://example.com",
+            "license": "MIT\n\nfoo | bar\nbaz",
+            "homepage": "https://example.com/a/very/long/path/that/exceeds/the/license/cap/easily",
             "declared": "platform_utils>=1.6",
         }
     ]
@@ -113,8 +111,13 @@ def test_dependency_table_cells_stay_single_line_and_bounded() -> None:
     # Exactly the 6 column separators on a single physical line (no row break).
     assert body_line.count(" | ") == 5
     assert "\n" not in body_line
-    # The raw license pipe is escaped, not left to split the row.
-    assert "free of charge \\|" in body_line or "\\|" in body_line
+    # The license pipe is escaped (not left to split the row), whitespace collapsed.
+    assert "MIT foo \\| bar baz" in body_line
+    # The Markdown link cell is NOT truncated, so it stays a valid [text](url) link.
+    expected_link = (
+        "[upstream](https://example.com/a/very/long/path/that/exceeds/the/license/cap/easily)"
+    )
+    assert expected_link in body_line
 
 
 def test_render_full_third_party_notices_includes_bundled_sources(tmp_path: Path) -> None:
