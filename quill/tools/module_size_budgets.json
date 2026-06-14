@@ -23,7 +23,7 @@
   "_next_target_main_frame": 15000,
   "_default_cap": 600,
   "budgets": {
-    "quill/ui/main_frame.py": 22397,
+    "quill/ui/main_frame.py": 22406,
     "quill/ui/assistant_tools.py": 1877,
     "quill/ui/assistant_panel.py": 725,
     "quill/ui/main_frame_power_tools.py": 863,
@@ -99,5 +99,6 @@
   "_rebaseline_2026_06_15_docx": "Save As Word/.docx (#204): main_frame.py 22231->22232 for docx wildcard + filter-extension map entry. export.py gains write_docx_document (Pandoc gfm->docx); pandoc.py gains convert_file_with_pandoc.",
   "_rebaseline_2026_06_15_citations": "Citation help (#203): main_frame.py 22232->22320 for insert_citation (form-driven MLA/Chicago/APA builder) + command registration + command-map entry; main_frame_menu.py 2993->3001 for Insert > Insert Citation id/item/binding. New core module citations.py (pure).",
   "_rebaseline_2026_06_15_bugfix": "#209/#210 fixes: setup_wizard_pages.py 632->637 (Profile page -> wx.RadioBox so arrow keys wrap within the group, #209); main_frame.py 22337->22352 (_on_close destroys straggler top-level windows so run-from-source exits, #210).",
-  "_rebaseline_2026_06_15_clearlogs": "Crash Recovery dialog: add Clear Logs button + _clear_recovery_logs helper (unlink, truncate in-use files) with a confirmation message dialog showing the count. main_frame.py 22352->22397."
+  "_rebaseline_2026_06_15_clearlogs": "Crash Recovery dialog: add Clear Logs button + _clear_recovery_logs helper (unlink, truncate in-use files) with a confirmation message dialog showing the count. main_frame.py 22352->22397.",
+  "_rebaseline_2026_06_15_close": "#210 (reopened): _on_close guards every shutdown step with _safely() so a failing/slow step (watch worker, ssh, settings write, recovery lock, sound backend) can never throw before event.Skip(), plus an explicit ExitMainLoop fallback. main_frame.py re-measured."
 }

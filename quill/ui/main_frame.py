@@ -5246,54 +5246,65 @@ class MainFrame(
         if not self._can_close_all_documents():
             event.Veto()
             return
+
+        # #210: the window must always close. Every shutdown step below runs
+        # under its own guard so that one failing or slow step (a watch worker,
+        # an SSH socket, a settings write, the recovery lock, the sound backend)
+        # can never throw out of this handler before we reach event.Skip() and
+        # leave the frame stuck open. A failed step is logged, not fatal.
+        def _safely(step: str, action: Callable[[], object]) -> None:
+            try:
+                action()
+            except Exception:  # noqa: BLE001 - shutdown must never block close
+                import logging
+
+                logging.getLogger(__name__).warning("Shutdown step failed: %s", step, exc_info=True)
+
+        def _shutdown_sound_manager() -> None:
+            from quill.ui import sound_manager
+
+            sound_manager.shutdown()
+
         # H-3-ui: destroy the modeless Watch Queue Monitor so it does not
         # outlive the main frame and leak a window reference.
         if self._watch_queue_monitor is not None:
-            try:
-                self._watch_queue_monitor.Destroy()
-            except Exception:  # noqa: BLE001
-                pass
+            _safely("watch queue monitor", self._watch_queue_monitor.Destroy)
             self._watch_queue_monitor = None
             self._watch_queue_listbox = None
             self._watch_queue_pause_button = None
-        self._watch_service.stop()
-        self._unregister_global_hotkeys()
-        self._remove_tray_icon()
-        self.close_ssh_connections()
+        _safely("watch service", self._watch_service.stop)
+        _safely("global hotkeys", self._unregister_global_hotkeys)
+        _safely("tray icon", self._remove_tray_icon)
+        _safely("ssh connections", self.close_ssh_connections)
         # #32: drop GitHub-temp files no longer referenced by an open tab so
         # the user's app-data directory does not accumulate copies of files
         # they opened once and never saved back.
         prune = getattr(self, "prune_orphaned_github_temp", None)
         if callable(prune):
-            try:
-                prune()
-            except Exception:  # noqa: BLE001 - cleanup must never block shutdown
-                pass
-        save_settings(self.settings)
-        self.flush_persistent_undo()
-        mark_clean_exit(self.session_id)
-        try:
-            from quill.ui import sound_manager
-
-            sound_manager.shutdown()
-        except Exception:  # noqa: BLE001
-            pass
-        # #210: when run from source the process could refuse to exit because a
-        # modeless top-level window (for example the Ask Quill chat frame) was
-        # still alive, so wx kept the main loop running after the main frame
-        # closed. Destroy any stragglers here so closing the main window always
-        # ends the loop and the process exits.
+            _safely("github temp prune", prune)
+        _safely("save settings", lambda: save_settings(self.settings))
+        _safely("persistent undo flush", self.flush_persistent_undo)
+        _safely("clean-exit marker", lambda: mark_clean_exit(self.session_id))
+        _safely("sound manager", _shutdown_sound_manager)
+        # Destroy any straggler top-level windows (e.g. a modeless Ask Quill
+        # chat frame) so they do not keep the wx main loop alive after the main
+        # frame closes.
         wx = self._wx
         get_tlws = getattr(wx, "GetTopLevelWindows", None)
         if callable(get_tlws):
             for window in list(get_tlws()):
                 if window is self.frame:
                     continue
-                try:
-                    window.Destroy()
-                except Exception:  # noqa: BLE001
-                    pass
+                _safely("destroy window", window.Destroy)
         event.Skip()
+        # Belt-and-suspenders: explicitly end the main loop after this event is
+        # processed, so the process exits even if a window slipped past the
+        # cleanup above or wx is not configured to exit on the last frame.
+        app = wx.GetApp() if hasattr(wx, "GetApp") else None
+        exit_loop = getattr(app, "ExitMainLoop", None)
+        call_after = getattr(wx, "CallAfter", None)
+        if callable(exit_loop) and callable(call_after):
+            call_after(exit_loop)
 
     def _on_iconize(self, event: object) -> None:
         if self.settings.tray_enabled and event.IsIconized():
