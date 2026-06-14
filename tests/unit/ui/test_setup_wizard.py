@@ -30,13 +30,47 @@ def _wizard_source() -> str:
 # ---------------------------------------------------------------------------
 
 
-def test_wizard_pages_module_has_nine_page_classes() -> None:
+def test_wizard_pages_module_has_ten_page_classes() -> None:
     src = _wizard_pages_source()
     # Count private page classes: they inherit from _WizardPage (the base class)
     import re
 
     pages = re.findall(r"^class _\w+Page\(_WizardPage\)", src, re.MULTILINE)
-    assert len(pages) == 9, f"Expected 9 page classes, found {len(pages)}: {pages}"
+    assert len(pages) == 10, f"Expected 10 page classes, found {len(pages)}: {pages}"
+
+
+def test_wizard_page_panels_are_not_keyboard_focusable() -> None:
+    # #a11y: the page container must stay out of the Tab order (Tab should land
+    # only on real controls, never on an empty "panel").
+    src = _wizard_pages_source()
+    assert "def AcceptsFocusFromKeyboard(self) -> bool:" in src
+    assert "def AcceptsFocus(self) -> bool:" in src
+
+
+def test_keyboard_sound_page_collects_sound_and_indent_settings() -> None:
+    src = _wizard_pages_source()
+    # The sound/indentation controls must actually persist, not just display.
+    assert "settings.sound_enabled = self._sound_enabled.GetValue()" in src
+    assert "settings.sound_pack_path = self._sound_pack_path" in src
+    assert "settings.indent_tone_scale =" in src
+
+
+def test_watch_folder_page_collects_watch_settings() -> None:
+    src = _wizard_pages_source()
+    assert "class _WatchFolderPage(_WizardPage)" in src
+    for field in (
+        "settings.watch_folder_enabled",
+        "settings.watch_folder_path",
+        "settings.watch_folder_include_subfolders",
+        "settings.watch_folder_process_existing",
+        "settings.watch_folder_auto_start",
+    ):
+        assert field in src, field
+
+
+def test_watch_folder_page_is_registered_in_build_pages() -> None:
+    src = _wizard_pages_source()
+    assert "_WatchFolderPage(self, self._settings)" in src
 
 
 def test_setup_wizard_dialog_exists() -> None:

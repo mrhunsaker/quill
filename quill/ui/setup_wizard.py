@@ -4,7 +4,7 @@ Shown automatically the first time QUILL launches
 (``settings.setup_wizard_completed == False``).  Re-runnable from
 Help > Personalise QUILL.
 
-The wizard walks the user through nine pages and writes the result into
+The wizard walks the user through ten pages and writes the result into
 ``Settings`` and ``FeatureManager`` before closing.  No feature is toggled
 mid-wizard; all changes are applied atomically when the user clicks Finish.
 

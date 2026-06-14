@@ -209,6 +209,8 @@
   "quill/ui/quillin_wizard.py::open_quillin_wizard.on_save::wx.MessageDialog": "native",
   "quill/ui/quillin_wizard.py::open_quillin_wizard::wx.Dialog": "hardened_custom",
   "quill/ui/session_browser.py::SessionBrowserDialog.__init__::wx.Dialog": "hardened_custom",
+  "quill/ui/setup_wizard_pages.py::_KeyboardSoundPage._on_choose_sound_pack::wx.FileDialog": "native",
+  "quill/ui/setup_wizard_pages.py::_WatchFolderPage._on_choose_folder::wx.DirDialog": "native",
   "quill/ui/skill_library_dialog.py::SkillLibraryDialog.__init__::wx.Dialog": "hardened_custom",
   "quill/ui/skill_library_dialog.py::SkillLibraryDialog._on_import::wx.FileDialog": "native",
   "quill/ui/skill_library_dialog.py::_SkillParameterDialog.__init__::wx.Dialog": "hardened_custom",

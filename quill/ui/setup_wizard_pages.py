@@ -12,8 +12,9 @@ Pages (in order):
   4 - AI Assistance
   5 - Reading and Accessibility
   6 - Writing Tools
-  7 - Startup Behaviour
-  8 - Summary
+  7 - Watch Folder
+  8 - Startup Behaviour
+  9 - Summary
 
 Feature toggles are held in ``_pending_overrides: dict[str, str]`` inside
 the dialog and applied to the ``FeatureManager`` only when the user clicks
@@ -50,6 +51,15 @@ class _WizardPage(wx.Panel):
         super().__init__(parent)
         self.SetName(name)
 
+    # The page panel is a layout container, not a control: keep it out of the
+    # Tab order so keyboard users never land on an empty "panel" between the
+    # real controls. wxWidgets consults these on every traversal step.
+    def AcceptsFocus(self) -> bool:  # noqa: N802 - wx override
+        return False
+
+    def AcceptsFocusFromKeyboard(self) -> bool:  # noqa: N802 - wx override
+        return False
+
 
 class _WelcomePage(_WizardPage):
     def __init__(self, parent: wx.Window, settings: Settings) -> None:
@@ -82,6 +92,15 @@ class _WelcomePage(_WizardPage):
 
 
 class _KeyboardSoundPage(_WizardPage):
+    # (value, label) for the indentation-tone scale. "" turns tones off.
+    _INDENT_TONE_CHOICES: tuple[tuple[str, str], ...] = (
+        ("", "Off"),
+        ("pentatonic", "Pentatonic (no dissonance)"),
+        ("whole_tone", "Whole tone (even steps)"),
+        ("diatonic", "Diatonic C major (familiar)"),
+        ("chromatic", "Chromatic (one semitone per level)"),
+    )
+
     def __init__(self, parent: wx.Window, settings: Settings) -> None:
         super().__init__(parent, "Keyboard and Sound")
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -93,9 +112,9 @@ class _KeyboardSoundPage(_WizardPage):
         desc = wx.StaticText(
             self,
             label=(
-                "Choose a keyboard layout and whether QUILL plays sounds "
-                "for mode changes. QUILL auto-detects your screen reader "
-                "and uses accessible defaults automatically."
+                "Choose a keyboard layout and how QUILL uses sound: earcons, a "
+                "sound pack, and optional indentation tones for code. Sound is "
+                "always optional and never replaces speech."
             ),
             name="wizard.kb_desc",
         )
@@ -117,21 +136,83 @@ class _KeyboardSoundPage(_WizardPage):
         grid.Add(pack_label, flag=wx.ALIGN_CENTER_VERTICAL)
         grid.Add(self._pack, flag=wx.EXPAND)
 
-        # The label lives on the checkbox itself, not a separate StaticText, so
-        # screen readers announce it instead of reading an unlabeled control
-        # (#208). An empty cell keeps the two-column grid aligned.
-        self._sounds = wx.CheckBox(
-            self, label="Play sounds for mode changes", name="wizard.kb_sounds_check"
+        # Master sound toggle (earcons). The label lives on the checkbox itself
+        # so screen readers announce it (#208); an empty cell keeps the grid
+        # aligned.
+        self._sound_enabled = wx.CheckBox(
+            self, label="Play sound notifications (earcons)", name="wizard.sound_enabled_check"
         )
-        self._sounds.SetValue(bool(settings.quill_key_sound_enter))
+        self._sound_enabled.SetValue(bool(getattr(settings, "sound_enabled", True)))
         grid.Add(wx.StaticText(self, label=""), flag=wx.ALIGN_CENTER_VERTICAL)
-        grid.Add(self._sounds)
+        grid.Add(self._sound_enabled)
+
+        # Sound pack: a read-only display plus a Browse button (empty path means
+        # the bundled Ink pack).
+        self._sound_pack_path = str(getattr(settings, "sound_pack_path", "") or "")
+        pack_row_label = wx.StaticText(self, label="Sound pack:", name="wizard.sound_pack_label")
+        pack_row = wx.BoxSizer(wx.HORIZONTAL)
+        self._sound_pack_display = wx.StaticText(
+            self, label=self._sound_pack_name(), name="wizard.sound_pack_display"
+        )
+        choose_pack = wx.Button(self, label="Choose...", name="wizard.sound_pack_choose")
+        choose_pack.Bind(wx.EVT_BUTTON, self._on_choose_sound_pack)
+        pack_row.Add(self._sound_pack_display, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        pack_row.Add(choose_pack, 0)
+        grid.Add(pack_row_label, flag=wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(pack_row, flag=wx.EXPAND)
+
+        # Indentation tones for code (off by default).
+        indent_label = wx.StaticText(
+            self, label="Indentation tones:", name="wizard.indent_tone_label"
+        )
+        self._indent = wx.Choice(
+            self,
+            name="wizard.indent_tone_choice",
+            choices=[label for _value, label in self._INDENT_TONE_CHOICES],
+        )
+        current_scale = str(getattr(settings, "indent_tone_scale", "") or "")
+        indent_idx = next(
+            (
+                i
+                for i, (value, _l) in enumerate(self._INDENT_TONE_CHOICES)
+                if value == current_scale
+            ),
+            0,
+        )
+        self._indent.SetSelection(indent_idx)
+        grid.Add(indent_label, flag=wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(self._indent, flag=wx.EXPAND)
 
         sizer.Add(grid, flag=wx.LEFT | wx.RIGHT | wx.BOTTOM, border=12)
         self.SetSizer(sizer)
 
+    def _sound_pack_name(self) -> str:
+        if not self._sound_pack_path:
+            return "Bundled Ink pack (default)"
+        from pathlib import Path
+
+        return Path(self._sound_pack_path).name or self._sound_pack_path
+
+    def _on_choose_sound_pack(self, _event: object) -> None:
+        with wx.FileDialog(
+            self,
+            "Choose a sound pack (.qsp)",
+            wildcard="Sound packs (*.qsp)|*.qsp|All files (*.*)|*.*",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            self._sound_pack_path = dlg.GetPath()
+        self._sound_pack_display.SetLabel(self._sound_pack_name())
+        self.Layout()
+
     def collect(self, settings: Settings, _overrides: dict) -> None:
         settings.keyboard_pack = self._pack.GetStringSelection() or "QUILL Default"
+        settings.sound_enabled = self._sound_enabled.GetValue()
+        settings.sound_pack_path = self._sound_pack_path
+        selection = self._indent.GetSelection()
+        if 0 <= selection < len(self._INDENT_TONE_CHOICES):
+            settings.indent_tone_scale = self._INDENT_TONE_CHOICES[selection][0]
 
 
 class _ProfilePage(_WizardPage):
@@ -426,6 +507,95 @@ class _StartupBehaviourPage(_WizardPage):
         settings.tray_enabled = self._tray.GetValue()
 
 
+class _WatchFolderPage(_WizardPage):
+    def __init__(self, parent: wx.Window, settings: Settings) -> None:
+        super().__init__(parent, "Watch Folder")
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        heading = wx.StaticText(self, label="Watch Folder", name="wizard.watch_heading")
+        heading.SetFont(heading.GetFont().Bold())
+        sizer.Add(heading, flag=wx.ALL, border=12)
+
+        desc = wx.StaticText(
+            self,
+            label=(
+                "QUILL can watch a folder and process files that arrive there. "
+                "This is optional; leave it off if you are not sure."
+            ),
+            name="wizard.watch_desc",
+        )
+        desc.Wrap(440)
+        sizer.Add(desc, flag=wx.LEFT | wx.RIGHT | wx.BOTTOM, border=12)
+
+        self._enable = wx.CheckBox(self, label="Enable watch folder", name="wizard.watch_enable")
+        self._enable.SetValue(bool(getattr(settings, "watch_folder_enabled", False)))
+        sizer.Add(self._enable, flag=wx.LEFT | wx.BOTTOM, border=12)
+
+        folder_label = wx.StaticText(
+            self, label="Folder to watch:", name="wizard.watch_folder_label"
+        )
+        sizer.Add(folder_label, flag=wx.LEFT, border=12)
+        folder_row = wx.BoxSizer(wx.HORIZONTAL)
+        self._folder_path = str(getattr(settings, "watch_folder_path", "") or "")
+        self._folder_display = wx.StaticText(
+            self, label=self._folder_name(), name="wizard.watch_folder_display"
+        )
+        choose = wx.Button(self, label="Choose Folder...", name="wizard.watch_folder_choose")
+        choose.Bind(wx.EVT_BUTTON, self._on_choose_folder)
+        folder_row.Add(self._folder_display, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        folder_row.Add(choose, 0)
+        sizer.Add(folder_row, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=12)
+
+        self._subfolders = wx.CheckBox(
+            self, label="Include subfolders", name="wizard.watch_subfolders"
+        )
+        self._subfolders.SetValue(bool(getattr(settings, "watch_folder_include_subfolders", False)))
+        sizer.Add(self._subfolders, flag=wx.LEFT | wx.BOTTOM, border=8)
+
+        self._process_existing = wx.CheckBox(
+            self,
+            label="Process files already in the folder when watching starts",
+            name="wizard.watch_process_existing",
+        )
+        self._process_existing.SetValue(
+            bool(getattr(settings, "watch_folder_process_existing", False))
+        )
+        sizer.Add(self._process_existing, flag=wx.LEFT | wx.BOTTOM, border=8)
+
+        self._auto_start = wx.CheckBox(
+            self, label="Start watching automatically on launch", name="wizard.watch_auto_start"
+        )
+        self._auto_start.SetValue(bool(getattr(settings, "watch_folder_auto_start", False)))
+        sizer.Add(self._auto_start, flag=wx.LEFT | wx.BOTTOM, border=12)
+
+        self.SetSizer(sizer)
+
+    def _folder_name(self) -> str:
+        return self._folder_path or "(no folder chosen)"
+
+    def _on_choose_folder(self, _event: object) -> None:
+        with wx.DirDialog(
+            self,
+            "Choose a folder to watch",
+            defaultPath=self._folder_path or "",
+            style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            self._folder_path = dlg.GetPath()
+        self._folder_display.SetLabel(self._folder_name())
+        self.Layout()
+
+    def collect(self, settings: Settings, _overrides: dict) -> None:
+        settings.watch_folder_path = self._folder_path
+        # Only enable if a folder is actually set, so the feature never turns on
+        # pointing at nothing.
+        settings.watch_folder_enabled = self._enable.GetValue() and bool(self._folder_path)
+        settings.watch_folder_include_subfolders = self._subfolders.GetValue()
+        settings.watch_folder_process_existing = self._process_existing.GetValue()
+        settings.watch_folder_auto_start = self._auto_start.GetValue()
+
+
 class _SummaryPage(_WizardPage):
     def __init__(self, parent: wx.Window) -> None:
         super().__init__(parent, "Summary")
@@ -536,6 +706,7 @@ class SetupWizardDialog(wx.Dialog):
             _AIPage(self, self._feature_manager),
             _ReadingAccessibilityPage(self, self._settings),
             _WritingToolsPage(self, self._settings),
+            _WatchFolderPage(self, self._settings),
             _StartupBehaviourPage(self, self._settings),
             _SummaryPage(self),
         ]
