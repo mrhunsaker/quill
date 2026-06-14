@@ -488,6 +488,9 @@ class MenuBuilderMixin:
         self._id_outline_navigator = wx.NewIdRef()
         self._id_heading_organizer = wx.NewIdRef()
         self._id_match_bracket = wx.NewIdRef()
+        self._id_next_token = wx.NewIdRef()
+        self._id_previous_token = wx.NewIdRef()
+        self._id_set_language = wx.NewIdRef()
         self._id_speak_window_title = wx.NewIdRef()
         self._id_speak_full_path = wx.NewIdRef()
         self._id_speak_status_summary = wx.NewIdRef()
@@ -556,6 +559,19 @@ class MenuBuilderMixin:
         navigate_menu.Append(
             self._id_match_bracket,
             self._menu_label("Match &Bracket", "navigate.match_bracket"),
+        )
+        navigate_menu.Append(
+            self._id_next_token,
+            self._menu_label("Next &Token", "navigate.next_token"),
+        )
+        navigate_menu.Append(
+            self._id_previous_token,
+            self._menu_label("P&revious Token", "navigate.previous_token"),
+        )
+        navigate_menu.AppendSeparator()
+        navigate_menu.Append(
+            self._id_set_language,
+            self._menu_label("Set Document &Language...", "navigate.set_language"),
         )
         navigate_menu.AppendSeparator()
         navigate_menu.Append(
@@ -2204,6 +2220,21 @@ class MenuBuilderMixin:
             wx.EVT_MENU,
             lambda _e: self.match_bracket(),
             id=self._id_match_bracket,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self.navigate_next_token(),
+            id=self._id_next_token,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self.navigate_previous_token(),
+            id=self._id_previous_token,
+        )
+        self.frame.Bind(
+            wx.EVT_MENU,
+            lambda _e: self.set_document_language(),
+            id=self._id_set_language,
         )
         self.frame.Bind(
             wx.EVT_MENU,
