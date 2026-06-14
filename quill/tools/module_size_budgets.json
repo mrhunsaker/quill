@@ -30,18 +30,18 @@
   "_rebaseline_2026_06_13h": "main_frame.py +9 for #173 fix: open_user_guide() now renders to HTML via render_preview_html and opens in the system browser (atomic write to user-guide/userguide.html, webbrowser.open), removing the editable document tab. open_user_guide_section() passes section as start_anchor. main_frame.py +13 for #175 fix: _update_side_preview wraps tab.preview.update() in try/except; on WebView2 ERROR_INVALID_STATE the faulted control is discarded (splitter unsplit, tab.preview=None) and _show_side_preview_for is called via CallAfter to rebuild a fresh instance.",
   "_default_cap": 600,
   "budgets": {
-    "quill/ui/main_frame.py": 21702,
+    "quill/ui/main_frame.py": 21966,
     "quill/ui/assistant_tools.py": 1877,
     "quill/ui/assistant_panel.py": 725,
     "quill/ui/main_frame_power_tools.py": 777,
-    "quill/ui/main_frame_menu.py": 2850,
+    "quill/ui/main_frame_menu.py": 2942,
     "quill/core/read_aloud.py": 1244,
     "quill/core/assistant_ai.py": 1300,
     "quill/core/features.py": 680,
     "quill/ui/github_dialogs.py": 638,
     "quill/core/glow.py": 810,
     "quill/core/settings_registry.py": 158,
-    "quill/core/settings_specs.py": 1070,
+    "quill/core/settings_specs.py": 1087,
     "quill/core/watch_actions.py": 700,
     "quill/io/structured.py": 664,
     "quill/core/settings.py": 690,
@@ -60,9 +60,10 @@
     "quill/ui/prompt_library_dialog.py": 488,
     "quill/ui/skill_library_dialog.py": 540,
     "quill/ui/setup_wizard_pages.py": 635,
-    "quill/core/keymap.py": 439,
-    "quill/core/keymap_packs.py": 279,
-    "quill/tools/check_banned_patterns.py": 695
+    "quill/core/keymap.py": 445,
+    "quill/core/keymap_packs.py": 284,
+    "quill/tools/check_banned_patterns.py": 695,
+    "quill/ui/compare_dialog.py": 210
   },
   "_rebaseline_2026_06_13i_banned_patterns": "check_banned_patterns.py 650 -> 695 for BUG-REGION gate (item 6 in module docstring + _check_dead_region_attrs function + find_violations call): bans self._enter_region / self._exit_region in quill/ui, the nonexistent attributes that caused the image-description feature to fail silently (#165). Gate code is CI control, not feature code.",
   "_rebaseline_2026_06_12j": "check_banned_patterns.py grew to 650 lines after GATE-42 addition (_check_show_modal_wrapper AST walk + constant block). Budget added to acknowledge deliberate growth; gate itself is a CI control, not feature code.",
@@ -96,5 +97,6 @@
   "_rebaseline_2026_06_13g_keymap": "keymap.py 438 -> 439 for the edit.find legacy rebinding that restores Find to Ctrl+F. Re-baselined to measured size.",
   "_rebaseline_2026_06_13h_features": "features.py 1029 -> 680: FeatureDefinition dataclass, FEATURE_DEFINITIONS dict, and FEATURE_ALIASES build extracted to feature_catalog.py (GATE-11 extraction). Aliases added for copy tray, abbreviations, macro, watch folder, agent (#171). Budget reduced to reflect decomposition.",
   "_rebaseline_2026_06_14": "assistant_ai.py 1264 -> 1300 for feat(about) contributor-listing code (GitHub contributors API fetch, baked-in list). Budget missed the update when that commit merged to main; corrected here to restore a green gate.",
-  "_rebaseline_2026_06_14b": "main_frame.py 21696 -> 21702 (+6) when main was merged into the bugs branch: the dynamic GitHub Contributors section from feat(about) (contributor_bullet_list + '## Contributors' block) landed alongside the bug-fix work. Re-baselined to the merged measured size."
+  "_rebaseline_2026_06_14b": "main_frame.py 21696 -> 21702 (+6) when main was merged into the bugs branch: the dynamic GitHub Contributors section from feat(about) (contributor_bullet_list + '## Contributors' block) landed alongside the bug-fix work. Re-baselined to the merged measured size.",
+  "_rebaseline_2026_06_14k": "ken branch merged with main: Navigate > Compare submenu (#187-#194), speak-status commands, Boxer compare dialog, bug-report dialog enhancements (screen reader ComboBox, name/email fields, settings persistence), Kelly Ford contributor/owner. compare_dialog.py new file capped at 210; keymap.py 445, keymap_packs.py 284. main_frame.py/menu re-measured after the merge."
 }
