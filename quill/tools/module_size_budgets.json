@@ -23,7 +23,7 @@
   "_next_target_main_frame": 15000,
   "_default_cap": 600,
   "budgets": {
-    "quill/ui/main_frame.py": 22567,
+    "quill/ui/main_frame.py": 22576,
     "quill/ui/assistant_tools.py": 1877,
     "quill/ui/assistant_panel.py": 725,
     "quill/ui/main_frame_power_tools.py": 863,
@@ -109,5 +109,6 @@
   "_rebaseline_2026_06_14_crashreport": "#210 follow-up (crash-dialog one-click report): _send_crash_report (consent for the PUBLIC tracker, direct issue creation via the unified token, redacted log summary, clear-logs-and-close on success, manual-form fallback otherwise) plus the Send Bug Report button in the Crash Recovery dialog. Submission + redaction logic lives in the new core/issue_submit.py. main_frame.py budget re-measured after merging main (#212 macOS Preferences work).",
   "_rebaseline_2026_06_14_braille_statusbar": "Braille Mode WIP: main_frame_statusbar.py 558->585 for the braille status bar cell wiring (new core/braille_statusbar.py module + feature_catalog/settings_normalizers/main_frame integration). WIP checkpoint; CQ-1 decomposition is the path to lower it.",
   "_rebaseline_2026_06_14_braille_statusbar_wire": "#233 (BR-010) completion: main_frame_statusbar.py 585->616 for _active_brf_resolver, which builds and caches a BraillePositionResolver from the active BRF document's source_metadata (Document is a slots dataclass so the resolver cannot be attached to it). The cell now renders live and refreshes via the existing _refresh_statusbar on caret activity.",
+  "_rebaseline_2026_06_14_braille_save": "#235 (BR-012) BRF byte-for-byte save: main_frame.py 22567->22576 for registering the soft save-warning hook and _announce_brf_save_warning. The verbatim write path (no line-ending normalization, no trailing-space trim, form feeds + encoding preserved) and the non-NABCC warning live in quill/io/text.py (_write_brf_document + set_save_warning_hook), with byte-for-byte round-trip tests over the corpus fixture.",
   "_rebaseline_2026_06_14_braille_menu": "#234 (BR-011) Braille menu + Phase 1 commands: main_frame.py 22564->22567 (BrailleCommandsMixin added to the MRO + import + _register_braille_commands call) and main_frame_menu.py 3016->3018 (top-level Braille menu append + _bind_braille_menu call). The 14 command handlers, command registration, and the Status/Navigation/Page-Tools menu live in the new quill/ui/main_frame_braille.py (388 lines, under the default cap) to keep main_frame growth to the wiring only."
 }

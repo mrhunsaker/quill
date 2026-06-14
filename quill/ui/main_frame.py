@@ -1100,6 +1100,10 @@ class MainFrame(
         self._sticky_note_hotkey_id = wx.NewIdRef()
         self.commands = CommandRegistry()
         self.commands.set_run_listener(self._on_command_run)
+        # #235: surface the soft BRF save warning (non-NABCC chars saved as-is).
+        from quill.io.text import set_save_warning_hook
+
+        set_save_warning_hook(self._announce_brf_save_warning)
         self._recent_menu_ids: dict[int, Path] = {}
         self._recent_session_menu_ids: dict[int, Path] = {}
         self._session_menu_ids: dict[int, int] = {}
@@ -6387,6 +6391,11 @@ class MainFrame(
 
     def _record_notification(self, message: str, category: str = "info") -> None:
         self._notifications = add_notification(message, category)
+
+    def _announce_brf_save_warning(self, message: str) -> None:
+        """Surface the soft BRF save warning (#235): status + announcement."""
+        self._set_status(message)
+        self._announce(message)
 
     def _announce(self, message: str) -> None:
         self._status_message = message
