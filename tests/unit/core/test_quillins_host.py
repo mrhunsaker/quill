@@ -54,7 +54,7 @@ class _RecordingServices:
         self.calls.append(("set_clipboard", (text,)))
 
 
-def _manifest(*capabilities: str) -> ExtensionManifest:
+def _manifest(*capabilities: str, net_allowed_hosts: tuple[str, ...] = ()) -> ExtensionManifest:
     return ExtensionManifest(
         id="com.example.t",
         name="T",
@@ -62,6 +62,7 @@ def _manifest(*capabilities: str) -> ExtensionManifest:
         capabilities=tuple(capabilities),
         main="extension.py",
         contributes=Contributions(),
+        net_allowed_hosts=net_allowed_hosts,
     )
 
 
@@ -157,3 +158,61 @@ def test_args_must_be_a_list() -> None:
     result = dispatcher.handle({"type": "api_call", "id": 1, "method": "get_text", "args": "x"})
     assert result["ok"] is False
     assert "args must be a list" in result["message"]
+
+
+# -- net_allowed_hosts enforcement -------------------------------------------
+
+
+def test_fetch_allowed_when_no_allowlist() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(_manifest("net"), services, consent=lambda c, d: True)
+    result = _call(dispatcher, "fetch", "https://example.com/data")
+    assert result["ok"] is True
+    assert services.calls[0][0] == "fetch"
+
+
+def test_fetch_blocked_when_host_not_in_allowlist() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(
+        _manifest("net", net_allowed_hosts=("api.example.com",)),
+        services,
+        consent=lambda c, d: True,
+    )
+    result = _call(dispatcher, "fetch", "https://evil.com/steal")
+    assert result["ok"] is False
+    assert "net_allowed_hosts" in result["message"]
+    assert services.calls == []
+
+
+def test_fetch_allowed_when_host_matches_exact() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(
+        _manifest("net", net_allowed_hosts=("api.example.com",)),
+        services,
+        consent=lambda c, d: True,
+    )
+    result = _call(dispatcher, "fetch", "https://api.example.com/v1/data")
+    assert result["ok"] is True
+
+
+def test_fetch_allowed_when_wildcard_matches_subdomain() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(
+        _manifest("net", net_allowed_hosts=("*.example.com",)),
+        services,
+        consent=lambda c, d: True,
+    )
+    result = _call(dispatcher, "fetch", "https://sub.example.com/data")
+    assert result["ok"] is True
+
+
+def test_fetch_blocked_when_wildcard_does_not_match_parent() -> None:
+    services = _RecordingServices()
+    dispatcher = ApiDispatcher(
+        _manifest("net", net_allowed_hosts=("*.example.com",)),
+        services,
+        consent=lambda c, d: True,
+    )
+    # "example.com" itself does not match "*.example.com"
+    result = _call(dispatcher, "fetch", "https://example.com/data")
+    assert result["ok"] is False

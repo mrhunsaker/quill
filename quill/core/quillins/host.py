@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import urllib.parse
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol
@@ -134,6 +135,7 @@ class ApiDispatcher:
             granted = manifest.capabilities
         self._granted: frozenset[str] = frozenset(granted)
         self._storage: dict[str, str] = storage if storage is not None else {}
+        self._net_allowed_hosts: tuple[str, ...] = manifest.net_allowed_hosts
 
     def handle(self, message: dict[str, Any]) -> dict[str, Any]:
         call_id = int(message.get("id", 0))
@@ -163,6 +165,29 @@ class ApiDispatcher:
         except Exception as error:  # never let a service fault crash the host loop
             return protocol.api_error(call_id, "QuillinError", str(error))
         return protocol.api_ok(call_id, value)
+
+    def _is_host_allowed(self, url: str) -> bool:
+        """Return True if ``url``'s hostname matches ``net_allowed_hosts``.
+
+        An empty allowlist means all hosts are permitted (backwards-compatible
+        default). Wildcard patterns ``*.example.com`` match any subdomain.
+        """
+
+        if not self._net_allowed_hosts:
+            return True
+        try:
+            host = urllib.parse.urlparse(url).hostname or ""
+        except Exception:
+            return False
+        for pattern in self._net_allowed_hosts:
+            if pattern.startswith("*."):
+                # "*.example.com" matches "sub.example.com" but NOT "example.com"
+                suffix = "." + pattern[2:]
+                if host.endswith(suffix):
+                    return True
+            elif pattern == host:
+                return True
+        return False
 
     def _invoke_service(self, method: str, args: list[Any]) -> Any:
         services = self._services
@@ -199,6 +224,8 @@ class ApiDispatcher:
             return None
         if method == "fetch":
             url = str(args[0])
+            if not self._is_host_allowed(url):
+                raise QuillinError(f"fetch blocked: host not in net_allowed_hosts ({url!r})")
             http_method = str(args[1]) if len(args) > 1 else "GET"
             body = args[2] if len(args) > 2 else None
             return services.fetch(url, http_method, None if body is None else str(body))

@@ -118,7 +118,7 @@ def test_build_inno_setup_script_mentions_portable_bundle() -> None:
         'Name: "speechopenvoice"; Description: "Install bundled OpenVoice voices/models";' in script
     )
     assert (
-        'Excludes: "docs\\QUILL-PRD.md,tools\\pandoc\\*,tools\\speech\\dectalk\\*,tools\\speech\\espeak-ng\\*,tools\\speech\\kokoro\\*,tools\\speech\\piper\\*,tools\\speech\\openvoice\\*,tools\\nodejs\\*"'
+        'Excludes: "docs\\QUILL-PRD.md,tools\\pandoc\\*,tools\\speech\\dectalk\\*,tools\\speech\\espeak-ng\\*,tools\\speech\\kokoro\\*,tools\\speech\\piper\\*,tools\\speech\\openvoice\\*,tools\\nodejs\\*,vendor\\braille-pack\\*"'
         in script
     )
     assert 'Source: "..\\portable\\tools\\pandoc\\*"; DestDir: "{app}\\tools\\pandoc";' in script

@@ -42,10 +42,12 @@ from quill.core.quillins.loader import (
     discover_bundled_extensions,
     discover_extensions,
     install_extension,
+    is_event_enabled,
     load_enabled_bundled_manifests,
     load_enabled_manifests,
     remove_extension,
     set_enabled,
+    set_event_enabled,
 )
 from quill.core.quillins.registry import ContributionRegistry
 from quill.plugins import THIRD_PARTY_PLUGINS_FEATURE
@@ -386,13 +388,21 @@ class QuillinsMenuMixin:
 
         enable_button = wx.Button(dialog, label="&Enable")
         disable_button = wx.Button(dialog, label="&Disable")
+        events_button = wx.Button(dialog, label="Configure &Events...")
         reload_button = wx.Button(dialog, label="&Reload")
         remove_button = wx.Button(dialog, label="Re&move...")
         install_button = wx.Button(dialog, label="&Install from Folder...")
         close_button = wx.Button(dialog, id=wx.ID_OK, label="&Close")
 
         actions = wx.BoxSizer(wx.HORIZONTAL)
-        for button in (enable_button, disable_button, reload_button, remove_button, install_button):
+        for button in (
+            enable_button,
+            disable_button,
+            events_button,
+            reload_button,
+            remove_button,
+            install_button,
+        ):
             actions.Add(button, 0, wx.RIGHT, 6)
         body.Add(actions, 0, wx.ALL, 8)
 
@@ -418,6 +428,13 @@ class QuillinsMenuMixin:
             has_item = item is not None
             enable_button.Enable(has_item and self._quillins_enabled())
             disable_button.Enable(has_item and self._quillins_enabled())
+            has_events = (
+                has_item
+                and item is not None
+                and item.manifest is not None
+                and bool(item.manifest.contributes.document_events)
+            )
+            events_button.Enable(has_events)
             reload_button.Enable(has_item)
             remove_button.Enable(has_item)
 
@@ -514,9 +531,20 @@ class QuillinsMenuMixin:
                     dialog,
                 )
 
+        def on_configure_events(_event: object) -> None:
+            item = selected_extension()
+            if item is None or item.manifest is None:
+                return
+            doc_events = item.manifest.contributes.document_events
+            if not doc_events:
+                return
+            self._open_event_toggle_dialog(dialog, item.id, doc_events)
+            refresh_details()
+
         chooser.Bind(wx.EVT_LISTBOX, on_select)
         enable_button.Bind(wx.EVT_BUTTON, on_enable)
         disable_button.Bind(wx.EVT_BUTTON, on_disable)
+        events_button.Bind(wx.EVT_BUTTON, on_configure_events)
         reload_button.Bind(wx.EVT_BUTTON, on_reload)
         remove_button.Bind(wx.EVT_BUTTON, on_remove)
         install_button.Bind(wx.EVT_BUTTON, on_install)
@@ -580,6 +608,70 @@ class QuillinsMenuMixin:
             state = "disabled"
         return f"{name} ({state})"
 
+    def _open_event_toggle_dialog(
+        self, parent: Any, extension_id: str, doc_events: tuple[object, ...]
+    ) -> None:
+        """Show a dialog listing each document event with an on/off checkbox."""
+
+        wx = self._wx
+        edlg = wx.Dialog(
+            parent,
+            title=f"Configure Events — {extension_id}",
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        body = wx.BoxSizer(wx.VERTICAL)
+        body.Add(
+            wx.StaticText(
+                edlg,
+                label=(
+                    "Check events you want active for this Quillin. "
+                    "Uncheck to stop an event from firing."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            8,
+        )
+
+        checks: list[tuple[str, Any]] = []
+        for entry in doc_events:
+            if not isinstance(entry, dict):
+                continue
+            event_name = str(entry.get("event", ""))
+            title = str(entry.get("title", event_name))
+            desc = str(entry.get("description", ""))
+            label = f"{title} ({event_name})"
+            if desc:
+                label += f"\n  {desc}"
+            cb = wx.CheckBox(edlg, label=label)
+            cb.SetName(f"event_{event_name}")
+            cb.SetValue(is_event_enabled(extension_id, event_name))
+            body.Add(cb, 0, wx.ALL | wx.EXPAND, 4)
+            checks.append((event_name, cb))
+
+        button_sizer = wx.StdDialogButtonSizer()
+        ok_button = wx.Button(edlg, id=wx.ID_OK, label="&Save")
+        cancel_button = wx.Button(edlg, id=wx.ID_CANCEL, label="&Cancel")
+        button_sizer.AddButton(ok_button)
+        button_sizer.AddButton(cancel_button)
+        button_sizer.Realize()
+        body.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 8)
+
+        edlg.SetSizerAndFit(body)
+        if hasattr(edlg, "CentreOnParent"):
+            edlg.CentreOnParent()
+
+        from quill.ui.dialog_contract import apply_modal_ids
+
+        apply_modal_ids(edlg, affirmative_id=wx.ID_OK, escape_id=wx.ID_CANCEL)
+        try:
+            result = self._show_modal_dialog(edlg, f"Configure Events — {extension_id}")
+        finally:
+            if result == wx.ID_OK:
+                for event_name, cb in checks:
+                    set_event_enabled(extension_id, event_name, bool(cb.GetValue()))
+            edlg.Destroy()
+
     def _quillin_detail_text(self, item: Any) -> str:
         if item is None:
             return "No Quillin selected."
@@ -592,11 +684,27 @@ class QuillinsMenuMixin:
                 lines.append(f"Author: {manifest.author}")
             if manifest.description:
                 lines.append(f"Description: {manifest.description}")
+            if manifest.categories:
+                lines.append(f"Categories: {', '.join(manifest.categories)}")
+            if manifest.min_quill_version:
+                lines.append(f"Min QUILL version: {manifest.min_quill_version}")
             caps = ", ".join(manifest.capabilities) if manifest.capabilities else "(none)"
             lines.append(f"Capabilities: {caps}")
+            if manifest.net_allowed_hosts:
+                lines.append(f"Net allowed hosts: {', '.join(manifest.net_allowed_hosts)}")
             lines.append(f"Type: {'Python handler' if manifest.is_layer_two else 'snippet only'}")
             command_ids = ", ".join(c.id for c in manifest.contributes.commands) or "(none)"
             lines.append(f"Commands: {command_ids}")
+            doc_events = manifest.contributes.document_events
+            if doc_events:
+                lines.append("Events:")
+                for evt in doc_events:
+                    if not isinstance(evt, dict):
+                        continue
+                    event_name = str(evt.get("event", ""))
+                    title = str(evt.get("title", event_name))
+                    active = is_event_enabled(item.id, event_name)
+                    lines.append(f"  {title} ({event_name}): {'on' if active else 'off'}")
         lines.append(f"Enabled: {'yes' if item.enabled else 'no'}")
         if item.errors:
             lines.append("")

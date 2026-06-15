@@ -112,6 +112,16 @@ def main() -> int:
         help="Optional local OpenVoice voices/models directory to bundle under portable\\tools\\speech\\openvoice.",
     )
     parser.add_argument(
+        "--braille-pack-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Optional local braille pack directory (containing lou_translate.exe, tables/, "
+            "brf_profiles.json) to bundle under portable\\vendor\\braille-pack. "
+            "Run scripts/build_braille_pack.py first to generate the catalog and profiles."
+        ),
+    )
+    parser.add_argument(
         "--bundle-dectalk-release",
         action="store_true",
         help="Download the official dectalk/dectalk vs2022 release and bundle it under portable\\tools\\speech\\dectalk.",
@@ -134,6 +144,7 @@ def main() -> int:
         args.output_dir,
         bundle_python=args.bundle_python,
         source_root=args.source_root,
+        braille_pack_dir=args.braille_pack_dir,
         bundle_dectalk_release=args.bundle_dectalk_release,
         bundled_tool_dirs={
             tool_id: path
@@ -165,6 +176,7 @@ def build_windows_distribution(
     bundle_python: bool = False,
     source_root: Path | None = None,
     bundled_tool_dirs: dict[str, Path] | None = None,
+    braille_pack_dir: Path | None = None,
     bundle_dectalk_release: bool = False,
     compile_installer: bool = False,
     iscc_path: Path | None = None,
@@ -214,9 +226,13 @@ def build_windows_distribution(
     }
     write_json_atomic(manifest_path, manifest)
 
+    braille_pack_staged = _stage_braille_pack(portable_dir, braille_pack_dir)
+
     installer_script = installer_dir / "quill.iss"
     reference_installer_script = reference_installer_dir / "quill.iss"
-    installer_script_text = build_inno_setup_script(version=version)
+    installer_script_text = build_inno_setup_script(
+        version=version, bundle_braille_pack=braille_pack_staged
+    )
     installer_script.write_text(installer_script_text, encoding="utf-8")
     reference_installer_script.write_text(installer_script_text, encoding="utf-8")
 
@@ -437,7 +453,7 @@ def build_shell_verb_registry_lines(
     return lines
 
 
-def build_inno_setup_script(version: str) -> str:
+def build_inno_setup_script(version: str, bundle_braille_pack: bool = False) -> str:
     """Return a production-quality Inno Setup script for the portable bundle.
 
     The script is assembled line-by-line to avoid the f-string + triple-
@@ -549,11 +565,20 @@ def build_inno_setup_script(version: str) -> str:
         " and the Developer Console TypeScript interface (~30 MB);"
         ' not required for Python Quillins";'
         " Types: custom; Flags: checkablealone",
+        'Name: "braillepack"; Description: "Install QUILL Braille Pack'
+        " (liblouis translation engine, UEB, Standard American English,"
+        ' and international braille profiles, ~15 MB)";'
+        " Types: full custom; Flags: checkablealone",
         "",
         "[Files]",
         'Source: "..\\portable\\*"; DestDir: "{app}";'
         " Flags: ignoreversion recursesubdirs createallsubdirs;"
-        ' Excludes: "docs\\QUILL-PRD.md,tools\\pandoc\\*,tools\\speech\\dectalk\\*,tools\\speech\\espeak-ng\\*,tools\\speech\\kokoro\\*,tools\\speech\\piper\\*,tools\\speech\\openvoice\\*,tools\\nodejs\\*"',
+        ' Excludes: "docs\\QUILL-PRD.md,tools\\pandoc\\*,tools\\speech\\dectalk\\*,tools\\speech\\espeak-ng\\*,tools\\speech\\kokoro\\*,tools\\speech\\piper\\*,tools\\speech\\openvoice\\*,tools\\nodejs\\*,vendor\\braille-pack\\*"',
+        "; QUILL Braille Pack: liblouis runtime, translation tables, and BRF profiles.",
+        "; Installed to vendor\\braille-pack so QUILL detects it automatically via QUILL_APP_ROOT.",
+        'Source: "..\\portable\\vendor\\braille-pack\\*"; DestDir: "{app}\\vendor\\braille-pack";'
+        " Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist;"
+        " Components: braillepack",
         'Source: "..\\portable\\tools\\pandoc\\*"; DestDir: "{app}\\tools\\pandoc";'
         " Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist;"
         " Components: pandoc",
@@ -966,6 +991,18 @@ def _stage_distribution_docs(portable_dir: Path, source_root: Path) -> list[Path
         shutil.copy2(source, target)
         staged.append(target)
     return staged
+
+
+def _stage_braille_pack(portable_dir: Path, braille_pack_dir: Path | None) -> bool:
+    """Copy the braille pack into portable/vendor/braille-pack/. Returns True if staged."""
+    if braille_pack_dir is None:
+        return False
+    if not braille_pack_dir.is_dir():
+        raise RuntimeError(f"Braille pack directory not found: {braille_pack_dir}")
+    target = portable_dir / "vendor" / "braille-pack"
+    shutil.copytree(braille_pack_dir, target, dirs_exist_ok=True)
+    print(f"Staged braille pack from {braille_pack_dir} to {target}")
+    return True
 
 
 def _stage_bundled_tools(portable_dir: Path, bundled_tool_dirs: dict[str, Path]) -> list[str]:

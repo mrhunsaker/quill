@@ -178,6 +178,8 @@ class Settings:
     language: str = ""
     # WIZARD: True once the first-run setup wizard has completed.
     setup_wizard_completed: bool = False
+    # UPGRADE: True once we have shown the post-upgrade braille-pack install prompt.
+    upgrade_prompt_braille_pack: bool = False
     # QDC: Developer Console settings.
     console_enabled: bool = True
     console_python_timeout: int = 30
@@ -504,6 +506,7 @@ class Settings:
         bug_reporter_email = str(data.get("bug_reporter_email", "")).strip()
         language = str(data.get("language", "")).strip()
         setup_wizard_completed = bool(data.get("setup_wizard_completed", False))
+        upgrade_prompt_braille_pack = bool(data.get("upgrade_prompt_braille_pack", False))
         console_enabled = bool(data.get("console_enabled", True))
         try:
             console_python_timeout = int(data.get("console_python_timeout", 30))
@@ -705,6 +708,7 @@ class Settings:
             multi_press_window_ms=multi_press_window_ms,
             language=language,
             setup_wizard_completed=setup_wizard_completed,
+            upgrade_prompt_braille_pack=upgrade_prompt_braille_pack,
             console_enabled=console_enabled,
             console_python_timeout=console_python_timeout,
             console_typescript_timeout=console_typescript_timeout,

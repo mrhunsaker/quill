@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0 — Insert Automation, Quillin Platform, Braille Mode, Vision Prompt Library (2026-06-15)
+
+See `rel.md` for the full narrative release notes.
+
 ## 0.5.1 — Sound Packs, Compare Mode, Code-Aware Editing, Encoding Tools (2026-06-15)
 
 ### New features

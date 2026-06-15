@@ -176,8 +176,8 @@
   </style>
 </head>
 <body>
-<h1 id="translating-quill--community-contributor-guide">Translating
-QUILL — Community Contributor Guide</h1>
+<h1 id="translating-quill-community-contributor-guide">Translating QUILL
+— Community Contributor Guide</h1>
 <p>This guide is for anyone who wants to help translate QUILL into their
 language. QUILL uses Crowdin for community translation. You do not need
 any programming knowledge to contribute.</p>
@@ -200,6 +200,11 @@ a new language team.</p>
 <hr />
 <h2 id="the-four-roles">The Four Roles</h2>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>Role</th>
@@ -258,7 +263,7 @@ preservation.</li>
 <code>.mo</code> file ships in the next QUILL release.</li>
 </ol>
 <hr />
-<h2 id="what-you-are-translating--the-three-crowdin-components">What You
+<h2 id="what-you-are-translating-the-three-crowdin-components">What You
 Are Translating — The Three Crowdin Components</h2>
 <p><strong>Component 1: UI Strings</strong> All menus, dialog labels,
 button text, status bar messages, and screen reader announcement
@@ -291,7 +296,7 @@ cut).</li>
 for a new language in its first release.</li>
 </ul>
 <p>Languages that miss the deadline or fall below the threshold are
-excluded from that release. The startup wizard's language selector does
+excluded from that release. The startup wizard’s language selector does
 not show excluded languages. This protects users from encountering a
 partially translated interface.</p>
 <p>If your language misses a release, it can catch up and ship in the
@@ -304,8 +309,8 @@ release).</li>
 <li>70% for a new language in its very first release.</li>
 </ul>
 <p>Languages below the threshold are shown in the language selector with
-a warning: "This translation is incomplete — some text will appear in
-English." This warning is shown rather than hiding the language
+a warning: “This translation is incomplete — some text will appear in
+English.” This warning is shown rather than hiding the language
 entirely, so users who prefer even a partial translation can still
 choose it.</p>
 <hr />
@@ -332,7 +337,7 @@ correctly. Pay particular attention to:</p>
 <li>Menu mnemonics (the underlined shortcut letters in menus)</li>
 <li>Announcement strings (what your screen reader says during
 actions)</li>
-<li>Plural forms (for example, "1 word" vs. "3 words")</li>
+<li>Plural forms (for example, “1 word” vs. “3 words”)</li>
 </ul></li>
 </ol>
 <hr />
@@ -351,7 +356,7 @@ decision is made, use it consistently.</p>
 <tbody>
 <tr>
 <td>Copy Tray</td>
-<td>QUILL's multi-slot clipboard feature</td>
+<td>QUILL’s multi-slot clipboard feature</td>
 </tr>
 <tr>
 <td>Ask Quill</td>
@@ -375,7 +380,7 @@ decision is made, use it consistently.</p>
 </tr>
 <tr>
 <td>GLOW</td>
-<td>QUILL's guided-learning workflow system</td>
+<td>QUILL’s guided-learning workflow system</td>
 </tr>
 </tbody>
 </table>
@@ -404,45 +409,36 @@ guide</h1>
 2026-06-13.</em></p>
 <h1 id="quill-translation-style-guide">QUILL Translation Style
 Guide</h1>
-<p>This document gives rules and guidance for translating QUILL's user
+<p>This document gives rules and guidance for translating QUILL’s user
 interface. Read it before you begin translating and return to it when
 you have questions about a specific type of string.</p>
 <hr />
 <h2 id="tone-and-register">Tone and Register</h2>
-<p>QUILL speaks to the user in the second person, directly. Use "your
-document", "press this key", not "the user's document" or "one presses
-this key."</p>
-<p>Match the register of the target language's screen reader
-ecosystem:</p>
-<ul>
-<li>French: use "vous" (formal) unless the French language community
-explicitly votes for "tu". Crowdin glossary records the decision.</li>
-<li>German: use "Sie" (formal) by default.</li>
-<li>For other languages, follow the convention used by NVDA's official
-translation into your language.</li>
-</ul>
+<p>QUILL speaks to the user in the second person, directly. Use “your
+document”, “press this key”, not “the user’s document” or “one presses
+this key.”</p>
+<p>Match the register of the target language’s screen reader ecosystem:
+- French: use “vous” (formal) unless the French language community
+explicitly votes for “tu”. Crowdin glossary records the decision. -
+German: use “Sie” (formal) by default. - For other languages, follow the
+convention used by NVDA’s official translation into your language.</p>
 <p>If you are uncertain about the appropriate register, ask your
 Language Coordinator before translating strings in bulk.</p>
 <hr />
-<h2 id="mnemonic-markers-">Mnemonic Markers (<code>&amp;</code>)</h2>
+<h2 id="mnemonic-markers">Mnemonic Markers (<code>&amp;</code>)</h2>
 <p>A mnemonic marker is the <code>&amp;</code> character that appears
 before one letter in a menu item or button label. It creates a keyboard
 shortcut: Alt plus that letter activates the menu item or button. Screen
 reader users rely on mnemonics to navigate menus without using arrow
 keys.</p>
-<p>Rules:</p>
-<ol type="1">
-<li>Every menu item and button label in QUILL has exactly one
-<code>&amp;</code>.</li>
-<li>When you translate a string that contains <code>&amp;</code>, your
-translation must also contain exactly one <code>&amp;</code>.</li>
-<li>Place the <code>&amp;</code> before a letter that is unique within
-the same menu or dialog. Two items in the same menu must not share the
-same mnemonic letter.</li>
-<li>The <code>&amp;</code> letter must be a letter that actually appears
-in your translated word, and ideally near the start of the word for
-discoverability.</li>
-</ol>
+<p>Rules: 1. Every menu item and button label in QUILL has exactly one
+<code>&amp;</code>. 2. When you translate a string that contains
+<code>&amp;</code>, your translation must also contain exactly one
+<code>&amp;</code>. 3. Place the <code>&amp;</code> before a letter that
+is unique within the same menu or dialog. Two items in the same menu
+must not share the same mnemonic letter. 4. The <code>&amp;</code>
+letter must be a letter that actually appears in your translated word,
+and ideally near the start of the word for discoverability.</p>
 <p>If you cannot find a unique letter in the natural word, it is
 acceptable to use any letter from the word as the mnemonic, even if it
 is not the first. Consult your Language Coordinator if a whole menu has
@@ -470,7 +466,7 @@ accelerator uses the same Ctrl+O shortcut. The mnemonic
 translated label.</p>
 <p>Do not change the key letter in <code>\t</code> accelerators.
 Accelerators are defined in code and are not affected by translation;
-only the label's <code>&amp;</code> mnemonic is yours to relocate.</p>
+only the label’s <code>&amp;</code> mnemonic is yours to relocate.</p>
 <hr />
 <h2 id="announcement-strings-speech-strings">Announcement Strings
 (Speech Strings)</h2>
@@ -482,37 +478,29 @@ msgid &quot;Copied to slot {n}&quot;</code></pre>
 <p>The <code>#. SPEECH:</code> comment is visible in the Crowdin editor
 as a string note. Use it to filter speech strings for a dedicated review
 pass.</p>
-<p>Rules for announcement strings:</p>
-<ol type="1">
-<li>Translate for natural speech, not literal label equivalence. A
-string that makes sense visually may sound unnatural when read aloud.
-Restructure the sentence if needed.</li>
-<li>Do not abbreviate in speech strings. If the source says "AI", spell
-it out as your language's full term unless the abbreviation is
-universally understood in your language's technology community.</li>
-<li>Add context if the meaning would be lost without visual UI. "Copied
-to slot 3" makes sense visually because the user can see the Copy Tray.
-In speech, "Copied to Copy Tray slot 3" is clearer.</li>
-<li>Test every announcement string with NVDA set to the target language.
-Ask a native speaker to listen and confirm the announcement sounds
-natural.</li>
-</ol>
+<p>Rules for announcement strings: 1. Translate for natural speech, not
+literal label equivalence. A string that makes sense visually may sound
+unnatural when read aloud. Restructure the sentence if needed. 2. Do not
+abbreviate in speech strings. If the source says “AI”, spell it out as
+your language’s full term unless the abbreviation is universally
+understood in your language’s technology community. 3. Add context if
+the meaning would be lost without visual UI. “Copied to slot 3” makes
+sense visually because the user can see the Copy Tray. In speech,
+“Copied to Copy Tray slot 3” is clearer. 4. Test every announcement
+string with NVDA set to the target language. Ask a native speaker to
+listen and confirm the announcement sounds natural.</p>
 <hr />
 <h2 id="plural-forms">Plural Forms</h2>
-<p>Follow your language's actual plural rules. Do not guess. Reference
-the official gettext plural forms list: <a
-href="https://www.gnu.org/software/gettext/manual/html_node/Plural-forms.html">https://www.gnu.org/software/gettext/manual/html_node/Plural-forms.html</a></p>
+<p>Follow your language’s actual plural rules. Do not guess. Reference
+the official gettext plural forms list:
+https://www.gnu.org/software/gettext/manual/html_node/Plural-forms.html</p>
 <p>The <code>Plural-Forms</code> header in your <code>.po</code> file
-must match your language's rules. If the header is wrong, you will see
+must match your language’s rules. If the header is wrong, you will see
 errors when the CI gate checks your file.</p>
-<p>Examples:</p>
-<ul>
-<li>French has two forms: singular for 0 and 1, plural for 2 and above.
-<code>Plural-Forms: nplurals=2; plural=(n &gt; 1);</code></li>
-<li>Russian has four forms.</li>
-<li>English has two forms: singular for 1, plural for everything
-else.</li>
-</ul>
+<p>Examples: - French has two forms: singular for 0 and 1, plural for 2
+and above. <code>Plural-Forms: nplurals=2; plural=(n &gt; 1);</code> -
+Russian has four forms. - English has two forms: singular for 1, plural
+for everything else.</p>
 <p>The CI gate checks that every <code>msgstr[n]</code> entry exists for
 languages with more than two plural forms.</p>
 <hr />
@@ -525,18 +513,13 @@ runtime. They appear in two forms:</p>
 <li><code>%(name)s</code> — Old-style format: <code>%(count)s</code>,
 <code>%(provider)s</code></li>
 </ul>
-<p>Rules:</p>
-<ol type="1">
-<li>Never translate a placeholder. <code>{n}</code> must remain
-<code>{n}</code> in every language.</li>
-<li>Never remove a placeholder. If the source has <code>{count}</code>
-words selected<code>, your translation must also have </code>{count}` in
-some position.</li>
-<li>You may reorder placeholders within the sentence to match the
-grammar of your language. <code>{filename} is open</code> may become
-<code>{filename} est ouvert</code> or <code>ouvert: {filename}</code> —
-the placeholder can move, but it must be present.</li>
-</ol>
+<p>Rules: 1. Never translate a placeholder. <code>{n}</code> must remain
+<code>{n}</code> in every language. 2. Never remove a placeholder. If
+the source has <code>{count}</code> words
+selected<code>,    your translation must also have</code>{count}<code>in some position. 3. You may reorder placeholders within the sentence to match the grammar of    your language.</code>{filename}
+is open<code>may become</code>{filename} est
+ouvert<code>or</code>ouvert: {filename}` — the placeholder can move, but
+it must be present.</p>
 <p>The CI gate checks that every placeholder present in the source
 string is also present in the translation.</p>
 <hr />
@@ -562,7 +545,7 @@ translated:</p>
 </ul>
 <hr />
 <h2 id="product-glossary">Product Glossary</h2>
-<p>Refer to the Crowdin project glossary for your language's decisions
+<p>Refer to the Crowdin project glossary for your language’s decisions
 on product name translation. See <code>docs/translating.md</code> for
 the full product glossary list. Once a decision is recorded in the
 glossary, apply it consistently across all strings.</p>
@@ -571,24 +554,20 @@ glossary, apply it consistently across all strings.</p>
 French</h2>
 <p><strong>English source string:</strong></p>
 <pre><code>msgid &quot;&amp;New document\tCtrl+N&quot;</code></pre>
-<p>This string:</p>
-<ul>
-<li>Has mnemonic <code>&amp;N</code> (N is the first letter of
-"New").</li>
-<li>Has accelerator <code>\tCtrl+N</code>.</li>
-</ul>
+<p>This string: - Has mnemonic <code>&amp;N</code> (N is the first
+letter of “New”). - Has accelerator <code>\tCtrl+N</code>.</p>
 <p><strong>French translation:</strong></p>
 <pre><code>msgstr &quot;&amp;Nouveau document\tCtrl+N&quot;</code></pre>
 <ul>
-<li>Mnemonic <code>&amp;N</code> is placed on "Nouveau" (N is the first
+<li>Mnemonic <code>&amp;N</code> is placed on “Nouveau” (N is the first
 letter).</li>
 <li>Accelerator <code>\tCtrl+N</code> is unchanged.</li>
-<li>The menu item reads "Nouveau document" with N underlined in the
+<li>The menu item reads “Nouveau document” with N underlined in the
 menu.</li>
 </ul>
 <p><strong>A case where the mnemonic must move:</strong></p>
 <p>English: <code>&amp;Save As...\tCtrl+Shift+S</code> French:
-"Enregistrer sous" — "S" is already used by "Save / Enregistrer". The
+“Enregistrer sous” — “S” is already used by “Save / Enregistrer”. The
 Language Coordinator decides to use <code>Enreg&amp;istrer sous</code>
 (mnemonic on <code>i</code>) to avoid a conflict in the File menu. This
 decision is recorded in the Crowdin glossary and applied
@@ -602,7 +581,7 @@ docs/localization/translation-contributor-plan.md on
 <h1 id="quill-translation-contributor-plan">QUILL Translation
 Contributor Plan</h1>
 <p><strong>QUILL</strong> follows a community-first localization model
-inspired by NVDA's gettext workflow.</p>
+inspired by NVDA’s gettext workflow.</p>
 <p>This document is the working plan for contributors who want to help
 translate QUILL and help maintain translation quality across
 releases.</p>
@@ -708,32 +687,24 @@ contributors.</li>
 <li>Community review is encouraged for terminology, consistency, and
 accessibility clarity.</li>
 </ul>
-<h2 id="i18n-status-in-050">i18n status in 0.5.0</h2>
+<h2 id="i18n-status-in-0.5.0">i18n status in 0.5.0</h2>
 <p>This section records the honest starting position so translators know
 what coverage to expect and maintainers know what work remains.</p>
-<p><strong>What is done:</strong></p>
-<ul>
-<li><code>quill/locale/quill.pot</code> — extraction template committed
-and regenerated by <code>babel extract</code> (see
-<code>babel.cfg</code>).</li>
-<li><code>quill/core/i18n.py</code> — runtime <code>_()</code> loader
-wired; falls through to identity when no <code>.mo</code> is present, so
-the app runs without translations.</li>
-<li>Strings in most new 0.5.0 modules are wrapped with
-<code>_()</code>.</li>
-</ul>
-<p><strong>What is not done yet:</strong></p>
-<ul>
-<li>No language-specific <code>.po</code> / <code>.mo</code> files are
-shipped with 0.5.0. The product ships English-only with translation
-infrastructure in place.</li>
-<li>Several 0.5.0 surfaces have unwrapped strings:
+<p><strong>What is done:</strong> - <code>quill/locale/quill.pot</code>
+— extraction template committed and regenerated by
+<code>babel extract</code> (see <code>babel.cfg</code>). -
+<code>quill/core/i18n.py</code> — runtime <code>_()</code> loader wired;
+falls through to identity when no <code>.mo</code> is present, so the
+app runs without translations. - Strings in most new 0.5.0 modules are
+wrapped with <code>_()</code>.</p>
+<p><strong>What is not done yet:</strong> - No language-specific
+<code>.po</code> / <code>.mo</code> files are shipped with 0.5.0. The
+product ships English-only with translation infrastructure in place. -
+Several 0.5.0 surfaces have unwrapped strings:
 <code>github_provider.py</code> error messages, update flow status
 strings in <code>main_frame.py</code>, and assorted diagnostic/log
-strings throughout.</li>
-<li>Legacy modules (predating 0.5.0) are largely unwrapped; a systematic
-sweep is planned for 0.6.0.</li>
-</ul>
+strings throughout. - Legacy modules (predating 0.5.0) are largely
+unwrapped; a systematic sweep is planned for 0.6.0.</p>
 <p><strong>For the first translator:</strong> Open
 <code>quill/locale/quill.pot</code> and create
 <code>quill/locale/&lt;lang&gt;/LC_MESSAGES/quill.po</code> following

@@ -24,8 +24,15 @@ def test_schema_and_api_version_are_stable_identifiers() -> None:
     assert API_VERSION == 1
 
 
-def test_consent_gated_caps_are_the_fs_and_net_caps_only() -> None:
-    assert CONSENT_GATED_CAPABILITIES == frozenset({"fs.read", "fs.write", "net"})
+def test_consent_gated_caps_are_the_fs_net_and_core_settings_write() -> None:
+    # settings.core.write requires explicit user confirmation per change,
+    # making it as privileged as file/network access.
+    assert CONSENT_GATED_CAPABILITIES == frozenset({
+        "fs.read",
+        "fs.write",
+        "net",
+        "settings.core.write",
+    })
     assert CONSENT_GATED_CAPABILITIES <= CAPABILITIES
 
 
@@ -78,3 +85,34 @@ def test_capability_error_names_the_capability() -> None:
     error = CapabilityError("net", detail="fetch(url)")
     assert error.capability == "net"
     assert "net" in str(error)
+
+
+def test_document_events_catalogue_has_fourteen_entries() -> None:
+    from quill.core.quillins.model import DOCUMENT_EVENTS
+
+    expected = {
+        "document.opened",
+        "document.activated",
+        "document.before_save",
+        "document.after_save",
+        "document.before_close",
+        "document.after_close",
+        "document.created",
+        "document.loaded_from_session",
+        "smart_trigger.entered",
+        "abbreviation.expanded",
+        "quillin.enabled",
+        "quillin.disabled",
+        "quill.shutdown",
+        "settings.changed",
+    }
+    assert DOCUMENT_EVENTS == expected
+
+
+def test_contributions_carries_new_contribution_fields() -> None:
+    c = Contributions()
+    assert c.abbreviations == ()
+    assert c.smart_triggers == ()
+    assert c.preferences == ()
+    assert c.document_events == ()
+    assert c.status_bar == ()

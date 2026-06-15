@@ -1289,6 +1289,9 @@ class MenuBuilderMixin:
         compare_menu.Append(self._id_compare_copy_all, "Copy A&ll Differences")
         tools_menu.AppendSubMenu(compare_menu, "C&omparison")
 
+        # Braille -----------------------------------------------------------------
+        tools_menu.AppendSubMenu(self._build_braille_menu(), "&Braille")
+
         # Watch Folder (extracted from former Dictation submenu) --------------
         watch_folder_menu = wx.Menu()
         watch_folder_menu.Append(
@@ -1678,10 +1681,6 @@ class MenuBuilderMixin:
             self._id_save_diagnostics,
             self._menu_label("Save &Diagnostics...", "help.save_diagnostics"),
         )
-        help_menu.Append(
-            self._id_report_bug,
-            self._menu_label("Report a &Bug...", "help.report_bug"),
-        )
         help_menu.AppendSeparator()
         profiles_menu = wx.Menu()
         profiles_menu.Append(
@@ -1712,6 +1711,10 @@ class MenuBuilderMixin:
             self._menu_label("Reset to &Essential Profile", "help.reset_feature_profile"),
         )
         help_menu.AppendSubMenu(profiles_menu, "Feature &Profiles")
+        help_menu.Append(
+            self._id_report_bug,
+            self._menu_label("Report a &Bug...", "help.report_bug"),
+        )
         # "Check for Updates on Startup" lives in Settings now (removed the
         # duplicate Help-menu toggle).
         help_menu.Append(self._id_check_updates, "Check for &Updates...")
@@ -1731,7 +1734,6 @@ class MenuBuilderMixin:
         menu_bar.Append(navigate_menu, "&Navigate")
         menu_bar.Append(search_menu, "&Search")
         menu_bar.Append(tools_menu, "&Tools")
-        menu_bar.Append(self._build_braille_menu(), "&Braille")
         menu_bar.Append(window_menu, "&Window")
         menu_bar.Append(help_menu, "&Help")
 

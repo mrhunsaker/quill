@@ -2,7 +2,7 @@
 ; Edit build_inno_setup_script(), not this file, to change packaging.
 
 #define AppName "Quill"
-#define AppVersion "0.5.1"
+#define AppVersion "0.6.0"
 #define AppPublisher "Blind Information Technology Solutions (BITS) and Community Access"
 #define AppURL "https://github.com/Community-Access/quill"
 #define AppExeName "run-quill.cmd"
@@ -38,7 +38,7 @@ MinVersion=10.0
 ; The file-association and Send-to-Quill tasks write Explorer keys, so
 ; tell Windows to refresh association/icon caches after install.
 ChangesAssociations=yes
-OutputBaseFilename=Quill-Setup-0.5.1
+OutputBaseFilename=Quill-Setup-0.6.0
 Compression=lzma2/ultra
 SolidCompression=yes
 WizardStyle=modern
@@ -85,9 +85,13 @@ Name: "speechkokoro"; Description: "Install bundled Kokoro voices/models"; Types
 Name: "speechpiper"; Description: "Install bundled Piper voices/models"; Types: full custom; Flags: checkablealone
 Name: "speechopenvoice"; Description: "Install bundled OpenVoice voices/models"; Types: full custom; Flags: checkablealone
 Name: "nodejs"; Description: "Install portable Node.js runtime for Node Quillins and the Developer Console TypeScript interface (~30 MB); not required for Python Quillins"; Types: custom; Flags: checkablealone
+Name: "braillepack"; Description: "Install QUILL Braille Pack (liblouis translation engine, UEB, Standard American English, and international braille profiles, ~15 MB)"; Types: full custom; Flags: checkablealone
 
 [Files]
-Source: "..\portable\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "docs\QUILL-PRD.md,tools\pandoc\*,tools\speech\dectalk\*,tools\speech\espeak-ng\*,tools\speech\kokoro\*,tools\speech\piper\*,tools\speech\openvoice\*,tools\nodejs\*"
+Source: "..\portable\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "docs\QUILL-PRD.md,tools\pandoc\*,tools\speech\dectalk\*,tools\speech\espeak-ng\*,tools\speech\kokoro\*,tools\speech\piper\*,tools\speech\openvoice\*,tools\nodejs\*,vendor\braille-pack\*"
+; QUILL Braille Pack: liblouis runtime, translation tables, and BRF profiles.
+; Installed to vendor\braille-pack so QUILL detects it automatically via QUILL_APP_ROOT.
+Source: "..\portable\vendor\braille-pack\*"; DestDir: "{app}\vendor\braille-pack"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: braillepack
 Source: "..\portable\tools\pandoc\*"; DestDir: "{app}\tools\pandoc"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: pandoc
 Source: "..\portable\tools\speech\dectalk\*"; DestDir: "{app}\tools\speech\dectalk"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Excludes: "voices\*"; Components: speechdectalk
 Source: "..\portable\tools\speech\dectalk\voices\*"; DestDir: "{app}\tools\speech\dectalk\voices"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: speechdectalk\voices\all_voices
@@ -359,4 +363,3 @@ begin
     end;
   end;
 end;
-

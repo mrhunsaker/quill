@@ -126,6 +126,8 @@ It operates in two primary layers:
 
 The QUILL key is its own tiny language: every chord is data-driven from the keymap, which means every chord is fully remappable in **Preferences → Keyboard → Keymap Editor**. The full cheat sheet is one keystroke away (`Ctrl+Shift+Grave, ?`).
 
+**QUILL key sound.** When the QUILL key is pressed and the prefix arms, QUILL plays a short two-tone earcon (`quill_key_pressed`) — a quick double-ping distinct from all other sounds — so you get instant audio confirmation without waiting for speech. This earcon is included in all bundled sound packs and can be toggled individually in **Tools → Reading & Dictation → Sound Events...**.
+
 **Detection note.** On some keyboards or drivers, Windows reports the grave/back-tick key differently than expected. QUILL now uses three independent detection strategies (character code, Windows virtual key VK_OEM_3, and physical scan code 0x29) so the key is recognized on any layout.
 
 **Reassigning chord commands.** Open **Preferences → Keyboard → Keymap Editor**, find the command you want to move, and type a new chord binding in the form `Ctrl+Shift+Grave, X` (replacing `X` with the key you want). Conflict detection prevents accidental double-bindings.
@@ -684,6 +686,15 @@ When a comparison is open you can move through it from the keyboard: **F8** for 
 
 If you use a sound pack, compare mode also plays short earcons: one when a comparison opens, one when it closes, distinct ticks for moving to the next or previous difference, and a soft "blocked" tone when you reach the first or last difference with nothing further to show. You can turn any of these on or off individually in **Tools → Reading & Dictation → Sound Events...** under the Compare section. See [Sound notifications and earcons](#sound-notifications-and-earcons).
 
+#### Braille
+
+- **Status** — Read Braille Status, Read Detailed Braille Status, Read Current Line and Cell, Read Current Braille Page, Read Current Print Page, Read Progress Summary.
+- **Navigation** — Go to Braille Page…, Next Braille Page, Previous Braille Page.
+- **Page Tools** — Insert Braille Page Break, Remove Braille Page Break, Recalculate Page Map, Normalize Line Endings (placeholder).
+- **Translation** (requires the optional QUILL Braille Pack) — a dynamic submenu organized into UEB (Contracted and Uncontracted), Standard American English Legacy (Contracted and Uncontracted), and More Languages (populated from the installed pack). Hidden when the pack is absent or in Safe Mode.
+
+See [Braille and BRF Support](#braille-and-brf-support) for full details on translation and the Universal BRF Pack.
+
 #### Power Tools
 
 Power Tools is the expanded home for automation utilities, developer tools, and editor-behavior power toggles.
@@ -742,9 +753,9 @@ These tools help review the editor experience itself, the current document's lin
 - **Export and Back Up...** / **Import or Restore...**
 - **Keymap Editor...** / **Export Keymap...** / **Import Keymap...** / **Reset Keymap**
 - **Show Notifications**
-- **Report a Bug...**
 - **Save Diagnostics...**
 - **Open Logs Folder** / **Open Diagnostics Folder**
+- **Report a Bug...**
 - **Check for Updates**
 
 Customize & Support merges the former separate Support and Customize submenus. All configuration and support paths live in one place, which is where both users and support staff expect to find them.
@@ -767,11 +778,11 @@ The **Help** menu is where Quill becomes a guide.
 - **Open Welcome Guide** opens a lighter, profile-aware getting-started document.
 - **Open Keyboard Reference** generates the current live shortcut reference from the active command registry.
 - **Save Diagnostics...** writes a local diagnostics bundle you can review before sharing.
-- **Report a Bug...** opens an in-app review screen, copies the environment summary to the clipboard, and then opens the Community Access support-hub issue form.
 - **What Can I Do Here?** gives context-aware assistance.
 - **Why Don't I See a Feature?** explains profile-driven feature visibility.
 - **Feature Profiles** commands let you switch profile, run health checks, undo the last profile change, reset to Essential, and run onboarding.
 - **Personalise QUILL...** (the first-run setup wizard) can be rerun at any time to adjust your keyboard pack, feature profile, remote access, AI, reading and accessibility, writing tools, and startup behaviour.
+- **Report a Bug...** opens an in-app review screen, copies the environment summary to the clipboard, and then opens the Community Access support-hub issue form.
 - **Check for Updates...** verifies the signed update manifest, opens the installer download page, and can close Quill so setup can run immediately.
 - **About Quill** shows version, publisher details, and linked third-party dependency attribution with license and version metadata.
 - **Open Third-Party Notices** opens a full notices document with dependency tables and bundled license texts.
@@ -937,12 +948,83 @@ The manager also has **Import** and **Export** buttons for JSON round-trips. Exp
 
 **Sound feedback.** Optional: enable **Play sound on abbreviation expansion** in `Tools > Customize & Support > Preferences > Editing` and optionally point **Abbreviation expansion sound file** to a `.wav` file. Leave the path blank for the default system beep.
 
+**Quillin-contributed abbreviations.** Installed Quillins can add their own abbreviations to the registry. These are listed in the Insert Automation Reference and can be disabled per-Quillin in **Preferences → Quillins**. Your own abbreviations always take priority over Quillin-contributed ones; if two Quillins claim the same trigger, the conflict is visible in the Conflict Manager.
+
+The bundled **Smart Insert** Quillin contributes five abbreviations by default:
+
+| Trigger | Inserts |
+| --- | --- |
+| `qbug` | Bug report template (Title, Build, Screen reader, Windows version, Steps, Expected, Actual, Notes) |
+| `qmeet` | Meeting notes template with today's date |
+| `qlog` | Date and time timestamp |
+| `qtodo` | Three-item to-do checklist |
+| `qbrf` | Predictable BRF test document |
+
 **Tips.**
 
 - Use `${cursor}` to drop the cursor inside a template. For example, the abbreviation `sig` expanding to `Best regards,${cursor}Jeff` positions the cursor right after the comma.
 - Use case-sensitive abbreviations sparingly — most triggers are lowercase and case sensitivity is rarely needed.
 - Abbreviations fire before snippet expansion. If a word matches both, the abbreviation wins.
 - Export your library regularly as a backup and to share abbreviations between machines.
+
+### Insert Automation: Smart Triggers, Log Files, and Append Anchors
+
+Insert Automation is the umbrella system that ties abbreviations, smart text triggers, `.LOG` file support, and document anchors together into one keyboard-first platform. Every action it takes is announced, undoable, and triggered only by an exact match — nothing runs in the background, nothing scans your file without being asked.
+
+#### Smart Text Triggers
+
+A smart text trigger is a typed command that begins with `=`, appears alone on the current line, and expands when you press Enter. Because they start with `=`, they can never accidentally fire inside a sentence.
+
+The bundled **Smart Insert** Quillin contributes these triggers out of the box:
+
+| Trigger | Inserts |
+| --- | --- |
+| `=bug()` | Bug report template |
+| `=meeting()` | Meeting notes with today's date |
+| `=journal()` | Journal entry with today's date |
+| `=todo()` or `=todo(5)` | To-do checklist (5 items by default, or however many you specify) |
+| `=logentry()` | Timestamp at the cursor, formatted by your Log Mode settings |
+| `=brftest()` | Predictable multi-page BRF test document |
+| `=rand(3,4)` | Three paragraphs of four readable sentences each |
+
+**How to use.** Type the trigger alone on a line and press Enter. If the trigger matches, QUILL replaces the whole line with the generated text and announces what it inserted. If it does not match, nothing happens and the Enter key behaves normally.
+
+**Large insertions.** If a trigger would produce more text than the configured threshold (default: 50 paragraphs), QUILL asks for confirmation before inserting anything. You can adjust the threshold in **Preferences → Quillins → Smart Insert → General**.
+
+**Enabling and disabling triggers.** Every trigger can be turned on or off individually in **Preferences → Quillins → Smart Insert → Smart Triggers**. Disabling a trigger means the `=name()` text is simply left as-is rather than replaced.
+
+#### `.LOG` File Compatibility
+
+If the first line of a text file is `.LOG`, QUILL treats the file as a timestamped log — the same behavior Notepad has had for decades.
+
+When you open a `.LOG` file QUILL:
+
+1. Detects `.LOG` at the top of the file (in the first 4096 bytes).
+2. Finds the best place to insert a new entry: a `QUILL-LOG-APPEND-HERE` anchor near the bottom of the file, or the end of the document if no anchor is present.
+3. Inserts a fresh timestamp.
+4. Places the cursor right after the timestamp so you can start typing immediately.
+5. Announces "Log timestamp inserted. Type your entry."
+
+Read-only files are never modified. `.LOG` in the middle of a file does not activate automatically. A UTF-8 BOM before `.LOG` is accepted.
+
+**Timestamp format.** Configure the format under **Preferences → Quillins → Smart Insert → Log Mode**:
+
+- Long date and time (default): `Sunday, June 14, 2026 9:42 PM`
+- Short: `06/14/2026 09:42 PM`
+- ISO 8601: `2026-06-14T21:42:00`
+- Date only, Time only, or a custom `strftime` pattern
+
+**Custom format example.** Set Timestamp format to Custom, then enter `%Y-%m-%d %H:%M` to get `2026-06-14 21:42`.
+
+#### Append Anchors
+
+Any file can have a `QUILL-APPEND-HERE` marker near the bottom. When QUILL generates content that belongs at the end of the file — a log timestamp, a generated template, a BRF test block — it inserts the new content immediately before the anchor and leaves the anchor in place for next time.
+
+This gives you a stable target that survives repeated use. Your footer notes, metadata, or closing instructions stay below the anchor; new content always lands above them.
+
+A `.LOG` file can use the more specific `QUILL-LOG-APPEND-HERE` anchor to separate log-mode insertions from other generated content.
+
+**To add an anchor.** Type `QUILL-APPEND-HERE` alone on a line near the bottom of your file. That is all — QUILL finds it automatically the next time content is generated for that file.
 
 ### Copy With Source
 
@@ -1243,7 +1325,7 @@ Quill can play short, non-speech audio cues — earcons — at meaningful editin
 - **Compare cues.** When a sound pack is active, compare mode plays distinct cues for opening and closing a comparison, moving to the next or previous difference, and bumping against the first or last difference. See [Comparison](#comparison).
 - **Toggle everything.** **Toggle Sound Notifications** (in Reading & Dictation) turns all earcons on or off at once, and plays a short confirming "on" or "off" cue so you know which state you landed in.
 
-Every scripted earcon in the bundled pack is a distinct sound, so two different events never sound identical. Pack authors can map any event ID to any WAV file; the full QSP format and event reference are documented in the product requirements document, under "Sound notifications and QSP sound packs."
+Earcon events in the bundled Ink pack include: `quill_key_pressed` (QUILL key prefix armed), `abbreviation_expanded`, `abbreviation_deleted`, `snippet_inserted`, `autocomplete_accepted`, `document_saved`, `document_created`, `search_found`, `search_not_found`, `search_wrapped`, `heading_jumped`, `table_entered`, `browse_mode_on`, `browse_mode_off`, `ai_thinking_started`, `ai_response_received`, `ai_error`, `transcription_started`, `transcription_stopped`, `ssh_connected`, `ssh_disconnected`, `error`, `warning`, `sound_on`, `sound_off`, and the five compare events. Every scripted earcon in the bundled pack is a distinct sound, so two different events never sound identical. Pack authors can map any event ID to any WAV file; the full QSP format and event reference are documented in the product requirements document, under "Sound notifications and QSP sound packs."
 
 ## Quill on macOS
 
@@ -1561,7 +1643,7 @@ QUILL opens and edits formatted braille text files — `.brf`, `.brl`, `.pef`, a
 
 **The braille status cell.** While a braille file is active, the status bar carries a braille cell that updates as you move: it reads like `BRF Pg 12/87 | Ln 14/25 | Cell 31/40 | Print 7`. That is the braille page, the line within the page, the cell within the line, and the print page. Print-page detection arrives in a later phase; until then the print segment reads `Print ?`.
 
-**The Braille menu.** A top-level **Braille** menu groups the commands. Bindings are intentionally left unset so nothing collides with your screen reader or existing editor keys; you can assign your own in the keyboard customizer, or run them from the Command Palette.
+**The Braille menu.** Braille commands live under **Tools > Braille**. Bindings are intentionally left unset so nothing collides with your screen reader or existing editor keys; you can assign your own in the keyboard customizer, or run them from the Command Palette.
 
 - **Status** — Read Braille Status (respects your status verbosity), Read Detailed Braille Status, Read Current Line and Cell, Read Current Braille Page, Read Current Print Page, and Read Progress Summary (how far through the document you are).
 - **Navigation** — Go to Braille Page… (type a page number), Next Braille Page, and Previous Braille Page. Stepping past the first or last page tells you there is no more.
@@ -1569,9 +1651,15 @@ QUILL opens and edits formatted braille text files — `.brf`, `.brl`, `.pef`, a
 
 Every status and navigation command is safe to run on a non-braille document — it simply tells you "This is not a braille document" rather than doing anything.
 
-**Translation (Universal BRF Pack).** Forward and back translation between print text and UEB braille require the optional **QUILL Braille Pack**. Instead of a simple set of tables, the pack uses a three-layer architecture: a full technical catalog of every available liblouis table, a set of user-facing profiles that map friendly names (like "UEB Grade 2") to the correct tables, and the translation runtime itself. 
+**Translation (Universal BRF Pack).** Forward and back translation between print text and braille require the optional **QUILL Braille Pack**. Instead of a simple set of tables, the pack uses a three-layer architecture: a full technical catalog of every available liblouis table, a set of user-facing profiles that map friendly names to the correct tables, and the translation runtime itself.
 
-The pack is not bundled by default; when it is absent, the **Translation** submenu is hidden so you never see disabled items, and a **Braille → Install Braille Pack…** item points you at the docs. When the pack is installed, the Translation submenu offers Translate to UEB Grade 1, Translate to UEB Grade 2, Translate Selection to UEB, and Back-Translate UEB. Forward translation opens the BRF result in a new document and tells you how many braille pages it produced. Back-translation always opens its result as a clearly labeled **draft** ("Back-translation draft. N words. Review against the BRF.") because no automatic back-translation is authoritative. Translation runs entirely out of process, so a liblouis failure can never take QUILL down; if it fails, QUILL announces the reason and does not open an empty document. The Translation submenu and the installer are also hidden in Safe Mode.
+The pack is not bundled by default. When it is absent, the **Translation** submenu is hidden so you never see disabled items. When the pack is installed, the Translation submenu is dynamic and organized into sections:
+
+- **UEB (Unified English Braille)** — Contracted (Grade 2), Uncontracted (Grade 1), Translate Selection to UEB, and Back-Translate UEB.
+- **Standard American English (Legacy)** — Contracted (Grade 2) and Uncontracted (Grade 1) using the traditional North American English tables.
+- **More Languages** — a submenu populated automatically from the installed pack's profile catalog. Languages with multiple profiles (for example, contracted and uncontracted variants) appear as their own sub-group. Examples include German, French, Spanish, Russian, Korean, and dozens more.
+
+Forward translation opens the BRF result in a new document and tells you how many braille pages it produced. Back-translation always opens its result as a clearly labeled **draft** ("Back-translation draft. N words. Review against the BRF.") because no automatic back-translation is authoritative. Translation runs entirely out of process, so a liblouis failure can never take QUILL down; if it fails, QUILL announces the reason and does not open an empty document. The Translation submenu is also hidden in Safe Mode.
 
 ## Help, Learning, and Daily Confidence
 
@@ -1797,32 +1885,106 @@ Quill is trying to feel like a skilled guide sitting just beside the editor, not
 
 ## Quillins: Sandboxed Extensions
 
-Quill supports **Quillins** — small, sandboxed extensions that add new commands, snippets, and menu items to the editor without requiring a full app restart.
+Quill supports **Quillins** — small, sandboxed extensions that add commands, snippets, menus, abbreviations, smart triggers, settings pages, status bar cells, and document event handlers to the editor without requiring a full app restart. QUILL renders every control using accessible, screen-reader-friendly stock widgets — a Quillin never touches wxPython directly.
 
 ### Bundled Quillins
-Quill ships with several trusted, first-party Quillins enabled by default. These provide common utilities that would otherwise clutter the core editor:
 
-- **Text Tools**: Provides advanced text transformations and analysis, including:
-  - **Line Numbering**: Prefix lines with sequential numbers.
-  - **Hard Wrap**: Wrap text at a specific character width.
-  - **Regular Expression Tools**: Count or extract patterns across the document.
-  - **Block Filtering**: Find lines that are common to two blocks or exist only in the first.
-- **Insert Tools**: Provides smart placeholders for quick insertion, such as the current **Date** and **Date/Time**.
+QUILL ships thirteen trusted, first-party Quillins enabled by default:
+
+- **Smart Insert** (`com.quill.smartinsert`) — abbreviations and smart text triggers for everyday templates. Contributes `qbug`, `qmeet`, `qlog`, `qtodo`, and `qbrf` abbreviations, as well as `=bug()`, `=meeting()`, `=journal()`, `=todo()`, `=logentry()`, `=brftest()`, and `=rand()` smart triggers. Settings are under **Preferences → Quillins → Smart Insert**.
+- **BRF Tools** (`com.quill.brftools`) — preferences for braille translation defaults, page handling, status bar display, and diagnostics. Requires the QUILL Braille Pack.
+- **Journal Stamp** (`com.quill.journalstamp`) — inserts a date header when you create a new journal document; announces your word count (and daily goal progress) after every save; announces session restores. Listens to `quillin.enabled` to log activation and `settings.changed` to hot-reload preferences. Settings under **Preferences → Quillins → Journal Stamp**.
+- **Document Guardian** (`com.quill.docguardian`) — warns before closing short or unfinished documents; optionally stamps an `Updated:` line before each save; optionally speaks the file name and size after each save. Uses `quillin.enabled`, `quillin.disabled`, and `quill.shutdown` lifecycle events. Settings under **Preferences → Quillins → Document Guardian**.
+- **Status Scribe** (`com.quill.statusscribe`) — adds a live word/character/sentence count to the status bar. The count updates after every save and when you switch tabs. Uses the `ui.log` capability to write developer messages to the Developer Console. Settings under **Preferences → Quillins → Status Scribe**.
+- **Text Tools** — advanced text transformations: line numbering, hard-wrap, regex match counting, and block filtering.
+- **Insert Tools** — date, time, and date-and-time snippets in the **Insert → Date and Time** submenu.
+- **Line Tools** — cursor-aware line operations.
+- **Markdown Helpers** — syntax assistance for Markdown documents.
+- **Insert Character** — a searchable character picker for Unicode symbols.
+- **Word Count (Node)** — word count via the Node.js Quillin runtime, demonstrating that Quillins can be written in JavaScript as well as Python.
+- **AI Writing Prompts** — additional prompt library entries contributed by the Quillin manifest.
+- **AI Writing Skills** — pre-built `.sqp` skill files for rewriting, meeting-notes extraction, and research drafts.
+
+### Quillin Preferences
+
+Every Quillin that declares settings contributes a preferences page under **Preferences → Quillins → Quillin Name**. You can also open a Quillin's settings directly from the Quillins Manager.
+
+**Settings tabs.** A Quillin with several groups of settings organizes them into tabs. Use the left and right arrow keys to move between tabs; Tab reaches the tab's controls. Changing tabs does not reset unsaved settings.
+
+**Searchable.** Quillin settings appear in Preferences search alongside QUILL's own settings. Search for "timestamp format" and QUILL takes you directly to the right setting, named by Quillin and tab. Settings may also carry `search_keywords` — synonyms the author added so the setting appears under terms a user might naturally try.
+
+### Document Events
+
+Quillins can subscribe to document lifecycle events and run code automatically — no user action required. Fourteen events are available:
+
+| Event | When it fires |
+| --- | --- |
+| `document.opened` | A file was opened from disk |
+| `document.activated` | You switched to this tab |
+| `document.before_save` | Right before saving |
+| `document.after_save` | After a successful save |
+| `document.before_close` | Before a tab closes |
+| `document.after_close` | After a tab closes |
+| `document.created` | A new blank document was created |
+| `document.loaded_from_session` | A document was restored from a crash |
+| `smart_trigger.entered` | A smart trigger was activated |
+| `abbreviation.expanded` | An abbreviation was expanded |
+| `quillin.enabled` | This Quillin was just enabled or QUILL started with it on |
+| `quillin.disabled` | This Quillin was disabled in the Manager |
+| `quill.shutdown` | QUILL is about to close |
+| `settings.changed` | A setting owned by this Quillin changed |
+
+Event subscriptions can be filtered by file extension, path pattern, or content. A journal Quillin can limit itself to `**/journal/**` paths; a `.LOG` handler can require the file to start with `.LOG`.
+
+Each subscription carries an `enabled_by_default` field. When an author sets it to `false`, the handler starts inactive — useful for optional or potentially noisy behaviors. You can toggle any event on or off per-Quillin from the **Quillins Manager → Configure Events...** dialog.
+
+Handlers call `api.announce()` to speak results; they must not block the UI thread.
+
+**Reset controls.** Every preference page offers Reset options:
+
+- **Reset this setting** — restores the single setting to its manifest default.
+- **Reset this section** — restores all settings in the section.
+- **Reset this Quillin** — restores all settings for the Quillin to their manifest defaults.
+
+**Settings storage.** Each Quillin's settings are stored at `%APPDATA%\Quill\quillin_settings\<quillin-id>.json`, written atomically. Disabling a Quillin hides its preference page but keeps its stored settings. Uninstalling prompts you to keep or delete the data.
 
 ### The Quillins Manager
 
-Open via **Tools > Quillins**. The Manager lets you:
+Open via **Tools → Quillins**. The Manager lets you:
 
-- See every installed Quillin and its current status (enabled or disabled).
-- Select a Quillin to review its manifest: name, version, author, description, and declared capabilities.
-- Enable or disable a Quillin without removing it.
-- Remove a Quillin entirely (confirmation required).
-- **Install from Folder** — press this button to select a local folder containing a Quillin. QUILL reads its `manifest.json`, validates it, copies the folder into your per-user extensions directory, and enables it immediately. If a Quillin with the same id is already installed it is replaced. This is the supported path for installing third-party Quillins.
+- See every installed Quillin and its current status (enabled or disabled, or invalid with an error).
+- Select a Quillin to review its details: name, version, author, description, categories, minimum required QUILL version, declared capabilities, network host allowlist, and the on/off status of each event subscription.
+- **Enable** or **Disable** a Quillin without removing it. Changes take effect immediately.
+- **Configure Events...** — opens a dialog listing every document event subscription for the selected Quillin with a checkbox next to each. Check to activate a handler, uncheck to stop it. The state is saved immediately and persisted across restarts.
+- **Reload** — re-reads all Quillins from disk without restarting. Use this after editing a bundled Quillin during development.
+- **Remove** — uninstall a Quillin (confirmation required). The extension directory is deleted from disk.
+- **Install from Folder** — select a local folder containing a Quillin. QUILL validates its `manifest.json`, copies the folder into your per-user extensions directory, and enables it immediately. This is the supported path for installing third-party Quillins once the SEC-8 gate lifts.
 
-When you select a Quillin, the panel shows all declared capabilities (for example `fs.read` or `net`). Review these before enabling an extension from an unknown source.
+When you select a Quillin, the details pane shows all declared capabilities (for example `fs.read`, `net`, `settings.own.read`, or `settings.own.write`), any `net_allowed_hosts` restrictions, and the current on/off state of each event subscription. Review capabilities before enabling a Quillin from an unknown source.
+
+If a Quillin fails to load — because it requires a newer QUILL version (`min_quill_version`), a missing dependency (`requires`), or a manifest error — the error is shown in the details pane so you know what is blocking it.
 
 ### Authoring Quillins
-For developers, Quillins are designed to be "screen-reader-first." They follow a strict capability model: a Quillin must declare the minimum set of permissions it needs, and any sensitive action (like writing to a file) is consent-gated at runtime.
+
+For developers, Quillins are designed to be "screen-reader-first." They follow a strict capability model: a Quillin must declare the minimum set of permissions it needs, and any sensitive action (like writing to a file or changing a setting) is consent-gated at runtime.
+
+Quillins can contribute:
+
+- **Commands** — Python or Node.js handlers, or declarative snippets.
+- **Menus** — items in the standard QUILL menu bar.
+- **Hotkeys** — keyboard bindings that respect the QUILL key chord prefix.
+- **Abbreviations** — typed shortcuts that expand after a delimiter.
+- **Smart triggers** — `=name()` typed commands on the current line.
+- **Sound events and sound packs** — custom earcons tied to Quillin-specific events.
+- **Preferences** — structured settings pages with tabs, sections, validated controls, search keywords, and per-Quillin storage.
+- **Document events** — lifecycle handlers that fire automatically when a document opens, saves, closes, is restored, or when the Quillin itself is enabled, disabled, or the app shuts down.
+- **Status bar cells** — live cells that the host refreshes and displays in the QUILL status bar. Requires the `ui.status` capability.
+- **Categories** — one or more taxonomy labels (`writing`, `accessibility`, `braille`, `productivity`, and more) for filtering in the Manager.
+- **Dependencies (`requires`)** — declarations that another Quillin must be installed before this one loads. QUILL enforces these at discovery time.
+- **Network host allowlist (`net_allowed_hosts`)** — when declaring the `net` capability, restrict outbound connections to a named list of hostnames or wildcard patterns. QUILL blocks connections to any unlisted host even if the user has granted blanket `net` consent.
+- **Minimum version (`min_quill_version`)** — declare the oldest QUILL release the Quillin supports. QUILL rejects it at load time if the running version is too old.
+
+See `docs/quillins.md` for the full authoring reference.
 
 ---
 

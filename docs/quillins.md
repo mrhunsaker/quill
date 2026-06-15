@@ -871,14 +871,22 @@ against this before submission.
           "editor.write",
           "ui.announce",
           "ui.command",
+          "ui.prompt",
           "ui.status",
           "ui.choices",
+          "ui.log",
           "storage",
           "fs.read",
           "fs.write",
           "net",
           "clipboard.read",
-          "clipboard.write"
+          "clipboard.write",
+          "settings.own.read",
+          "settings.own.write",
+          "settings.core.read",
+          "settings.core.write",
+          "document.directives",
+          "document.events"
         ]
       }
     },
@@ -986,6 +994,36 @@ against this before submission.
           }
         }
       }
+    },
+    "categories": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "writing", "accessibility", "braille", "productivity",
+          "developer", "formatting", "navigation", "ai",
+          "integration", "education", "utilities"
+        ]
+      },
+      "description": "Taxonomy labels for the Quillins Manager filter."
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "description": "Fully-qualified id of the required Quillin." },
+          "min_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "description": "Minimum version of the dependency." }
+        }
+      },
+      "description": "Other Quillins that must be installed and valid before this one loads."
+    },
+    "net_allowed_hosts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Restrict the net capability to these hostnames or *.domain.com wildcard patterns."
     }
   },
   "allOf": [
@@ -2875,3 +2913,671 @@ To prevent unauthorized users from updating others' plugins, the system implemen
 
 ### 5.2 Automated Security Gate
 ...existing code...
+
+---
+
+# New in 0.6.0: Insert Automation contributions, Quillin Preferences, and per-Quillin settings
+
+QUILL 0.6.0 extends the Quillin manifest with three new contribution types and six new capabilities. These are the most significant additions to the Quillins platform since launch.
+
+## Abbreviation contributions
+
+A Quillin can contribute typed abbreviations to the Insert Automation registry. These expand after a delimiter (space, period, comma, etc.) exactly like user-defined abbreviations — except user abbreviations always win if there is a conflict.
+
+### Declarative abbreviation
+
+No entry module required. QUILL expands the `expansion` text directly, supporting the same placeholders as snippet commands:
+
+```json
+{
+  "contributes": {
+    "abbreviations": [
+      {
+        "trigger": "qbug",
+        "expansion": "Title:\nBuild:\nScreen reader:\nWindows version:\nSteps to reproduce:\n\nExpected result:\n\nActual result:\n\nNotes:\n${cursor}",
+        "description": "Insert a QUILL bug report template",
+        "category": "Templates",
+        "enabled_by_default": true
+      }
+    ]
+  }
+}
+```
+
+Required fields: `trigger`, `description`, and one of `expansion` or `handler`.
+
+Optional fields: `category`, `enabled_by_default`, `case_sensitive`, `file_extensions`.
+
+### Dynamic abbreviation
+
+A handler-based abbreviation calls a Python function after an exact trigger match. The trigger must still match exactly before the handler is called — handlers never poll the document on every keystroke.
+
+```json
+{
+  "contributes": {
+    "abbreviations": [
+      {
+        "trigger": "qbrf",
+        "handler": "insert_brf_test",
+        "description": "Insert a BRF test document via dynamic handler",
+        "category": "Braille",
+        "enabled_by_default": true
+      }
+    ]
+  }
+}
+```
+
+Dynamic abbreviations require `main` + `ui.command` in capabilities, just like handler-based commands.
+
+## Smart trigger contributions
+
+Smart triggers are `=name()` commands typed alone on the current line and activated with Enter. A Quillin contributes them by name; QUILL dispatches to the linked command when the trigger text matches.
+
+```json
+{
+  "contributes": {
+    "smart_triggers": [
+      {
+        "trigger": "bug",
+        "command": "ext.smartinsert.bug",
+        "syntax": "=bug()",
+        "description": "Insert a bug report template.",
+        "category": "Templates",
+        "enabled_by_default": true
+      },
+      {
+        "trigger": "rand",
+        "command": "ext.smartinsert.rand",
+        "syntax": "=rand(paragraphs, lines)",
+        "description": "Insert readable sample text.",
+        "category": "Sample Text",
+        "enabled_by_default": true,
+        "min_args": 0,
+        "max_args": 2,
+        "large_insert_threshold": 50
+      }
+    ]
+  }
+}
+```
+
+Required fields: `trigger`, `command`, `syntax`, `description`.
+
+Optional fields: `category`, `enabled_by_default`, `min_args`, `max_args`, `large_insert_threshold`, `file_extensions`.
+
+Rules:
+- Trigger names do not include `=`. They must be lowercase.
+- The `command` must reference a command contributed by this Quillin or a built-in command id.
+- Triggers activate only when the exact text appears alone on the current line and Enter is pressed.
+- Third-party smart trigger contributions require the Smart Triggers feature to be enabled.
+
+## Preferences contributions
+
+This is the headline new contribution type. A Quillin can declare its own preferences page, organized into tabs and sections, and QUILL renders them using accessible stock controls. The Quillin never touches `wx` directly.
+
+### Minimal preferences page
+
+```json
+{
+  "contributes": {
+    "preferences": [
+      {
+        "id": "mytool",
+        "title": "My Tool",
+        "description": "Configure My Tool behavior.",
+        "settings": [
+          {
+            "key": "enable_feature",
+            "label": "Enable my feature",
+            "type": "boolean",
+            "default": true,
+            "description": "Turn my feature on or off."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Full preferences page with tabs
+
+For Quillins with several related setting groups, declare tabs. Each tab contains sections, and each section contains settings:
+
+```json
+{
+  "contributes": {
+    "preferences": [
+      {
+        "id": "smartinsert",
+        "title": "Smart Insert",
+        "parent": "Editing",
+        "placement": "page",
+        "description": "Configure Smart Insert triggers and log mode.",
+        "tabs": [
+          {
+            "id": "general",
+            "title": "General",
+            "description": "General behavior.",
+            "order": 10,
+            "sections": [
+              {
+                "id": "general_behavior",
+                "title": "General Behavior",
+                "settings": [
+                  {
+                    "key": "confirm_large_insertions",
+                    "label": "Confirm before large insertions",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Ask before inserting generated text above the threshold."
+                  },
+                  {
+                    "key": "large_insert_threshold",
+                    "label": "Large insertion threshold (paragraphs)",
+                    "type": "integer",
+                    "default": 50,
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "description": "Ask for confirmation when inserting this many paragraphs."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "log_mode",
+            "title": "Log Mode",
+            "description": "Configure .LOG file behavior and timestamp format.",
+            "order": 20,
+            "sections": [
+              {
+                "id": "log_mode_behavior",
+                "title": "Log Mode Behavior",
+                "settings": [
+                  {
+                    "key": "timestamp_format",
+                    "label": "Timestamp format",
+                    "type": "choice",
+                    "default": "long",
+                    "description": "Controls how timestamps are formatted.",
+                    "choices": [
+                      { "value": "long", "label": "Long date and time" },
+                      { "value": "short", "label": "Short date and time" },
+                      { "value": "iso", "label": "ISO 8601" },
+                      { "value": "custom", "label": "Custom format" }
+                    ]
+                  },
+                  {
+                    "key": "custom_timestamp_format",
+                    "label": "Custom timestamp pattern",
+                    "type": "string",
+                    "default": "",
+                    "description": "Python strftime pattern when Timestamp format is Custom.",
+                    "visible_when": { "setting": "timestamp_format", "equals": "custom" }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Supported setting types
+
+| Type | Control | Notes |
+| --- | --- | --- |
+| `boolean` | Checkbox | |
+| `choice` | Combo box | Requires `choices` array with `value` and `label` |
+| `radio` | Radio button group | Requires `choices` array |
+| `string` | Single-line text field | |
+| `text` | Multi-line text field | |
+| `integer` | Numeric field | Supports `minimum`, `maximum`, `step` |
+| `number` | Decimal numeric field | Supports `minimum`, `maximum`, `step` |
+| `path` | File or folder picker | |
+| `password` | Masked text field | Set `sensitive: true` |
+| `list` | Editable list | |
+| `action` | Button | |
+| `info` | Read-only help text | |
+
+### Conditional visibility
+
+A setting can declare `visible_when` or `enabled_when` to show or enable itself only when another setting in the same page has a specific value:
+
+```json
+{
+  "key": "custom_timestamp_format",
+  "visible_when": { "setting": "timestamp_format", "equals": "custom" }
+}
+```
+
+### Placement
+
+A preferences page may declare a preferred parent area (`parent`) and placement style (`placement`: `page`, `tab`, or `section`). QUILL may override placement to avoid clutter. Third-party Quillins are placed under **Preferences → Quillins → Quillin Name** by default; bundled first-party Quillins may integrate into the Editing or Tools areas.
+
+### Required setting fields
+
+Every setting must declare `key`, `label`, `type`, `default`, and `description`. No unlabeled controls are allowed. This is enforced at lint time.
+
+## Settings storage and the Quillin API
+
+Each Quillin's settings are stored at `%APPDATA%\Quill\quillin_settings\<quillin-id>.json`, written atomically. The Quillin can read and write its own settings through the API:
+
+```python
+def my_handler(api):
+    fmt = api.get_setting("timestamp_format")     # "long", "short", "iso", ...
+    api.set_setting("timestamp_format", "iso")
+    api.reset_setting("timestamp_format")         # restores manifest default
+```
+
+Settings survive restarts, are retained when a Quillin is disabled, and can be reset to manifest defaults at any time from the preferences page. Uninstalling a Quillin prompts to keep or delete its data.
+
+## New capabilities
+
+| Capability | What it grants |
+| --- | --- |
+| `settings.own.read` | Read this Quillin's declared settings |
+| `settings.own.write` | Write this Quillin's declared settings |
+| `settings.core.read` | Read QUILL core settings (requires user review) |
+| `settings.core.write` | Change a QUILL core setting (requires explicit user confirmation per change) |
+| `document.directives` | Respond to top- or bottom-of-file document markers |
+| `document.events` | Register handlers for document lifecycle events (open, save, close, etc.) |
+
+Sensitive QUILL settings (AI credentials, network settings, security flags, third-party Quillin enablement) cannot be written by any Quillin regardless of capability.
+
+## Bundled examples
+
+Two bundled Quillins ship in 0.6.0 as reference implementations of these new features:
+
+- **Smart Insert** (`com.quill.smartinsert`) — abbreviations, smart triggers, and a five-tab preferences page. Handler-based commands for `=bug()`, `=meeting()`, `=journal()`, `=todo()`, `=logentry()`, `=brftest()`, and `=rand()`. See `quill/quillins_bundled/smart-insert/`.
+- **BRF Tools** (`com.quill.brftools`) — declarative preferences only, no handler code. Shows a four-tab settings page for translation defaults, page dimensions, status bar display, and advanced diagnostics. See `quill/quillins_bundled/brf-tools/`.
+
+## Accessibility rules for Quillin Preferences
+
+- The tab list must be keyboard-reachable and arrow-key navigable.
+- Every control must have a label. The lint gate rejects settings without `label`, `type`, `default`, and `description`.
+- Search results must identify the Quillin, page, tab, and setting.
+- Focus must return predictably after the page closes.
+- No custom-drawn controls. No unlabeled controls. No mouse-only interactions.
+- Screen readers must be able to review every preference without extra effort.
+
+These rules are enforced at lint time, at load time, and at render time. A Quillin that violates them does not reach the preferences UI.
+
+## Document event contributions
+
+A Quillin can now respond to the things that happen to a document over its lifetime — when it opens, saves, closes, or is restored — by declaring `document_events` in its manifest. Each entry names one lifecycle event and one Python handler function.
+
+### The ten available events
+
+| Event name | When it fires |
+| --- | --- |
+| `document.opened` | A file was read from disk and loaded into an editor tab |
+| `document.activated` | The user switched focus to this document tab |
+| `document.before_save` | Immediately before a save; the document is still writable |
+| `document.after_save` | After a successful save; the file is on disk |
+| `document.before_close` | Before the tab is removed; the user can still cancel |
+| `document.after_close` | After the tab is gone; use for cleanup only |
+| `document.created` | A new, empty document was created (not opened from disk) |
+| `document.loaded_from_session` | A document was restored from a crash or session file |
+| `smart_trigger.entered` | Any smart trigger (`=name()`) was activated in any document |
+| `abbreviation.expanded` | Any abbreviation was expanded in any document |
+
+Note: `document.activated` fires every time focus changes. Do not perform expensive work there.
+
+High-frequency events (text changed, cursor moved, key pressed) are not available in version 1.
+They would allow a Quillin to observe every keystroke, which is both a performance hazard and a
+privacy problem. They are excluded by design.
+
+### Minimal example
+
+```json
+{
+  "schema": "quill.extension/1",
+  "id": "com.example.journal-stamp",
+  "name": "Journal Stamp",
+  "version": "1.0.0",
+  "capabilities": ["document.events", "editor.write", "ui.announce"],
+  "main": "extension.py",
+  "contributes": {
+    "document_events": [
+      {
+        "event": "document.created",
+        "handler": "on_document_created",
+        "title": "Insert journal header",
+        "description": "Adds an ISO date line to every new document opened in the journal folder.",
+        "conditions": {
+          "file_path_pattern": "**/journal/**"
+        }
+      }
+    ]
+  }
+}
+```
+
+```python
+# extension.py
+def on_document_created(api, event):
+    from datetime import date
+    api.editor_insert(f"{date.today().isoformat()}\n\n")
+    api.announce("Journal header inserted.")
+```
+
+### Full document_events entry schema
+
+```json
+{
+  "event": "document.opened",
+  "handler": "my_handler_function",
+  "title": "Short display name (shown in Quillin Manager)",
+  "description": "What this handler does — shown in the event log and Quillin Manager.",
+  "conditions": {
+    "file_extension": ".log",
+    "file_path_pattern": "**/logs/**",
+    "content_pattern": "^\\.(LOG|log)"
+  },
+  "filter_extensions": [".txt", ".log"],
+  "enabled_by_default": true
+}
+```
+
+All fields except `event`, `handler`, `title`, and `description` are optional.
+
+### Conditions and filtering
+
+The `conditions` object narrows which documents trigger the handler. All specified conditions must match simultaneously (AND semantics).
+
+| Field | Type | What it matches |
+| --- | --- | --- |
+| `file_extension` | string | Exact extension, e.g. `".txt"`, `".brf"` |
+| `file_path_pattern` | string | Glob against the full file path |
+| `content_pattern` | string | Regex matched against the first 4 KB of content |
+
+`filter_extensions` is a shorthand list form of `file_extension` for matching multiple extensions at once (`[".txt", ".log"]` means either).
+
+### The capability gate
+
+`document.events` requires:
+- `"document.events"` in `capabilities`
+- A `"main"` entry module that defines the handler functions
+
+Manifests that declare `document_events` without `document.events` fail validation and cannot be loaded. Manifests without a `main` module also fail. Both checks are enforced by `quillin_lint` and by the runtime loader.
+
+### Event handler signature
+
+Every event handler receives two arguments:
+
+```python
+def my_handler(api, event):
+    # api: the QuillExtensionApi instance (same as command handlers)
+    # event: dict with at minimum:
+    #   event["event"] — the event name string
+    #   event["document_id"] — opaque document identifier
+    #   event["file_path"] — absolute path, or "" for unsaved documents
+    #   event["title"] — display title of the document tab
+    ...
+```
+
+For `document.before_save`, the handler may return `{"cancel": True, "reason": "..."}` to abort the save and show the reason in a notification. For all other events, the return value is ignored.
+
+For `smart_trigger.entered`, `event` additionally contains `"trigger"` (the trigger name, without `=`) and `"args"` (a list of string arguments).
+
+For `abbreviation.expanded`, `event` additionally contains `"trigger"` (the abbreviation text that was typed) and `"expansion"` (what it was replaced with).
+
+### What events make possible
+
+| Use case | Events to subscribe to |
+| --- | --- |
+| Auto-insert date headers in new journal files | `document.created` + `file_path_pattern` |
+| Timestamp logs on open (`.LOG` compatibility) | `document.opened` + `content_pattern` |
+| Word-count after every save | `document.after_save` |
+| Warn before closing an empty log entry | `document.before_close` |
+| Restore a status indicator when switching tabs | `document.activated` |
+| Chain actions on abbreviation expand | `abbreviation.expanded` |
+| React to any smart trigger globally | `smart_trigger.entered` |
+| Insert a template in every newly created file | `document.created` |
+| Check integrity after session restore | `document.loaded_from_session` |
+| Initialize state when the Quillin activates | `quillin.enabled` |
+| Release resources when the Quillin deactivates | `quillin.disabled` |
+| Flush caches cleanly when QUILL closes | `quill.shutdown` |
+| Hot-reload internal config when preferences change | `settings.changed` |
+
+### Lifecycle events
+
+Four events fire outside the document lifecycle and let a Quillin manage its own existence:
+
+- **`quillin.enabled`** — fires once when the user enables the Quillin, or at startup if the Quillin was already enabled. Use it to announce activation, initialize caches, or register anything that requires the API to be live. The `event` dict carries `"quillin_id"` (the Quillin's own ID).
+- **`quillin.disabled`** — fires when the user disables the Quillin in Quillin Manager. Use it to clean up resources and optionally announce deactivation. After this handler returns the Quillin's commands and event subscriptions are unregistered.
+- **`quill.shutdown`** — fires when QUILL is about to exit. The handler should complete quickly (under 200ms); the host enforces this with a deadline and kills any Quillin that overruns it.
+- **`settings.changed`** — fires when the user saves a change to any setting owned by this Quillin (i.e. any key registered in the Quillin's preferences contribution). The `event` dict carries `"key"` (the setting key), `"value"` (the new value), and `"old_value"` (the previous value). Use it to hot-reload internal config so preferences take effect without restarting the Quillin or QUILL.
+
+### Accessibility rules for document event handlers
+
+- Handlers must not block the UI thread. If a handler needs to do real work, use `api.run_in_background()` and announce the result on completion.
+- Handlers that produce screen-reader output must call `api.announce()`. Silent mutations are confusing.
+- Handlers that modify the document must call `api.announce()` describing the change so the user knows what happened without having to check.
+- `document.before_save` handlers that cancel a save must provide a clear `"reason"` the user will understand.
+- `document.activated` handlers must be fast and nearly silent; re-announcing the document title is the host's job, not the Quillin's.
+- `quillin.enabled` / `quillin.disabled` handlers should use `priority="quiet"` when announcing activation to avoid interrupting the user's workflow.
+
+---
+
+## Categories
+
+Quillins may optionally declare one or more category labels for the Quillins Manager filter. Categories are informational — they affect filtering but not validation, capability grants, or loading order.
+
+Declare them as a JSON array at the top level of the manifest:
+
+```json
+"categories": ["writing", "accessibility"]
+```
+
+Valid categories: `accessibility`, `ai`, `braille`, `developer`, `education`, `formatting`, `integration`, `navigation`, `productivity`, `utilities`, `writing`.
+
+---
+
+## Quillin dependencies (`requires`)
+
+A Quillin may declare that it depends on another Quillin being installed and enabled:
+
+```json
+"requires": [
+  { "id": "com.quill.journalstamp", "min_version": "1.0.0" }
+]
+```
+
+QUILL checks each dependency before loading the declaring Quillin. If a dependency is missing or too old, the Quillin fails to load with a clear error. `min_version` is optional; omit it to accept any installed version.
+
+---
+
+## Network host allowlist (`net_allowed_hosts`)
+
+When a Quillin declares the `net` capability, it may optionally restrict which hosts it connects to:
+
+```json
+"capabilities": ["net"],
+"net_allowed_hosts": ["api.openweathermap.org", "*.example.com"]
+```
+
+Each entry is a hostname or a wildcard `*.example.com` pattern. When the list is non-empty, QUILL blocks outbound connections to any host not on the list (even after the user has given blanket consent for `net`). When the list is omitted or empty, all outbound hosts are permitted with normal user consent.
+
+---
+
+## Status bar contributions
+
+A Quillin may add live cells to the QUILL status bar. Each cell has a handler the host calls to get the current display string.
+
+### Declaring a status bar cell
+
+```json
+"capabilities": ["ui.status", "ui.command"],
+"main": "extension.py",
+"contributes": {
+  "status_bar": [
+    {
+      "id": "wordcount",
+      "label": "Words: --",
+      "handler": "get_word_count",
+      "tooltip": "Current document word count",
+      "width": 12
+    }
+  ]
+}
+```
+
+- `id` — unique within the Quillin. Required.
+- `label` — static fallback text before the first refresh. Required.
+- `handler` — name of the Python function in `main` that returns the current cell string. Required.
+- `tooltip` — description read to screen-reader users when the cell receives focus. Optional.
+- `width` — suggested character-width hint (1-40). The host may ignore it. Optional; defaults to 10.
+
+### Handler signature
+
+```python
+def get_word_count() -> str:
+    """Called by the host to refresh the cell. No arguments."""
+    return f"Words: {_current_count}"
+```
+
+The handler takes no arguments and must return a string. The host calls it on its schedule (on tab switch, after save, or on a timer). If the handler raises an exception, the host shows the last good value.
+
+### Capability requirements
+
+`contributes.status_bar` requires:
+- `ui.status` capability (declared in `capabilities`)
+- a `main` module (the handler function lives there)
+
+Missing either causes validation to fail.
+
+---
+
+## Command descriptions
+
+Commands may carry a human-readable `description` for display in the keyboard reference and command palette:
+
+```json
+{
+  "id": "ext.myquillin.run",
+  "title": "Run My Quillin",
+  "description": "Processes the selected text and inserts the result below the cursor.",
+  "run": { "handler": "run" }
+}
+```
+
+`description` is optional, at most 400 characters. It is shown in the QUILL keyboard reference alongside the title and binding.
+
+---
+
+## Preferences — search keywords
+
+Individual settings may carry extra words users might type to find the setting in the Preferences search box:
+
+```json
+{
+  "key": "date_format",
+  "label": "Date format",
+  "type": "choice",
+  "default": "long",
+  "description": "How the date is written in the header.",
+  "search_keywords": ["timestamp", "iso", "strftime", "header format"]
+}
+```
+
+QUILL's preference search matches against `label`, `description`, and `search_keywords`. Adding synonyms and technical terms improves discoverability for users who may not know the setting's label.
+
+---
+
+## User control — capabilities, consent, and permissions
+
+Understanding how users control Quillin behavior is essential for writing extensions that respect the user's expectations.
+
+### Enable and disable
+
+Users can enable or disable any Quillin at any time from **Tools → Quillins Manager**. Disabling stops all of a Quillin's event handlers, commands, and status bar cells immediately. The Quillin's settings data is preserved. The `quillin.disabled` event fires when this happens, giving the Quillin a chance to clean up gracefully before it goes quiet.
+
+### Capability enforcement — two levels
+
+**Level 1: declared capabilities.** A Quillin may only call API methods that correspond to capabilities it declared in its manifest. If it tries to call `get_text()` without `editor.read`, the host blocks the call with a `CapabilityError` and notifies the Quillin. This check happens at every API call, not just at install time.
+
+**Level 2: consent-gated capabilities.** Four capabilities are additionally consent-gated — they prompt the user with a "Allow this action?" dialog on every individual use:
+
+| Capability | Gated action |
+| --- | --- |
+| `fs.read` | Reading a file from disk |
+| `fs.write` | Writing a file to disk |
+| `net` | Making a network request |
+| `settings.core.write` | Changing a QUILL-wide setting |
+
+When a user says no, QUILL raises `ConsentDeniedError`. Your handler should catch this and respond gracefully — do not retry without another explicit user trigger. Saying no once does not revoke the capability permanently; it only denies the specific action.
+
+The remaining capabilities (`editor.read/write`, `ui.announce/command/prompt/choices/status/log`, `clipboard.*`, `storage`, `document.*`, `settings.own.*`) are disclosed once at install time and do not prompt again.
+
+### Per-event control (`enabled_by_default`)
+
+Each document event subscription carries an `enabled_by_default` boolean. When `false`, QUILL registers the subscription but starts it inactive — the handler does not fire until the user turns it on. Use this for behaviors that are clearly optional or potentially disruptive, so users do not need to hunt for a setting to silence something they did not ask for.
+
+A per-event toggle UI is available in the Quillins Manager (**Configure Events...**). Select a Quillin, click that button, and check or uncheck individual event subscriptions. The state is persisted per-Quillin in `state.json` and respected at dispatch time.
+
+### Bundled vs. third-party Quillins
+
+QUILL ships with trusted, first-party bundled Quillins (Tier C). Bundled Quillins have their non-consent capabilities pre-granted so they do not nag on first use. Consent-gated capabilities (`fs.*`, `net`, `settings.core.write`) are never pre-granted — even bundled Quillins must ask.
+
+Third-party Quillins (user-installed from outside the install tree) are locked off until the `core.third_party_plugins` feature flag is enabled. This flag is `locked_off` for QUILL 1.0 and will unlock when the publishing and review process is ready. Third-party Quillins, when enabled, go through the same capability gate and consent flow as the runtime enforces — there is no shortcut for any code origin.
+
+---
+
+## Developer logging (`api.log`)
+
+Quillins with the `ui.log` capability may call `api.log(message)` to write structured log lines to the QUILL Developer Console:
+
+```python
+api.log("Journal Stamp enabled — ready to stamp.")
+api.log(f"Setting changed: {key} = {value!r}")
+```
+
+`api.log()` is a no-op when the Developer Console is closed or when `QUILL_DEV_BUILD` is not set; it never writes to files or to the screen reader. Declare the `ui.log` capability to use it:
+
+```json
+"capabilities": ["ui.log"]
+```
+
+`ui.log` requires no consent gate — it has no user-visible side effect and cannot exfiltrate data.
+
+---
+
+## Announcement priority
+
+`api.announce()` accepts an optional `priority` keyword argument:
+
+```python
+api.announce("Saved.", priority="quiet")      # queued, does not interrupt
+api.announce("Warning: TODO found.", priority="normal")
+api.announce("Error: file not writable.", priority="urgent")  # interrupts
+```
+
+Valid priorities: `quiet`, `normal`, `urgent`. Default is `normal`. The host maps these to the screen reader's urgency channel (SSML priority, NVDA speak flags, etc.). Use `quiet` for informational messages that should queue behind ongoing speech; use `urgent` only for errors or warnings requiring immediate attention.
+
+---
+
+## Scaffold tool (`quillin_new`)
+
+The scaffold tool generates a ready-to-edit Quillin directory from a single command:
+
+```
+python -m quill.tools.quillin_new com.example.myquillin "My Quillin" --out src/quillins/myquillin
+```
+
+Options:
+
+| Flag | Description |
+| --- | --- |
+| `--layer1` | Generate a snippet-only extension (no Python entry module) |
+| `--categories cat,...` | Add category labels (comma-separated) |
+| `--doc-events` | Include sample `quillin.enabled`, `document.opened`, and `settings.changed` handlers |
+| `--status-bar` | Include a sample status bar cell contribution |
+
+After running the tool, edit `manifest.json` (fill in author, description, and exact capabilities needed) and `extension.py` (implement your logic), then lint with `python -m quill.tools.quillin_lint <dir> --strict`.

@@ -263,7 +263,7 @@ and Packaging the Braille Pack (liblouis)</h2>
 liblouis in-process (see the out-of-process worker, BR-021); the pack
 only has to put a liblouis runtime plus the UEB tables somewhere the
 worker subprocess can find them. The remaining question — answered here
-so it is no longer a gap — is how that runtime reaches a user's
+so it is no longer a gap — is how that runtime reaches a user’s
 machine.</p>
 <h3 id="what-the-pack-contains">What the pack contains</h3>
 <ul>
@@ -293,7 +293,7 @@ detected the same way.</p>
 <li><strong>Optional Inno Setup component (recommended
 default).</strong> Ship the pack as a selectable component in the
 Windows installer. This is offline, deterministic, needs no hosting, and
-"just works" for users who opt in at install time.</li>
+“just works” for users who opt in at install time.</li>
 <li><strong>Download-on-demand from inside QUILL.</strong>
 <code>install_braille_pack()</code> fetches a pinned, signed pack
 archive when the user explicitly chooses <strong>Braille → Install
@@ -311,17 +311,17 @@ logic, so the Translation submenu appears whenever <em>any</em> path
 succeeded and stays hidden otherwise (never shown disabled).</p>
 <h3 id="inno-setup-specifics">Inno Setup specifics</h3>
 <ul>
-<li>Add a <code>[Components]</code> entry, e.g.
-<code>Name: "braillepack"; Description: "Braille translation pack (liblouis + UEB tables)"; Types: full</code>
+<li>Add a <code>[Components]</code> entry,
+e.g. <code>Name: "braillepack"; Description: "Braille translation pack (liblouis + UEB tables)"; Types: full</code>
 — left <strong>unchecked in the default/compact install</strong> so the
 base installer stays small.</li>
 <li>Tag the pack files in <code>[Files]</code> with
 <code>Components: braillepack</code> so they are only laid down when the
 component is selected, into <code>{app}\braille-pack\</code>.</li>
 <li>The build pipeline vendors a <strong>pinned</strong> liblouis
-Windows build + tables into the packaging tree and verifies each file's
+Windows build + tables into the packaging tree and verifies each file’s
 SHA-256 against <code>manifest.json</code> before Inno Setup runs. No
-build ever pulls "latest".</li>
+build ever pulls “latest”.</li>
 </ul>
 <h3 id="download-on-demand-constraints-security">Download-on-demand
 constraints (security)</h3>
@@ -332,7 +332,7 @@ design. When the real download lands it MUST:</p>
 Pack…</strong> action — no auto-prompt, no auto-download, no silent
 network calls.</li>
 <li>Fetch a <strong>pinned URL</strong> (a specific QUILL release
-asset), verify the archive's SHA-256 against an embedded expected hash,
+asset), verify the archive’s SHA-256 against an embedded expected hash,
 and verify a release signature before unpacking.</li>
 <li>Be added to the network-egress audit (<code>_REVIEWED_EGRESS</code>)
 so the egress gate passes; until then, the stub keeps the gate
@@ -345,7 +345,7 @@ the Translation submenu are hidden when
 <p>liblouis is LGPL-2.1-or-later and the UEB tables carry their own
 (mostly free) licenses. Because QUILL invokes liblouis <strong>out of
 process</strong> (a separate executable/process, never linked or
-imported into QUILL), the LGPL's dynamic linking obligations are not
+imported into QUILL), the LGPL’s dynamic linking obligations are not
 triggered for QUILL itself. The pack must still ship the upstream
 <code>LICENSE</code>/<code>COPYING</code> files and the build must
 record the exact upstream version so corresponding source can be offered
@@ -360,7 +360,7 @@ files + tables, it:</p>
 per-file hash + size);</li>
 <li>zips the tree into
 <code>quill-braille-pack-&lt;version&gt;-&lt;platform&gt;.zip</code>;</li>
-<li>prints the archive's SHA-256 to pin in
+<li>prints the archive’s SHA-256 to pin in
 <code>quill.core.braille_pack</code>.</li>
 </ol>
 <p>It never touches the network. A separate, audited <strong>vendor
@@ -370,7 +370,7 @@ drop them in <code>vendor/braille-pack/</code>. The release CI job runs
 the vendor step then the build script, and uploads the archive as a
 <strong>QUILL GitHub release asset</strong>. That asset — not an
 upstream URL — is what QUILL downloads, which is the clean answer to
-"can QUILL pull these directly?": pulling straight from liblouis
+“can QUILL pull these directly?”: pulling straight from liblouis
 upstream is fragile (no stable, hash-pinned Windows binary asset) and a
 supply-chain risk, so QUILL only ever fetches packs we built, hashed,
 and host ourselves.</p>
@@ -397,23 +397,24 @@ disabled in Safe Mode.</p>
 <h3 id="additional-languages-on-demand-language-packs">Additional
 languages (on-demand language packs)</h3>
 <p>liblouis ships tables for ~all supported languages; the runtime is
-identical, so "another language" is just another table file. Two
+identical, so “another language” is just another table file. Two
 strategies:</p>
 <ul>
 <li><strong>Bundle all tables (simplest).</strong> The full liblouis
 table set is only a few MB, so the base pack can include every table.
-"Additional languages" then needs no download at all — only UI to choose
+“Additional languages” then needs no download at all — only UI to choose
 the table. Recommended unless installer size is critical.</li>
 <li><strong>Per-language packs (lean base).</strong> Ship the runtime +
 English UEB in the base pack and host each extra language as its own
 small archive. A hosted <code>language_index.json</code> (code, name,
 archive URL, SHA-256, bytes) drives an <strong>Install Braille
 Language…</strong> picker; selecting one downloads + verifies + extracts
-that language's tables into <code>braille-pack/tables/</code>, reusing
+that language’s tables into <code>braille-pack/tables/</code>, reusing
 the same pinned-URL + hash-verify flow above.</li>
 </ul>
-<p>Either way the worker just receives a table name (e.g.
-<code>fr-bfu-comp6.utb</code>); no QUILL code is language-specific.</p>
+<p>Either way the worker just receives a table name
+(e.g. <code>fr-bfu-comp6.utb</code>); no QUILL code is
+language-specific.</p>
 <h3 id="implementation-status">Implementation status</h3>
 <p>Phase 5 software is complete: pack detection
 (<code>braille_pack.py</code>), the out-of-process worker + client
@@ -438,7 +439,7 @@ export</li>
 PDF-to-BRF, DOCX-to-BRF, or eBraille authoring in the first release.</p>
 <h2 id="important-page-concepts-quill-should-understand">Important Page
 Concepts QUILL Should Understand</h2>
-<h3 id="1-physical-brf-page-break">1. Physical BRF Page Break</h3>
+<h3 id="physical-brf-page-break">1. Physical BRF Page Break</h3>
 <p>A BRF page break is usually represented by a form feed character.</p>
 <p>In QUILL, this should be treated as a structural page boundary.</p>
 <p>User-facing command names:</p>
@@ -451,7 +452,7 @@ Concepts QUILL Should Understand</h2>
 </ul>
 <p>Screen reader announcement:</p>
 <p>“Page break. Beginning braille page 12.”</p>
-<h3 id="2-calculated-braille-page">2. Calculated Braille Page</h3>
+<h3 id="calculated-braille-page">2. Calculated Braille Page</h3>
 <p>If a BRF file does not contain form feeds, QUILL should calculate
 braille pages using the active profile.</p>
 <p>Default profile:</p>
@@ -468,7 +469,7 @@ braille pages using the active profile.</p>
 </ul>
 <p>Screen reader announcement:</p>
 <p>“Calculated braille page 12. No form feed found.”</p>
-<h3 id="3-print-page-number">3. Print Page Number</h3>
+<h3 id="print-page-number">3. Print Page Number</h3>
 <p>A braille transcription can show the original print page number,
 usually at the end of line 1.</p>
 <p>QUILL should scan line 1 of each braille page for likely print page
@@ -486,7 +487,7 @@ numbers.</p>
 <p>“Print page 12.”</p>
 <p>or:</p>
 <p>“Print page 12, continuation b.”</p>
-<h3 id="4-page-change-indicator">4. Page Change Indicator</h3>
+<h3 id="page-change-indicator">4. Page Change Indicator</h3>
 <p>When a new print page begins in the middle of a braille page, a page
 change indicator may appear. This is commonly a line of unspaced dots
 3-6 ending with the new print page number.</p>
@@ -504,7 +505,7 @@ number, such as:</p>
 <li>Mark Current Line as Print Page Change</li>
 <li>Remove Print Page Change Mark</li>
 </ul>
-<h3 id="5-lettered-continuation-print-pages">5. Lettered Continuation
+<h3 id="lettered-continuation-print-pages">5. Lettered Continuation
 Print Pages</h3>
 <p>A single print page often occupies multiple braille pages.
 Continuation pages may be marked by an unspaced letter before the print
@@ -519,7 +520,7 @@ page number.</p>
 <p>Status example:</p>
 <p>“Braille page 3 of 87. Print page 1, continuation b. Line 14, cell
 31.”</p>
-<h3 id="6-braille-page-number">6. Braille Page Number</h3>
+<h3 id="braille-page-number">6. Braille Page Number</h3>
 <p>The braille page number is usually placed at the right margin on the
 last line of the braille page.</p>
 <p>QUILL should detect it separately from the print page number.</p>
@@ -527,15 +528,14 @@ last line of the braille page.</p>
 <p>“Print page 12. Braille page 34.”</p>
 <p>This matters because the user may care about either one depending on
 the task.</p>
-<h3 id="7-transcriber-generated-pages">7. Transcriber-Generated
-Pages</h3>
+<h3 id="transcriber-generated-pages">7. Transcriber-Generated Pages</h3>
 <p>Some braille page numbers may be prefixed with <code>t</code>.</p>
 <p>Example:</p>
 <p><code>t1</code></p>
 <p>QUILL should detect these as transcriber-generated pages.</p>
 <p>Status example:</p>
 <p>“Transcriber-generated braille page t3.”</p>
-<h3 id="8-front-matter-braille-pages">8. Front Matter Braille Pages</h3>
+<h3 id="front-matter-braille-pages">8. Front Matter Braille Pages</h3>
 <p>Some front matter braille page numbers may be prefixed with
 <code>p</code>.</p>
 <p>Example:</p>
@@ -543,7 +543,7 @@ Pages</h3>
 <p>QUILL should detect these as preliminary/front-matter pages.</p>
 <p>Status example:</p>
 <p>“Front matter braille page p4.”</p>
-<h3 id="9-running-head">9. Running Head</h3>
+<h3 id="running-head">9. Running Head</h3>
 <p>A running head may appear on the first line of many braille
 pages.</p>
 <p>QUILL should not confuse a running head with body text or a page
@@ -557,7 +557,7 @@ number.</p>
 <li>Use Running Head in Status</li>
 <li>Detect Running Head Pattern</li>
 </ul>
-<h3 id="10-combined-print-page-numbers">10. Combined Print Page
+<h3 id="combined-print-page-numbers">10. Combined Print Page
 Numbers</h3>
 <p>A braille page may represent combined or omitted print pages.</p>
 <p>Examples:</p>
@@ -569,7 +569,7 @@ Numbers</h3>
 <p>QUILL should detect these as ranges.</p>
 <p>Status example:</p>
 <p>“Print pages 25 through 29.”</p>
-<h3 id="11-implied-or-missing-print-page-numbers">11. Implied or Missing
+<h3 id="implied-or-missing-print-page-numbers">11. Implied or Missing
 Print Page Numbers</h3>
 <p>Sometimes print page numbers are implied or absent in the original
 print.</p>
@@ -935,7 +935,7 @@ Translation Pack) is intentionally opt-in and depends only on Phase
 <li><strong>Phase 1 (BRF Core)</strong> — open/save, page map, status,
 navigation. Foundation for every later phase.</li>
 <li><strong>Phase 5 (UEB Translation Pack, opt-in)</strong> —
-translation is the most independent phase. It needs Phase 1's open/save
+translation is the most independent phase. It needs Phase 1’s open/save
 round-trip and <code>go_to_page</code> command, but it does not need
 print-page detection or validation. Ship it as soon as Phase 1 is stable
 so English UEB users get the feature without bundling every language and
@@ -943,7 +943,7 @@ table.</li>
 <li><strong>Phase 2 (Page Intelligence)</strong> — print/braille page
 numbers, continuation letters, running heads, detailed status mode. The
 proofing counters in Phase 3 and the warning rules in Phase 4 both read
-Phase 2's detection signals, so this lands before them.</li>
+Phase 2’s detection signals, so this lands before them.</li>
 <li><strong>Phase 3 (Proofing and Progress)</strong> — sidecar, last
 position, mark proofed / needs review, progress summary. The sidecar
 schema lands <em>after</em> Phase 2 so it can include the print-page
@@ -960,12 +960,12 @@ everything above.</li>
 summary voice prompt depends on print-page detection, and the sidecar
 schema would have to be re-migrated to add the print-page field.</li>
 <li><strong>Do not do Phase 4 before Phase 2.</strong> Most warning
-rules are checks on Phase 2's detection output; building the validator
+rules are checks on Phase 2’s detection output; building the validator
 first means either writing rules with no signal to trigger or
 duplicating detection work in the validator.</li>
 <li><strong>Phase 5 can safely land before Phases 2, 3, and 4</strong>
 because translation is opt-in and out-of-process, but it must still wait
-for Phase 1's open/save and <code>go_to_page</code>.</li>
+for Phase 1’s open/save and <code>go_to_page</code>.</li>
 </ul>
 <h3 id="phase-1-brf-core">Phase 1: BRF Core</h3>
 <p>Deliver:</p>

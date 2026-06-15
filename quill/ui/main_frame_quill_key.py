@@ -128,6 +128,10 @@ class QuillKeyMixin:
                     )
                 self._set_status_quiet(message)
                 self._refresh_statusbar()
+                from quill.core.sound_events import SoundEvent
+                from quill.ui.sound_manager import post_sound
+
+                post_sound(SoundEvent.QUILL_KEY_PRESSED)
                 return True
             return False
 

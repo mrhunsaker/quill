@@ -1290,6 +1290,7 @@ class MainFrame(
             ("WebView2 warm-up", self._prewarm_webview_runtime),
             ("crash recovery", self._offer_crash_recovery),
             ("first-run onboarding", self._maybe_run_first_run_onboarding),
+            ("braille pack prompt", self._maybe_prompt_braille_pack_install),
             ("startup profile prompt", self.run_startup_profile_prompt),
             ("watch-folder startup", self._maybe_start_watch_folder),
             ("lexical cache warm-up", start_lexical_preload),
@@ -11039,6 +11040,7 @@ class MainFrame(
         ("Blind Information Technology Solutions (BITS)", "https://bits-acb.org"),
         ("Techopolis", "https://techopolis.app"),
         ("GLOW (Community Access)", "https://letitglow.app"),
+        ("AccessibleApps (Christopher Toth)", "https://github.com/accessibleapps"),
     )
 
     # Contributor / project profiles on GitHub.
@@ -11050,6 +11052,19 @@ class MainFrame(
         ("Becky K on GitHub", "https://github.com/BeckyK102125"),
         ("Doug Langley on GitHub", "https://github.com/douglangley"),
         ("Kelly Ford on GitHub", "https://github.com/kellylford"),
+        (
+            "Kelly Ford: Image Description Toolkit",
+            "https://github.com/kellylford/Image-Description-Toolkit",
+        ),
+        (
+            "Kelly Ford: QuickMail (accessible IMAP client)",
+            "https://github.com/kellylford/QuickMail",
+        ),
+        ("Kelly Ford: RSSQuick (accessible RSS reader)", "https://github.com/kellylford/rssquick"),
+        (
+            "Kelly Ford: ChatViewer (Copilot Chat viewer)",
+            "https://github.com/kellylford/ChatViewer",
+        ),
         (
             "wx-accessible-webview on GitHub",
             "https://github.com/Community-Access/wx-accessible-webview",
@@ -11087,6 +11102,20 @@ class MainFrame(
             "With sincere thanks to our contributors and beta testers: "
             "Techopolis, Taylor Arndt, Michael Doise, Kayla Bentas, "
             "Shane Popplestone, Doug Langley, Becky K, and Kelly Ford.\n\n"
+            "**Special thanks to Kelly Ford** ([@kellylford](https://github.com/kellylford)) "
+            "for contributing the Vision Prompt Library in QUILL 0.6.0 — 12 IDT-evaluated "
+            "image description styles, the retry-in-dialog workflow, and the Manage Image Prompts "
+            "dialog. Kelly is also the creator of the "
+            "[Image Description Toolkit](https://github.com/kellylford/Image-Description-Toolkit), "
+            "an independent project for accessible image interaction that everyone in the "
+            "accessibility space should know about. His other screen-reader-first tools "
+            "include [QuickMail](https://github.com/kellylford/QuickMail), "
+            "[RSSQuick](https://github.com/kellylford/rssquick), and "
+            "[ChatViewer](https://github.com/kellylford/ChatViewer).\n\n"
+            "Special thanks to **AccessibleApps** (Christopher Toth, "
+            "https://github.com/accessibleapps) for the open-source accessibility libraries "
+            "that QUILL builds on: `app_updater`, `smart_list`, `accessible_output2`, "
+            "`html_to_text`, `app_elements`, `platform_utils`, and `keyboard_handler`.\n\n"
             f"{glow_summary}\n\n"
             "## BITS Whisperer\n\n"
             "BITS Whisperer brings speech and dictation integration to Quill, arriving in "
@@ -21891,6 +21920,71 @@ class MainFrame(
             self._show_watch_folder_onboarding(force=False)
             self._first_run_watch_folder_prompt = False
         _focus_editor()
+
+    def _maybe_prompt_braille_pack_install(self) -> None:
+        """One-time post-upgrade prompt when the Braille Pack is absent.
+
+        Runs only in a real (non-dev) install, only once per user, only when
+        the pack is actually missing. Offers to re-run the cached installer so
+        the user can add the braillepack component without re-downloading.
+        """
+        from quill.core.braille_pack import is_braille_pack_installed
+        from quill.core.paths import _DEV_BUILD
+
+        if _DEV_BUILD:
+            return
+        if is_braille_pack_installed():
+            return
+        if getattr(self.settings, "upgrade_prompt_braille_pack", False):
+            return
+
+        # Mark shown first so a crash during the dialog doesn't re-show.
+        self.settings.upgrade_prompt_braille_pack = True
+        save_settings(self.settings)
+
+        wx = self._wx
+        msg = (
+            "QUILL Braille Pack is not installed.\n\n"
+            "The Braille Pack adds braille translation, BRF/BRL file export, "
+            "and braille display support. It is an optional component included "
+            "in the installer.\n\n"
+            "Choose 'Install Braille Pack' to run the installer and add it now "
+            "(QUILL will close). Choose 'Not Now' to skip; you can add it later "
+            "by re-running the QUILL installer and selecting the Braille Pack "
+            "component."
+        )
+        with wx.MessageDialog(
+            self.frame,
+            msg,
+            "QUILL Braille Pack",
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_INFORMATION,
+        ) as dlg:
+            if hasattr(dlg, "SetYesNoLabels"):
+                dlg.SetYesNoLabels("Install Braille Pack", "Not Now")
+            apply_modal_ids(dlg, affirmative_id=wx.ID_YES, escape_id=wx.ID_NO)
+            result = self._show_modal_dialog(dlg, "QUILL Braille Pack")
+
+        if result != wx.ID_YES:
+            self._set_status("Braille Pack install skipped")
+            return
+
+        # Look for a cached copy of the installer left in the updates folder.
+        cached = self._find_cached_quill_installer()
+        if cached is not None:
+            self._launch_installer(cached)
+        else:
+            # No cached installer: trigger a fresh download via check-for-updates.
+            self._set_status("Downloading installer to add Braille Pack...")
+            self.check_for_updates(silent_no_update=False)
+
+    def _find_cached_quill_installer(self):
+        """Return the Path of a cached Quill-Setup-*.exe in the updates folder, or None."""
+        try:
+            updates_dir = app_data_dir() / "updates"
+            candidates = sorted(updates_dir.glob("Quill-Setup-*.exe"), reverse=True)
+            return candidates[0] if candidates else None
+        except Exception:  # noqa: BLE001
+            return None
 
     def _show_startup_wizard_first_run_prompt(self) -> bool:
         wx = self._wx
